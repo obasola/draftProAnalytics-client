@@ -31,7 +31,7 @@ const form = reactive({
   homeCity: '',
   homeState: '',
   university: '',
-  yearEnteredLeague: new Date(),
+  yearEnteredLeague: null as number | null,
   position: '',
 })
 
@@ -64,7 +64,7 @@ onMounted(async () => {
       homeCity: playerStore.currentPlayer.homeCity,
       homeState: playerStore.currentPlayer.homeState,
       university: playerStore.currentPlayer.university,
-      yearEnteredLeague: new Date(playerStore.currentPlayer.yearEnteredLeague),
+      yearEnteredLeague: Number(playerStore.currentPlayer.yearEnteredLeague),
       position: playerStore.currentPlayer.position,
     })
   }
@@ -223,11 +223,10 @@ const onCancel = () => {
             </div>
             <div class="form-row">
               <label for="yearEnteredLeague">Year Entered League *</label>
-              <Calendar
+              <InputNumber
                 id="yearEnteredLeague"
                 v-model="form.yearEnteredLeague"
                 view="year"
-                dateFormat="yy"
                 required
                 class="form-input"
               />

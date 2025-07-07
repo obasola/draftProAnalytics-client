@@ -13,5 +13,10 @@ export default defineConfig({
   server: {
     port: 8080,
     open: true,
+    watch: {
+      usePolling: true,
+      interval: 150,
+      ignored: ['**/node_modules/**', '**/.git/**'],
+    },
   },
 })

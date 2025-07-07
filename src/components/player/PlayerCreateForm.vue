@@ -28,7 +28,7 @@ const form = reactive({
   homeCity: '',
   homeState: '',
   university: '',
-  yearEnteredLeague: new Date(),
+  yearEnteredLeague: null as number | null,
   position: '',
 })
 

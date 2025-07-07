@@ -138,8 +138,8 @@ const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: stri
   const shortName = nameParts[nameParts.length - 1]
   const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
   const logoFile = `${shortName}.${fileExt}`
-  const logoPath = new URL(`../../assets/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
-  console.log("logoPath: "+logoPath)
+  // Instead of complex URL construction
+  const logoPath = `/images/${team.conference.toLowerCase()}/${logoFile}`
   return { shortName, logoPath }
 }
 

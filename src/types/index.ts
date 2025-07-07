@@ -70,7 +70,7 @@ export interface Player {
   homeCity: string
   homeState: string
   university: string
-  yearEnteredLeague: Date
+  yearEnteredLeague: number
   position: string
   team?: Team
   awards?: PlayerAward[]

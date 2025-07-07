@@ -51,13 +51,10 @@ const getGameStatusSeverity = (status: string | undefined) => {
 const getTeamLogo = (team: any): string => {
   if (!team || !team.name || !team.conference) return ''
 
-  const lastWord = team.name.trim().split(' ').pop()
+  const lastWord = team.name.trim().split(/\s+/).pop() || ''
   const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
 
-  return new URL(
-    `../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`,
-    import.meta.url
-  ).href
+  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
 }
 
 const getGameResult = computed(() => {

@@ -105,12 +105,13 @@
 
               <!-- Home Team -->
               <div class="team-display">
-                <span class="checkmark-placeholder">
-                  <i v-if="isWinner(data, 'home')" class="pi pi-check winner-check"></i>
-                </span>
+              
+                <span class="team-name">{{getTeamShortName(data.homeTeam) }}</span>
                 <img v-if="data.homeTeam" :src="getTeamLogo(data.homeTeam)" :alt="data.homeTeam.name"
                   class="team-icon" />
-                <span class="team-name">{{ getTeamShortName(data.homeTeam) }}</span>
+                 <span class="checkmark-placeholder">
+                  <i v-if="isWinner(data, 'home')" class="pi pi-check winner-check"></i>
+                </span> 
               </div>
             </div>
           </template>
@@ -312,12 +313,12 @@ const getTeamShortNameAndLogo = (team: any): { fullName: string; logoPath: strin
   const shortName = nameParts[nameParts.length - 1]
   const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
   const logoFile = `${shortName}.${fileExt}`
-  const logoPath = new URL(`../../assets/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
+  const logoPath = new URL(`../../../public/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
   console.log("logoPath: " + logoPath)
   return { fullName, logoPath }
 }
 function getNflLogo() {
-  return new URL('../../assets/images/NFLogo.jpeg', import.meta.url).href
+  return new URL('../../../public/images/NFLogo.jpeg', import.meta.url).href
 }
 const cancelRequest = () => {
   alert('BTN CLICKED!')
@@ -570,12 +571,9 @@ const getTeamLogo = (team: any) => {
   const shortName = getTeamShortName(team)
   const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
   const logoFile = `${shortName}.${fileExt}`
-
-  try {
-    return new URL(`../../assets/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
-  } catch {
-    return ''
-  }
+  const logoPath = new URL(`../../../public/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
+  return logoPath
+  // return `../../../public/images/${team.conference.toLowerCase()}/${logoFile}`
 }
 
 const isWinner = (game: any, side: 'home' | 'away') => {
@@ -745,8 +743,8 @@ onMounted(() => {
 }
 
 .team-icon {
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
 }
 

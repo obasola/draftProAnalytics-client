@@ -26,8 +26,6 @@ export const usePlayerStore = defineStore('player', () => {
     return (position: string) =>
       players.value.filter((p) => p.position === position)
   })
-
-  
   // Actions - All data comes from/goes to REST API
   const fetchAll = async (refresh = false) => {
     // Only fetch if we don't have data or explicitly refreshing
@@ -117,7 +115,9 @@ export const usePlayerStore = defineStore('player', () => {
     error.value = null
     try {
       const updatedPlayer = await playerService.update(id, playerData)
-      
+      if(playerData && playerData.yearEnteredLeague != 0) {
+        throw new ValidationError("yearEnteredLeague is empty or INVALID")
+      }
       // Update local cache
       const index = players.value.findIndex((p) => p.id === id)
       if (index !== -1) {
