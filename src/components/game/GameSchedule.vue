@@ -1,14 +1,14 @@
 <template>
   <div class="pgHeader">
-    <h1>
-      <img :src="getNflLogo()" class="nfl-logo" />
-      Season Schedule
-    </h1>
+ 
     <div class="team">
       <img v-if="selectedTeamObject" :src="getTeamShortNameAndLogo(selectedTeamObject).logoPath"
         :alt="getTeamShortNameAndLogo(selectedTeamObject).fullName" class="team-logo" />
-      <span v-if="selectedTeamObject">{{ getTeamShortNameAndLogo(selectedTeamObject).fullName }}</span>
-      <span v-else-if="selectedTeam === 'league'">NFL League</span>
+      <span v-if="selectedTeamObject">
+        {{ getTeamShortNameAndLogo(selectedTeamObject).fullName }}&nbsp;Season Schedule
+      </span>
+      <span v-else-if="selectedTeam === 'league'">
+        <img :src="getNflLogo()" class="nfl-logo" />League-wide Season Schedule</span>
       <span v-else>Select Team</span>
     </div>
   </div>
@@ -25,7 +25,7 @@
         </select>
       </div>
 
-      <div class="control-group">
+      <div v-show="selectedTeam === 'league'" class="control-group">
         <label for="week">Season:</label>
         <select id="week" v-model="selectedWeek" class="schedule-select" @change="loadSchedule">
           <option value="0">Select Week</option>
@@ -144,7 +144,7 @@
                 </option>
               </select>
             </div>
-          </template>
+          </template>team
         </Column>
 
         <!-- Home Score Column -->
