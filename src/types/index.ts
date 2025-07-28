@@ -12,10 +12,12 @@ export interface PaginatedResponse<T> {
 
 // Updated to match your backend structure
 export interface PaginationMeta {
-  page: number        // Current page (1-based)
-  limit: number       // Items per page
-  total: number       // Total items
-  pages: number       // Total pages
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
 }
 export interface Game {
   // Game fields
