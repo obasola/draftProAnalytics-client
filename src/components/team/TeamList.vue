@@ -76,13 +76,19 @@ const deleteTeam = async (id: number) => {
     await teamStore.fetchAll(backendPage.value, rowsPerPage.value, true)
   }
 }
+const getNflLogo = (): string => {
+  return `../../images/NFLogo.jpeg`
+}
 </script>
 
 <template>
   <div class="team-list">
     <!-- Updated header with team colors -->
     <div class="list-header bg-team-primary text-team-accent">
-      <h2>Teams</h2>
+            <h2 class="nfl-logo">
+        <img :src="getNflLogo()" class="inline-logo" />
+        Teams
+      </h2>
       <Button
         @click="createTeam"
         label="Create Team"
@@ -95,6 +101,7 @@ const deleteTeam = async (id: number) => {
     <DataTable
       :value="teamStore.teams"
       :loading="teamStore.loading"
+      :stripedRows="false"
       lazy
       paginator
       :first="currentPage * rowsPerPage"
@@ -179,5 +186,17 @@ const deleteTeam = async (id: number) => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+    background: rgb(116, 69, 8);
+    color: #4b5563;
+    transition: box-shadow 0.2s;
+}
+.p-datatable-odd {
+  background-color: tan; /* A light blue background */
+}
+.p-datatable-even {
+  background-color: salmon; /* A light blue background */
 }
 </style>

@@ -50,7 +50,7 @@ import 'primevue/resources/primicons.css';
 import './style.css';
 */
 // Import global styles
-import './global_styles.css';
+import '../src/assets/styles/global-styles.css'
 
 
 const app = createApp(App);

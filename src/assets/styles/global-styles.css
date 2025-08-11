@@ -3,7 +3,7 @@
 
 :root {
   /* Default Colors */
-  --bg-primary: #003049;
+  --bg-primary: #ffffff;
   --bg-secondary: #780000;
   --bg-datatable: #1f8067;
   --text-primary: #780000;
@@ -437,4 +437,17 @@
   box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.16),
     0 3px 6px rgba(0, 0, 0, 0.23);
+}
+.nfl-logo {
+  display: flex;
+  align-items: flex-start;
+  /* align top edges */
+  gap: 0.5rem;
+  /* space between logo and text */
+}
+
+.inline-logo {
+  height: 45px;
+  /* or your preferred size */
+  width: auto;
 }
