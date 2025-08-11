@@ -13,6 +13,12 @@ import { useRouter } from 'vue-router'
 import { apiService } from '@/services/api'
 import type { Player, PaginatedResponse } from '@/types'
 
+import { useRoute } from 'vue-router'
+import { useThemeStore } from '@/stores/theme.store'
+
+const route = useRoute()
+const themeStore = useThemeStore()
+
 const teamStore = useTeamStore()
 const router = useRouter()
 
@@ -37,11 +43,28 @@ const loadTeamPlayers = async (teamId: number) => {
   }
 }
 
+const getTeamLogo = (team: any): string => {
+  if (!team || !team.name || !team.conference) return ''
+
+  const lastWord = team.name.trim().split(/\s+/).pop() || ''
+  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
+
+  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
+}
+
 onMounted(async () => {
+
+})
+onMounted(async () => {
+  // Apply theme based on route parameter if present
+  if (route.params.teamId && typeof route.params.teamId === 'string') {
+    await themeStore.selectTeam(route.params.teamId)
+  }
   if (team.value?.id) {
     await loadTeamPlayers(team.value.id)
   }
 })
+
 
 // Watch for team changes
 watch(
@@ -67,7 +90,7 @@ const createPlayer = () => {
 </script>
 
 <template>
-  <Card v-if="team" class="team-details">
+  <Card v-if="team" class="team-details bg-team-primary text-team-accent">
     <template #title>
       {{ team.name }}
     </template>
@@ -76,13 +99,17 @@ const createPlayer = () => {
     </template>
 
     <template #content>
-      <div class="team-info-grid">
+      <div class="team-info-grid bg-team-primary text-team-accent">
         <div class="info-section">
-          <h3>Team Information</h3>
           <div class="info-row">
-            <span class="label">Team Name:</span>
-            <span class="value">{{ team.name }}</span>
+            <h3 class="team-name-with-logo">
+              <img :src="getTeamLogo(team)" :alt="team.name" class="inline-logo" />
+              {{ team.name }}
+            </h3>
           </div>
+          <h3>Team Information</h3>
+
+
           <div class="info-row">
             <span class="label">City:</span>
             <span class="value">{{ team.city }}</span>
@@ -123,12 +150,7 @@ const createPlayer = () => {
           <div class="players-section">
             <div class="section-header">
               <h4>Team Roster</h4>
-              <Button
-                @click="createPlayer"
-                label="Add Player"
-                icon="pi pi-plus"
-                class="p-button-success p-button-sm"
-              />
+              <Button @click="createPlayer" label="Add Player" icon="pi pi-plus" class="p-button-success p-button-sm" />
             </div>
 
             <div v-if="playersLoading" class="loading-message">
@@ -141,23 +163,11 @@ const createPlayer = () => {
 
             <div v-else-if="players.length === 0" class="empty-message">
               <i class="pi pi-info-circle"></i> No players found for this team.
-              <Button
-                @click="createPlayer"
-                label="Add First Player"
-                icon="pi pi-plus"
-                class="p-button-link"
-              />
+              <Button @click="createPlayer" label="Add First Player" icon="pi pi-plus" class="p-button-link" />
             </div>
 
-            <DataTable
-              v-else
-              :value="players"
-              responsiveLayout="scroll"
-              :paginator="players.length > 10"
-              :rows="10"
-              sortField="lastName"
-              :sortOrder="1"
-            >
+            <DataTable v-else :value="players" responsiveLayout="scroll" :paginator="players.length > 10" :rows="10"
+              sortField="lastName" :sortOrder="1">
               <Column header="Name" sortable>
                 <template #body="{ data }">
                   <span class="player-name">
@@ -188,18 +198,10 @@ const createPlayer = () => {
               <Column header="Actions">
                 <template #body="{ data }">
                   <div class="action-buttons">
-                    <Button
-                      @click="viewPlayer(data.id)"
-                      icon="pi pi-eye"
-                      class="p-button-info p-button-sm"
-                      v-tooltip="'View Player'"
-                    />
-                    <Button
-                      @click="editPlayer(data.id)"
-                      icon="pi pi-pencil"
-                      class="p-button-warning p-button-sm"
-                      v-tooltip="'Edit Player'"
-                    />
+                    <Button @click="viewPlayer(data.id)" icon="pi pi-eye" class="p-button-info p-button-sm"
+                      v-tooltip="'View Player'" />
+                    <Button @click="editPlayer(data.id)" icon="pi pi-pencil" class="p-button-warning p-button-sm"
+                      v-tooltip="'Edit Player'" />
                   </div>
                 </template>
               </Column>
@@ -235,19 +237,19 @@ const createPlayer = () => {
             </div>
           </div>
         </AccordionTab>
-        
+
         <AccordionTab header="Schedule">
           <p>Team schedule will be displayed here when schedule relationships are implemented.</p>
         </AccordionTab>
-        
+
         <AccordionTab header="Draft Picks">
           <p>Team draft history will be displayed here when draft pick relationships are implemented.</p>
         </AccordionTab>
-        
+
         <AccordionTab header="Team Needs">
           <p>Team draft needs will be displayed here when team needs relationships are implemented.</p>
         </AccordionTab>
-        
+
         <AccordionTab header="Playoff Results">
           <p>Playoff history will be displayed here when post-season results are implemented.</p>
         </AccordionTab>
@@ -291,7 +293,8 @@ const createPlayer = () => {
 
 .value {
   font-weight: 500;
-  color: #2563eb; /* Blue color for data values */
+  color: #2563eb;
+  /* Blue color for data values */
   /* Alternative color options:
      color: #059669; - Green
      color: #7c3aed; - Purple  
@@ -378,5 +381,19 @@ const createPlayer = () => {
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-color);
+}
+
+.team-name-with-logo {
+  display: flex;
+  align-items: flex-start;
+  /* align top edges */
+  gap: 0.5rem;
+  /* space between logo and text */
+}
+
+.inline-logo {
+  height: 32px;
+  /* or your preferred size */
+  width: auto;
 }
 </style>

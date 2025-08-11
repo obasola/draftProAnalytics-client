@@ -80,7 +80,8 @@ const deleteTeam = async (id: number) => {
 
 <template>
   <div class="team-list">
-    <div class="list-header">
+    <!-- Updated header with team colors -->
+    <div class="list-header bg-team-primary text-team-accent">
       <h2>Teams</h2>
       <Button
         @click="createTeam"
@@ -90,6 +91,7 @@ const deleteTeam = async (id: number) => {
       />
     </div>
 
+    <!-- Added team-themed class to DataTable -->
     <DataTable
       :value="teamStore.teams"
       :loading="teamStore.loading"
@@ -103,6 +105,7 @@ const deleteTeam = async (id: number) => {
       responsiveLayout="scroll"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} teams"
+      class="themed-datatable"
     >
       <Column field="name" header="Team Name" sortable />
       <Column field="city" header="City" sortable />
@@ -138,16 +141,6 @@ const deleteTeam = async (id: number) => {
       </Column>
     </DataTable>
 
-    <!-- Debug info - remove after testing -->
-    <div v-if="teamStore.pagination" class="debug-info" style="margin-top: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 4px;">
-      <h4>Debug - Pagination Info:</h4>
-      <pre>{{ JSON.stringify(teamStore.pagination, null, 2) }}</pre>
-      <p>Frontend Current Page (0-based): {{ currentPage }}</p>
-      <p>Backend Page (1-based): {{ backendPage }}</p>
-      <p>Rows Per Page: {{ rowsPerPage }}</p>
-      <p>Total Records: {{ totalRecords }}</p>
-      <p>Teams Count: {{ teamStore.teams.length }}</p>
-    </div>
   </div>
 </template>
 
@@ -156,11 +149,14 @@ const deleteTeam = async (id: number) => {
   width: 100%;
 }
 
+/* Updated list-header with team colors */
 .list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
 .action-buttons {
@@ -168,8 +164,20 @@ const deleteTeam = async (id: number) => {
   gap: 0.5rem;
 }
 
+/* Updated debug-info with team colors */
 .debug-info {
   font-size: 0.8rem;
   color: #666;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+/* Add team-themed DataTable styling */
+.themed-datatable {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
 }
 </style>

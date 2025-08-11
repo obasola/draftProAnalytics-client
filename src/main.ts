@@ -24,7 +24,7 @@ import 'primeicons/primeicons.css'
 // import '@fortawesome/fontawesome-free/css/all.css' // <- this loads FA icons
 
 // Custom styles
-import './assets/styles/main.css'
+import './assets/styles/global-styles.css'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 import Button from 'primevue/button'
@@ -42,16 +42,28 @@ import Card from 'primevue/card'
 import Menubar from 'primevue/menubar'
 import ProgressSpinner from 'primevue/progressspinner'
 
-const app = createApp(App)
+// main.ts updates
+import { TeamColorsPlugin } from '../src/plug-ins/team-colors.plugin';
+/*
+import 'primevue/resources/themes/lara-light-blue/theme.css';
+import 'primevue/resources/primicons.css';
+import './style.css';
+*/
+// Import global styles
+import './global_styles.css';
 
 
-const pinia = createPinia()
+const app = createApp(App);
+const pinia = createPinia();
 
 app.use(pinia)
-app.use(router)
+
 app.use(PrimeVue, { ripple: true })
 app.use(ToastService)
 app.use(ConfirmationService)
+app.use(TeamColorsPlugin);
+app.use(router)
+
 app.directive('tooltip', Tooltip)
 
 // Register PrimeVue components globally

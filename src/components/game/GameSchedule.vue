@@ -573,7 +573,7 @@ const getTeamLogo = (team: any) => {
   const logoFile = `${shortName}.${fileExt}`
   const logoPath = new URL(`../../../public/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
   return logoPath
-  // return `../../../public/images/${team.conference.toLowerCase()}/${logoFile}`
+  // return `../../images/${team.conference.toLowerCase()}/${logoFile}`
 }
 
 const isWinner = (game: any, side: 'home' | 'away') => {

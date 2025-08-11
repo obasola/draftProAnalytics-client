@@ -1,3 +1,6 @@
+# Client
+sports-mgmt-app-client/src/.env.*
+
 # Logs
 logs
 *.log

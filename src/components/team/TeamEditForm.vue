@@ -8,8 +8,17 @@ import Dropdown from 'primevue/dropdown'
 import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
 
+import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useThemeStore } from '@/stores/theme.store'
+
+
+const themeStore = useThemeStore()
 const teamStore = useTeamStore()
+
 const router = useRouter()
+const route = useRoute()
+
 const toast = useToast()
 
 const team = computed(() => teamStore.currentTeam)
@@ -64,6 +73,20 @@ watch(
   },
   { immediate: true }
 )
+const getTeamLogo = (team: any): string => {
+  if (!team || !team.name || !team.conference) return ''
+
+  const lastWord = team.name.trim().split(/\s+/).pop() || ''
+  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
+
+  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
+}
+onMounted(async () => {
+  // Apply theme based on route parameter if present
+  if (route.params.teamId && typeof route.params.teamId === 'string') {
+    await themeStore.selectTeam(route.params.teamId)
+  }
+})
 
 const onSubmit = async () => {
   if (!team.value?.id) return
@@ -96,9 +119,15 @@ const onCancel = () => {
 
 <template>
   <Card class="edit-form">
-    <template #title>Edit Team</template>
+    <template #title>Edit Team info</template>
     <template #subtitle v-if="team">
-      Editing: {{ team.name }}
+      <div class="info-row">
+        <h3 class="team-name-with-logo">
+          <img :src="getTeamLogo(team)" :alt="team.name" class="inline-logo" />
+          {{ team.name }}
+        </h3>
+      </div>
+
     </template>
 
     <template #content>
@@ -106,123 +135,62 @@ const onCancel = () => {
         <div class="form-grid">
           <div class="form-section">
             <h3>Basic Information</h3>
-            
+
             <div class="form-row">
               <label for="name">Team Name *</label>
-              <InputText
-                id="name"
-                v-model="form.name"
-                required
-                class="form-input"
-                placeholder="Enter team name"
-              />
+              <InputText id="name" v-model="form.name" required class="form-input" placeholder="Enter team name" />
             </div>
 
             <div class="form-row">
               <label for="city">City *</label>
-              <InputText
-                id="city"
-                v-model="form.city"
-                required
-                class="form-input"
-                placeholder="Enter city"
-              />
+              <InputText id="city" v-model="form.city" required class="form-input" placeholder="Enter city" />
             </div>
 
             <div class="form-row">
               <label for="state">State *</label>
-              <InputText
-                id="state"
-                v-model="form.state"
-                required
-                class="form-input"
-                placeholder="Enter state/province"
-              />
+              <InputText id="state" v-model="form.state" required class="form-input"
+                placeholder="Enter state/province" />
             </div>
 
             <div class="form-row">
               <label for="country">Country *</label>
-              <Dropdown
-                id="country"
-                v-model="form.country"
-                :options="countries"
-                optionLabel="label"
-                optionValue="value"
-                required
-                class="form-input"
-                placeholder="Select country"
-              />
+              <Dropdown id="country" v-model="form.country" :options="countries" optionLabel="label" optionValue="value"
+                required class="form-input" placeholder="Select country" />
             </div>
 
             <div class="form-row">
               <label for="stadium">Stadium *</label>
-              <InputText
-                id="stadium"
-                v-model="form.stadium"
-                required
-                class="form-input"
-                placeholder="Enter stadium name"
-              />
+              <InputText id="stadium" v-model="form.stadium" required class="form-input"
+                placeholder="Enter stadium name" />
             </div>
           </div>
 
           <div class="form-section">
             <h3>League Information</h3>
-            
+
             <div class="form-row">
               <label for="conference">Conference *</label>
-              <Dropdown
-                id="conference"
-                v-model="form.conference"
-                :options="conferences"
-                optionLabel="label"
-                optionValue="value"
-                required
-                class="form-input"
-                placeholder="Select conference"
-              />
+              <Dropdown id="conference" v-model="form.conference" :options="conferences" optionLabel="label"
+                optionValue="value" required class="form-input" placeholder="Select conference" />
             </div>
 
             <div class="form-row">
               <label for="division">Division *</label>
-              <Dropdown
-                id="division"
-                v-model="form.division"
-                :options="divisions"
-                optionLabel="label"
-                optionValue="value"
-                required
-                class="form-input"
-                placeholder="Select division"
-              />
+              <Dropdown id="division" v-model="form.division" :options="divisions" optionLabel="label"
+                optionValue="value" required class="form-input" placeholder="Select division" />
             </div>
 
             <div class="form-row">
               <label for="scheduleId">Schedule ID</label>
-              <InputText
-                id="scheduleId"
-                v-model.number="form.scheduleId"
-                type="number"
-                class="form-input"
-                placeholder="Enter schedule ID (optional)"
-              />
+              <InputText id="scheduleId" v-model.number="form.scheduleId" type="number" class="form-input"
+                placeholder="Enter schedule ID (optional)" />
             </div>
           </div>
         </div>
 
         <div class="form-actions">
-          <Button
-            type="button"
-            @click="onCancel"
-            label="Cancel"
-            class="p-button-secondary"
-          />
-          <Button
-            type="submit"
-            label="Update Team"
-            :loading="teamStore.loading"
-            class="p-button-primary"
-          />
+          <Button type="button" @click="onCancel" label="Cancel" class="p-button-secondary" />
+          <Button type="submit" label="Update Team" :loading="teamStore.loading" class="p-button-primary" />
         </div>
       </form>
     </template>
@@ -274,5 +242,18 @@ const onCancel = () => {
   gap: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
+}
+.team-name-with-logo {
+  display: flex;
+  align-items: flex-start;
+  /* align top edges */
+  gap: 0.5rem;
+  /* space between logo and text */
+}
+
+.inline-logo {
+  height: 32px;
+  /* or your preferred size */
+  width: auto;
 }
 </style>

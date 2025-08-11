@@ -3,16 +3,17 @@
 
 :root {
   /* Default Colors */
-  --bg-primary: #4ba9dc;
-  --bg-secondary: #bc0362;
-  --text-primary: #78003e;
-  --text-secondary: #ffffff;
+  --bg-primary: #003049;
+  --bg-secondary: #780000;
+  --bg-datatable: #1f8067;
+  --text-primary: #780000;
+  --text-secondary: #bd7c7c;
   --accent-color: #fdf0d5;
   --border-color: #669bbc;
   /* Default NFL Colors */
-  --team-primary: #72adec;
+  --team-primary: #013369;
   --team-secondary: #d50a0a;
-  --team-accent: #ffffff;
+  --team-accent: #ad7b7b;
 
   /* RGB versions for transparency effects */
   --team-primary-rgb: 1, 51, 105;
@@ -31,11 +32,20 @@
   }
 
   body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
-}
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+  }
+  nav-menu {
+    color: #d1d5db;
+  }
+  .p-menuitem-text {
+    color: #d1d5db;
+  }
+  .p-menuitem-link:hover {
+    background-color: var(--bg-primary);
+  }
   /* Component-specific mappings */
   --header-bg: var(--team-primary);
   --button-primary-bg: var(--team-primary);
@@ -55,6 +65,25 @@
   --color-neutral-900: #111827;
 }
 
+/* Custom NFL styling with default colors */
+.nfl-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #013369 0%, #d50a0a 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+.nfl-datatable {
+  background-color: var(--team-primary);
+  border: 1px solid #013369;
+  border-radius: 12px;
+}
+.p-datatable-odd {
+  background-color: #e0f2f7; /* A light blue background */
+}
+.p-datatable-even {
+  background-color: #e0f2f7; /* A light blue background */
+}
 /* Team-aware utility classes */
 .bg-team-primary {
   background-color: var(--team-primary);
@@ -76,7 +105,7 @@
   color: var(--team-secondary);
 }
 
-.text-team-accent {5e0a19dc
+.text-team-accent {
   color: var(--team-accent);
 }
 
@@ -274,7 +303,6 @@
   }
 }
 
-
 .app-container {
   min-height: 100vh;
   background-color: var(--bg-primary);
@@ -406,5 +434,7 @@
 }
 
 .shadow-2 {
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23);
 }

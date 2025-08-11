@@ -102,9 +102,11 @@ const menuItems = ref([
 <style scoped>
 .app-navigation {
   width: 250px;
-  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
   padding: 1rem;
+  
 }
 
 :deep(.nav-menu) {
@@ -113,16 +115,17 @@ const menuItems = ref([
 }
 
 :deep(.nav-menu .p-menuitem-link) {
-  color: var(--text-primary);
+  color: var(--text-secondary);
   border-radius: 4px;
   margin-bottom: 0.5rem;
 }
 
 :deep(.nav-menu .p-menuitem-link:hover) {
   background-color: rgba(120, 0, 0, 0.1);
+
 }
 
 :deep(.nav-menu .p-menuitem-icon) {
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 </style>

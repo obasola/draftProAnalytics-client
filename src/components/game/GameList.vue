@@ -149,157 +149,127 @@ const cancelRequest = () => {
 </script>
 
 <template>
-  <div class="game-list">
-    <div class="list-header">
+  < class="game-list">
+    <!-- PATTERN APPLIED: Team-colored header -->
+
+    <div class="nfl-datatable">
       <h2>Games</h2>
-      <Button @click="createGame" label="Create Game" icon="pi pi-plus" class="p-button-success" />
+      <Button
+        @click="createGame"
+        label="Create Game"
+        icon="pi pi-plus"
+        class="p-button-success"
+      />
     </div>
 
-    <!-- Error Message -->
-    <Message v-if="gameStore.error" severity="error" :closable="false" class="mb-3">
-      <div class="flex justify-content-between align-items-center">
-        <span>{{ gameStore.error }}</span>
-        <Button label="Retry" icon="pi pi-refresh" class="p-button-sm p-button-outlined" @click="retryFetch" />
-      </div>
-    </Message>
+      <!-- PATTERN APPLIED: Team-themed DataTable -->
+      <DataTable :value="gameStore.games" :loading="gameStore.loading" paginator :rows="rows" :first="first"
+        :rowsPerPageOptions="[5, 10, 20, 50, 100]" @page="onPage" responsiveLayout="scroll" sortMode="single"
+        :globalFilterFields="['seasonYear', 'homeTeam.name', 'awayTeam.name', 'gameLocation']" filterDisplay="menu"
+        :filters="filters" showGridlines class="nfl-datatable">
 
-    <!-- Debug Info (remove in production) -->
-    <Message v-if="gameStore.games.length === 0 && !gameStore.loading && !gameStore.error" severity="info" class="mb-3">
-      No games found. Total records: {{ gameStore.games.length }}
-      <br>
-      <small>Client-side sorting enabled - all data loaded</small>
-    </Message>
+        <!-- Season Year -->
+        <Column field="seasonYear" header="Season" sortable :showFilterMatchModes="false">
+          <template #filter="{ filterModel }">
+            <input v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search by season" />
+          </template>
+        </Column>
 
-    <!-- Team Data Debug (remove in production) -->
-    <Message
-      v-if="gameStore.games.length > 0 && gameStore.games[0] && (!gameStore.games[0].homeTeam || !gameStore.games[0].awayTeam)"
-      severity="warn" class="mb-3">
-      ⚠️ Team relationship data missing. First game data:
-      <br>
-      <small>
-        homeTeamId: {{ gameStore.games[0]?.homeTeamId }} |
-        awayTeamId: {{ gameStore.games[0]?.awayTeamId }} |
-        homeTeam: {{ gameStore.games[0]?.homeTeam ? 'present' : 'missing' }} |
-        awayTeam: {{ gameStore.games[0]?.awayTeam ? 'present' : 'missing' }}
-      </small>
-    </Message>
+        <!-- Week -->
+        <Column header="Week" sortable sortField="gameWeek">
+          <template #body="{ data }">
+            <span v-if="data.preseason">Pre {{ data.preseason }}</span>
+            <span v-else-if="data.gameWeek">Week {{ data.gameWeek }}</span>
+            <span v-else>-</span>
+          </template>
+        </Column>
 
-    <!-- ✅ Client-side DataTable with automatic sorting -->
-    <DataTable 
-      :value="gameStore.games" 
-      :loading="gameStore.loading" 
-      paginator 
-      :rows="rows" 
-      :first="first"
-      :rowsPerPageOptions="[5, 10, 20, 50, 100]" 
-      @page="onPage"
-      responsiveLayout="scroll" 
-      sortMode="single"
-      :globalFilterFields="['seasonYear', 'homeTeam.name', 'awayTeam.name', 'gameLocation']"
-      filterDisplay="menu"
-      :filters="filters"
-      showGridlines
-      stripedRows>
-      
-      <!-- Season Year -->
-      <Column field="seasonYear" header="Season" sortable :showFilterMatchModes="false">
-        <template #filter="{ filterModel }">
-          <input v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search by season" />
-        </template>
-      </Column>
+        <!-- Date -->
+        <Column field="gameDate" header="Date" sortable dataType="date">
+          <template #body="{ data }">
+            <span v-if="data.gameDate">
+              {{ new Date(data.gameDate).toLocaleDateString() }}
+            </span>
+            <span v-else>TBD</span>
+          </template>
+        </Column>
 
-      <!-- Week -->
-      <Column header="Week" sortable sortField="gameWeek">
-        <template #body="{ data }">
-          <span v-if="data.preseason">Pre {{ data.preseason }}</span>
-          <span v-else-if="data.gameWeek">Week {{ data.gameWeek }}</span>
-          <span v-else>-</span>
-        </template>
-      </Column>
-
-      <!-- Date -->
-      <Column field="gameDate" header="Date" sortable dataType="date">
-        <template #body="{ data }">
-          <span v-if="data.gameDate">
-            {{ new Date(data.gameDate).toLocaleDateString() }}
-          </span>
-          <span v-else>TBD</span>
-        </template>
-      </Column>
-
-      <!-- Matchup -->
-      <Column header="Matchup" sortField="homeTeam.name">
-        <template #body="{ data }">
-          <div class="matchup-cell">
-            <div class="team">
-              <img v-if="data.awayTeam" :src="getTeamShortNameAndLogo(data.awayTeam).logoPath"
-                :alt="getTeamShortNameAndLogo(data.awayTeam).shortName" class="team-logo" />
-              <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
+        <!-- Matchup -->
+        <Column header="Matchup" sortField="homeTeam.name">
+          <template #body="{ data }">
+            <div class="matchup-cell">
+              <div class="team">
+                <img v-if="data.awayTeam" :src="getTeamShortNameAndLogo(data.awayTeam).logoPath"
+                  :alt="getTeamShortNameAndLogo(data.awayTeam).shortName" class="team-logo" />
+                <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
+              </div>
+              <span class="at-symbol">@</span>
+              <div class="team">
+                <img v-if="data.homeTeam" :src="getTeamShortNameAndLogo(data.homeTeam).logoPath"
+                  :alt="getTeamShortNameAndLogo(data.homeTeam).shortName" class="team-logo" />
+                <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
+              </div>
             </div>
-            <span class="at-symbol">@</span>
-            <div class="team">
-              <img v-if="data.homeTeam" :src="getTeamShortNameAndLogo(data.homeTeam).logoPath"
-                :alt="getTeamShortNameAndLogo(data.homeTeam).shortName" class="team-logo" />
-              <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
+          </template>
+          <template #filter="{ filterModel }">
+            <input v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search teams" />
+          </template>
+        </Column>
+
+        <!-- Score -->
+        <Column header="Score" sortField="homeScore">
+          <template #body="{ data }">
+            <span v-if="data.homeScore !== null && data.awayScore !== null">
+              {{ data.awayScore }} - {{ data.homeScore }}
+            </span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </Column>
+
+        <!-- Location -->
+        <Column field="gameLocation" header="Location" sortable>
+          <template #body="{ data }">
+            <span v-if="data.gameLocation">{{ data.gameLocation }}</span>
+            <span v-else-if="data.gameCity && data.gameStateProvince">{{ data.gameCity }}, {{ data.gameStateProvince
+              }}</span>
+            <span v-else-if="data.gameCity">{{ data.gameCity }}</span>
+            <span v-else-if="data.homeTeam && data.homeTeam.city">{{ data.homeTeam.city }}</span>
+            <span v-else class="text-muted">TBD</span>
+          </template>
+          <template #filter="{ filterModel }">
+            <input v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search location" />
+          </template>
+        </Column>
+
+        <!-- Status -->
+        <Column field="gameStatus" header="Status" sortable>
+          <template #body="{ data }">
+            <span>{{ data.gameStatus || 'SCHEDULED' }}</span>
+          </template>
+        </Column>
+
+        <!-- Actions -->
+        <Column header="Actions">
+          <template #body="{ data }">
+            <div class="action-buttons">
+              <Button @click="viewGame(data.id)" icon="pi pi-eye" class="p-button-info p-button-sm"
+                v-tooltip="'View'" />
+              <Button @click="editGame(data.id)" icon="pi pi-pencil" class="p-button-warning p-button-sm"
+                v-tooltip="'Edit'" />
+              <Button @click="deleteGame(data.id)" icon="pi pi-trash" class="p-button-danger p-button-sm"
+                v-tooltip="'Delete'" />
             </div>
-          </div>
-        </template>
-        <template #filter="{ filterModel }">
-          <input v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search teams" />
-        </template>
-      </Column>
-
-      <!-- Score -->
-      <Column header="Score" sortField="homeScore">
-        <template #body="{ data }">
-          <span v-if="data.homeScore !== null && data.awayScore !== null">
-            {{ data.awayScore }} - {{ data.homeScore }}
-          </span>
-          <span v-else class="text-muted">-</span>
-        </template>
-      </Column>
-
-      <!-- Location -->
-      <Column field="gameLocation" header="Location" sortable>
-        <template #body="{ data }">
-          <span v-if="data.gameLocation">{{ data.gameLocation }}</span>
-          <span v-else-if="data.gameCity && data.gameStateProvince">{{ data.gameCity }}, {{ data.gameStateProvince }}</span>
-          <span v-else-if="data.gameCity">{{ data.gameCity }}</span>
-          <span v-else-if="data.homeTeam && data.homeTeam.city">{{ data.homeTeam.city }}</span>
-          <span v-else class="text-muted">TBD</span>
-        </template>
-        <template #filter="{ filterModel }">
-          <input v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search location" />
-        </template>
-      </Column>
-
-      <!-- Status -->
-      <Column field="gameStatus" header="Status" sortable>
-        <template #body="{ data }">
-          <span>{{ data.gameStatus || 'SCHEDULED' }}</span>
-        </template>
-      </Column>
-
-      <!-- Actions -->
-      <Column header="Actions">
-        <template #body="{ data }">
-          <div class="action-buttons">
-            <Button @click="viewGame(data.id)" icon="pi pi-eye" class="p-button-info p-button-sm" v-tooltip="'View'" />
-            <Button @click="editGame(data.id)" icon="pi pi-pencil" class="p-button-warning p-button-sm"
-              v-tooltip="'Edit'" />
-            <Button @click="deleteGame(data.id)" icon="pi pi-trash" class="p-button-danger p-button-sm"
-              v-tooltip="'Delete'" />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+          </template>
+        </Column>
+      </DataTable>
     
-    <!-- ✅ Create Game Modal -->
-    <Dialog v-model:visible="showCreateModal" modal header="Create New Game" :style="{ width: '50rem' }"
-      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-      <GameCreateForm @game-created="onGameCreated" @cancel="cancelRequest" />
-    </Dialog>
-  </div>
+   
+      <!-- ✅ Create Game Modal -->
+      <Dialog v-model:visible="showCreateModal" modal header="Create New Game" :style="{ width: '50rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+        <GameCreateForm @game-created="onGameCreated" @cancel="cancelRequest" />
+      </Dialog>
+
 </template>
 
 <style scoped>
@@ -307,12 +277,7 @@ const cancelRequest = () => {
   width: 100%;
 }
 
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
+
 
 .action-buttons {
   display: flex;
@@ -326,6 +291,9 @@ const cancelRequest = () => {
 
 .mb-3 {
   margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid;
+  border-radius: 8px;
 }
 
 .matchup-cell {
@@ -351,4 +319,6 @@ const cancelRequest = () => {
   font-weight: bold;
   margin: 0 0.25rem;
 }
+
+
 </style>

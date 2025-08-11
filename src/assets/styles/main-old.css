@@ -1,0 +1,312 @@
+/* src/assets/styles/main.css */
+:root {
+  --bg-primary: #003049;
+  --text-primary: #780000;
+  --text-secondary: #ffffff;
+  --accent-color: #fdf0d5;
+  --border-color: #669bbc;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+}
+
+.app-container {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+}
+
+/* Custom Grid and Flex Utilities (replacing PrimeFlex) */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-end {
+  justify-content: flex-end;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+}
+
+.col-12 {
+  grid-column: span 12;
+}
+
+.col-6 {
+  grid-column: span 6;
+}
+
+.col-4 {
+  grid-column: span 4;
+}
+
+.col-3 {
+  grid-column: span 3;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 1rem;
+}
+
+.gap-4 {
+  gap: 1.5rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.p-3 {
+  padding: 1rem;
+}
+
+.p-4 {
+  padding: 1.5rem;
+}
+
+.m-2 {
+  margin: 0.5rem;
+}
+
+.m-3 {
+  margin: 1rem;
+}
+
+.m-4 {
+  margin: 1.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.border-round {
+  border-radius: 6px;
+}
+
+.shadow-2 {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+/* PrimeVue Component Overrides */
+.p-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.p-card .p-card-title {
+  color: var(--text-primary);
+}
+
+.p-card .p-card-content {
+  color: var(--text-primary);
+}
+
+.p-inputtext {
+  background-color: var(--accent-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.p-inputtext:focus {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 0.2rem rgba(120, 0, 0, 0.2);
+}
+
+.p-dropdown {
+  background-color: var(--accent-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.p-dropdown:focus {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 0.2rem rgba(120, 0, 0, 0.2);
+}
+
+.p-dropdown-panel {
+  background-color: var(--accent-color);
+  border: 1px solid var(--border-color);
+}
+
+.p-dropdown-item {
+  color: var(--text-primary);
+}
+
+.p-dropdown-item:hover {
+  background-color: rgba(120, 0, 0, 0.1);
+}
+
+.p-button {
+  background-color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+  color: var(--text-secondary);
+}
+
+.p-button:hover {
+  background-color: #a00000;
+  border-color: #a00000;
+}
+
+.p-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(120, 0, 0, 0.2);
+}
+
+.p-datatable {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--text-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: rgba(120, 0, 0, 0.1);
+}
+
+.p-accordion .p-accordion-header .p-accordion-header-link {
+  background-color: var(--text-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.p-accordion .p-accordion-header .p-accordion-header-link:hover {
+  background-color: #a00000;
+}
+
+.p-accordion .p-accordion-content {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.p-panel .p-panel-header {
+  background-color: var(--text-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.p-panel .p-panel-content {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.p-toast .p-toast-message {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.p-toast .p-toast-message.p-toast-message-success {
+  background-color: #4caf50;
+  color: white;
+}
+
+.p-toast .p-toast-message.p-toast-message-error {
+  background-color: #f44336;
+  color: white;
+}
+
+.p-calendar .p-inputtext {
+  background-color: var(--accent-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.p-calendar .p-datepicker {
+  background-color: var(--accent-color);
+  border: 1px solid var(--border-color);
+}
+
+.p-calendar .p-datepicker .p-datepicker-header {
+  background-color: var(--text-primary);
+  color: var(--text-secondary);
+}
+
+.p-calendar .p-datepicker .p-datepicker-calendar td span {
+  color: var(--text-primary);
+}
+
+.p-calendar .p-datepicker .p-datepicker-calendar td span:hover {
+  background-color: rgba(120, 0, 0, 0.1);
+}

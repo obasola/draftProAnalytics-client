@@ -8,6 +8,13 @@ import Dropdown from 'primevue/dropdown'
 import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
 
+import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useThemeStore } from '@/stores/theme.store'
+
+const route = useRoute()
+const themeStore = useThemeStore()
+
 const teamStore = useTeamStore()
 const router = useRouter()
 const toast = useToast()
@@ -42,6 +49,13 @@ const countries = [
   { label: 'United Kingdom', value: 'UK' },
   { label: 'Germany', value: 'Germany' }
 ]
+
+onMounted(async () => {
+  // Apply theme based on route parameter if present
+  if (route.params.teamId && typeof route.params.teamId === 'string') {
+    await themeStore.selectTeam(route.params.teamId)
+  }
+})
 
 const onSubmit = async () => {
   try {
