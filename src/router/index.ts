@@ -9,14 +9,14 @@ import CombineScoreDetail from '@/views/CombineScoreDetail.vue'
 import DraftPickDetail from '@/views/DraftPickDetail.vue'
 import ProspectDetail from '@/views/ProspectDetail.vue'
 import GameDetail from '@/views/GameDetail.vue'
+
 import ScheduleDetail from '@/views/GameScheduleView.vue'
-import TeamSelectionView from '@/views/TeamSelectionView.vue'
-
-// DO NOT import these at module level:
-// import { onMounted } from 'vue'
-// import { useThemeStore } from '@/stores/theme.store'
-// import { useRoute } from 'vue-router'
-
+import JobList from '@/views/jobs/JobList.vue'
+import JobDetail from '@/views/jobs/JobDetail.vue'
+/*
+import TeamNeedDetail from '@/views/TeamNeedDetail.vue'
+import PostSeasonResultDetail from '@/views/PostSeasonResultDetail.vue'
+*/
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -33,7 +33,7 @@ const router = createRouter({
     {
       path: '/teams/:id?',
       name: 'TeamDetail',
-      component: TeamDetail,      
+      component: TeamDetail,
     },
     {
       path: '/player-awards/:id?',
@@ -56,9 +56,14 @@ const router = createRouter({
       component: DraftPickDetail,
     },
     {
-      path: '/draft',
-      name: 'draft',
-      component: TeamSelectionView,
+      path: '/jobs',
+      name: 'JobList',
+      component: JobList,
+    },
+    {
+      path: '/jobs/:id?',
+      name: 'JobDetail',
+      component: JobDetail,
     },
     {
       path: '/prospects/:id?',
@@ -74,9 +79,23 @@ const router = createRouter({
         description: 'View and edit NFL game schedules',
       },
     },
-    // Fixed: removed duplicate PlayerAwardDetail route
-    
-    // Fixed: removed duplicate GameDetail routes, kept the lazy-loaded one
+    {
+      path: '/player-awards/:id?',
+      name: 'PlayerAwardDetail',
+      component: PlayerAwardDetail,
+    },
+    // Add this route to your routes array
+    {
+      path: '/games/:id?',
+      name: 'GameDetail',
+      component: GameDetail,
+      meta: {
+        title: 'Games',
+        requiresAuth: true, // if you have authentication
+      },
+    },
+
+    // Alternative: Use lazy loading (recommended)
     {
       path: '/games/:id?',
       name: 'GameDetail',
@@ -101,11 +120,5 @@ const router = createRouter({
     */
   ],
 })
-
-// DO NOT call Vue composition functions at module level
-// Remove these lines:
-// const route = useRoute();
-// const themeStore = useThemeStore();
-// onMounted(async () => { ... });
 
 export default router

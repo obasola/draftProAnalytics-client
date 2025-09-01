@@ -26,7 +26,7 @@ export const useScheduleStore = defineStore('schedule', () => {
   })
 
   const getSchedulesBySeason = computed(() => {
-    return (seasonYear: number) => schedules.value.filter((item) => item.seasonYear === seasonYear)
+    return (seasonYear: number) => schedules.value.filter((item) => Number(item.seasonYear) === seasonYear)
   })
 
   // Actions - All data from REST API with pagination support
@@ -137,6 +137,30 @@ export const useScheduleStore = defineStore('schedule', () => {
     }
   }
 
+  const fetchByTeamSeason = async (teamId: number, seasonYear: number) => {
+    loading.value = true
+    error.value = null
+    try {
+      const seasonSchedules = await scheduleService.getByTeamSeason(teamId, seasonYear)
+      // Update local cache with season schedules
+      seasonSchedules.forEach(schedule => {
+        const index = schedules.value.findIndex(item => item.id === schedule.id)
+        if (index !== -1) {
+          schedules.value[index] = schedule
+        } else {
+          schedules.value.push(schedule)
+        }
+      })
+      return seasonSchedules
+    } catch (err) {
+      error.value = 'Failed to fetch season schedules from server'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   const create = async (data: Omit<Schedule, 'id'>) => {
     loading.value = true
     error.value = null
@@ -227,6 +251,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     fetchById,
     fetchByTeam,
     fetchBySeason,
+    fetchByTeamSeason,
     create,
     update,
     remove,
