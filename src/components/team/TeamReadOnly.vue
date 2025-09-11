@@ -15,6 +15,7 @@ import type { Player, PaginatedResponse } from '@/types'
 
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
+import TeamScheduleEditor from '@/components/team/TeamScheduleEditor.vue'
 
 const route = useRoute()
 const themeStore = useThemeStore()
@@ -239,7 +240,7 @@ const createPlayer = () => {
         </AccordionTab>
 
         <AccordionTab header="Schedule">
-          <p>Team schedule will be displayed here when schedule relationships are implemented.</p>
+          <TeamScheduleEditor :teamId="team?.id" />
         </AccordionTab>
 
         <AccordionTab header="Draft Picks">

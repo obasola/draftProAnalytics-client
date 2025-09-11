@@ -137,6 +137,15 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  const fetchByTeamAndSeason = async (teamId: number, seasonYear: string) => {
+    try {
+      games.value = await gameService.getByTeamAndSeasonYear(teamId, seasonYear)
+      return games
+    } catch (error) {
+      console.log('Error: ' + error)
+    }
+  }
+
   const fetchRegularSeasonGames = async (teamId: number, seasonYear?: string) => {
     try {
       const games = await gameService.getRegularSeasonGames(teamId, seasonYear)
@@ -145,7 +154,6 @@ export const useGameStore = defineStore('game', () => {
       console.log('Error: ' + error)
     }
   }
-
   const fetchPreSeasonGames = async (
     teamId: number,
     seasonYear?: string
@@ -251,6 +259,7 @@ export const useGameStore = defineStore('game', () => {
     // Actions
     fetchAll,
     fetchById,
+    fetchByTeamAndSeason,
     fetchRegularSeasonGames,
     fetchTeamSeasonWeekGames,
     fetchPreSeasonGames,

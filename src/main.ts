@@ -24,7 +24,6 @@ import 'primeicons/primeicons.css'
 // import '@fortawesome/fontawesome-free/css/all.css' // <- this loads FA icons
 
 // Custom styles
-import './assets/styles/global-styles.css'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 import Button from 'primevue/button'
@@ -44,11 +43,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 
 // main.ts updates
 import { TeamColorsPlugin } from '../src/plug-ins/team-colors.plugin';
-/*
-import 'primevue/resources/themes/lara-light-blue/theme.css';
-import 'primevue/resources/primicons.css';
-import './style.css';
-*/
+
 // Import global styles
 import '../src/assets/styles/global-styles.css'
 

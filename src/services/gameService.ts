@@ -327,6 +327,18 @@ export class GameService {
     }
   }
 
+  async getByTeamAndSeasonYear(teamId: number, seasonYear: string): Promise<Game[]> {
+    console.log(`🔍 Game Service: Fetching games by season: ${seasonYear}`)
+    const res = await apiService.get<ApiResponse<Game[]> | Game[]>(
+      `/games/team/${teamId}/season/${seasonYear}`
+    );
+    return this.unwrapArray<Game>(res.data);
+  }
+
+  // Helper: unwrap envelope-or-array into a plain array
+async unwrapArray<T>(payload: ApiResponse<T[]> | T[]): T[] {
+  return Array.isArray(payload) ? payload : (payload?.data ?? []);
+}
   async getPreseasonGames(
     teamId?: number,
     seasonYear?: number
