@@ -1,4 +1,4 @@
-<!-- src/views/Home.vue -->
+<!-- Home.vue — NFL Fan Theme -->
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -7,6 +7,8 @@ import { useTeamStore } from '@/stores/teamStore'
 import AppLayout from '@/components/ui/AppLayout.vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
+
+import '@/assets/css/theme-nfl-fan.css'
 
 const router = useRouter()
 const playerStore = usePlayerStore()
@@ -29,9 +31,8 @@ const navigateTo = (route: string) => { router.push(route) }
 </script>
 
 <template>
-  <!-- AppLayout already scopes theme-five in its root -->
   <AppLayout>
-    <main class="home-view" role="main" aria-label="Home Dashboard">
+    <main class="home-view theme-nfl" role="main" aria-label="Home Dashboard">
       <!-- Welcome / Hero -->
       <section class="welcome-section" aria-labelledby="home-title">
         <h1 id="home-title">Sports Management System</h1>
@@ -40,7 +41,7 @@ const navigateTo = (route: string) => { router.push(route) }
 
       <!-- Stats Overview -->
       <section class="stats-overview" aria-label="Summary Statistics">
-        <Card class="stat-card" tabindex="0" aria-label="Total Players">
+        <Card class="stat-card card-accent--green" tabindex="0" aria-label="Total Players">
           <template #content>
             <div class="stat-content">
               <i class="pi pi-users stat-icon" aria-hidden="true"></i>
@@ -53,7 +54,7 @@ const navigateTo = (route: string) => { router.push(route) }
         </Card>
 
         <Card
-          class="stat-card clickable-card"
+          class="stat-card clickable-card card-accent--gold"
           role="button"
           tabindex="0"
           aria-label="Total Teams. Go to Teams"
@@ -78,9 +79,10 @@ const navigateTo = (route: string) => { router.push(route) }
 
         <div class="actions-grid">
           <Card
-            v-for="action in quickActions"
+            v-for="(action, i) in quickActions"
             :key="action.route"
             class="action-card"
+            :class="i % 3 === 0 ? 'card-accent--green' : (i % 3 === 1 ? 'card-accent--gold' : 'card-accent--navy')"
             role="button"
             tabindex="0"
             :aria-label="`${action.label}. ${action.description}. Go`"
@@ -92,8 +94,12 @@ const navigateTo = (route: string) => { router.push(route) }
                 <i :class="action.icon" class="action-icon" aria-hidden="true"></i>
                 <h3>{{ action.label }}</h3>
                 <p>{{ action.description }}</p>
-                <!-- Go button background = --body-bg (per your request) -->
-                <Button label="Go" icon="pi pi-arrow-right" class="p-button-sm" />
+                <Button
+                  label="Go"
+                  icon="pi pi-arrow-right"
+                  class="p-button-sm"
+                  :class="i % 3 === 0 ? 'solid-primary' : (i % 3 === 1 ? 'solid-secondary' : 'ghost-navy')"
+                />
               </div>
             </template>
           </Card>
@@ -104,105 +110,92 @@ const navigateTo = (route: string) => { router.push(route) }
 </template>
 
 <style scoped>
-/* Map page & components to the five-color tokens */
 .home-view {
-  --home-body-bg: var(--content-bg);   /* deep bg2 */
-  --home-card-bg: var(--card-bg);      /* bg1 */
-  --home-text-card: var(--text-on-bg1);/* white on bg1 */
-  --home-text-content: var(--text-on-bg2); /* dark on content */
+  --home-body-bg: var(--content-bg);
+  --home-panel-bg: var(--surface-100);
+  --home-text-dark: var(--text-on-dark);
+  --home-text-light: var(--text-on-light);
+  --home-border-dark: var(--border-dark);
+  --home-hover-dark: var(--hover-dark);
 }
 
 .home-view {
   max-width: 1200px;
   margin: 0 auto;
   background: var(--home-body-bg);
-  color: var(--home-text-content);
+  color: var(--home-text-dark);
 }
 
-/* Welcome / Hero */
+/* Hero: navy gradient with gold hint */
 .welcome-section {
   text-align: center;
-  margin-bottom: 2rem;
-  background: linear-gradient(135deg, rgba(204,123,0,0.18), rgba(6,45,146,0.12));
-  border: 1px solid rgba(0,0,0,0.35);
+  margin-bottom: 2.5rem;
+  background: linear-gradient(135deg, rgba(0,34,68,0.22), rgba(255,182,18,0.12));
+  border: 1px solid var(--home-border-dark);
   border-radius: 14px;
-  padding: 1.75rem;
+  padding: 2rem;
 }
-.welcome-section h1 { font-size: 2.4rem; margin-bottom: 0.5rem; color: var(--home-text-content); }
-.welcome-section p  { font-size: 1.05rem; color: #1b1b1b; }
+
+.welcome-section h1 { font-size: 2.6rem; margin-bottom: 0.75rem; color: var(--home-text-dark); }
+.welcome-section p  { font-size: 1.1rem; color: var(--muted-on-dark); }
 
 /* Stats grid */
 .stats-overview {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
 }
+
 :deep(.stat-card.p-card) {
-  background: var(--home-card-bg);         /* bg1 */
-  color: var(--home-text-card);            /* white */
-  border: 1px solid rgba(255,255,255,0.18);
+  background: var(--home-panel-bg);
+  border: 1px solid var(--border-light);
   border-radius: 12px;
   transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+  color: var(--text-on-light);
 }
-:deep(.stat-card.p-card .p-card-content) { padding: 1.0rem 1.1rem 1.1rem; }
+:deep(.stat-card.p-card .p-card-content) { padding: 1.1rem 1.2rem 1.25rem; }
 
 .stat-card, .clickable-card { cursor: pointer !important; }
-.clickable-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.25); }
+.clickable-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.25); background: var(--hover-light); }
 
 /* Stat content */
 .stat-content { display: flex; align-items: center; gap: 1rem; }
-.stat-icon { font-size: 2rem; color: var(--home-text-card); }
-.stat-info h3 { font-size: 2rem; margin: 0; color: var(--home-text-card); }
-.stat-info span { color: rgba(255,255,255,0.9); }
+.stat-icon { font-size: 2rem; color: var(--muted-on-light); }
+.stat-info h3 { font-size: 2rem; margin: 0; color: var(--text-on-light); }
+.stat-info span { color: var(--muted-on-light); }
 
 /* Quick Actions */
-.quick-actions h2 { margin-bottom: 1rem; color: var(--home-text-content); }
+.quick-actions h2 { margin-bottom: 1.25rem; color: var(--home-text-dark); }
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 :deep(.action-card.p-card) {
-  background: var(--home-card-bg);         /* bg1 */
-  color: var(--home-text-card);            /* white */
-  border: 1px solid rgba(255,255,255,0.18);
+  background: var(--home-panel-bg);
+  border: 1px solid var(--border-light);
   border-radius: 12px;
   transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+  color: var(--text-on-light);
 }
-.action-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.25); }
-:deep(.action-card .p-card-content) { padding: 1.2rem 1.0rem; }
+.action-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.25); background: var(--hover-light); }
+:deep(.action-card .p-card-content) { padding: 1.35rem 1.1rem; }
 
 .action-content { text-align: center; }
-.action-icon { font-size: 2.2rem; color: var(--home-text-card); margin-bottom: 0.4rem; }
-.action-content h3 { margin-bottom: 0.4rem; color: var(--home-text-card); }
-.action-content p { margin-bottom: 0.9rem; color: rgba(255,255,255,0.9); }
+.action-icon { font-size: 2.4rem; color: var(--brand-navy); margin-bottom: 0.5rem; }
+.action-content h3 { margin-bottom: 0.5rem; color: var(--text-on-light); }
+.action-content p { margin-bottom: 1rem; color: var(--muted-on-light); }
 
-/* Quick Actions "Go" buttons = page body color; readable text black */
-:deep(.quick-actions .p-button) {
-  background: var(--body-bg) !important;    /* bg2 */
-  border: 1px solid rgba(0,0,0,0.35) !important;
-  color: #000 !important;                   /* black text per your requirement */
-  font-weight: 600;
-}
-:deep(.quick-actions .p-button:hover) {
-  filter: brightness(0.95);
+:deep(.action-card .p-button:focus-visible) {
+  outline: 3px solid var(--brand-green);
+  outline-offset: 2px;
 }
 
-/* Forms (for edit pages when they render here) */
-:deep(input),
-:deep(textarea),
-:deep(select),
-:deep(.p-inputtext),
-:deep(.p-dropdown),
-:deep(.p-multiselect),
-:deep(.p-calendar) {
-  background: var(--field-bg) !important;   /* bg3 */
-  color: #000 !important;
-  -webkit-text-fill-color: #000 !important;
-  border: 1px solid rgba(0,0,0,0.3) !important;
+.action-card:focus-visible, .clickable-card:focus-visible, .stat-card:focus-visible {
+  outline: 3px solid var(--brand-green);
+  outline-offset: 3px;
+  border-radius: 12px;
 }
-:deep(input::placeholder),
-:deep(textarea::placeholder) { color: #222 !important; opacity: 1 !important; }
 </style>

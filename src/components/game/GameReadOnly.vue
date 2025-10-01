@@ -1,122 +1,18 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import Card from 'primevue/card'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 import Tag from 'primevue/tag'
 import Divider from 'primevue/divider'
-import type { Game } from '@/types'
 
 const gameStore = useGameStore()
 
 const game = computed(() => gameStore.currentGame)
 
-// Statistics state
-const homeTeamGames = ref<Game[]>([])
-const awayTeamGames = ref<Game[]>([])
-const statsLoading = ref(false)
-
 onMounted(async () => {
-  await loadTeamStatistics()
-})
-
-const loadTeamStatistics = async () => {
-  if (!game.value) return
-  
-  statsLoading.value = true
-  try {
-    // Fetch all games for both teams in the current season
-    const [homeGames, awayGames] = await Promise.all([
-      gameStore.fetchAllGamesForSeason(game.value.homeTeamId, game.value.seasonYear),
-      gameStore.fetchAllGamesForSeason(game.value.awayTeamId, game.value.seasonYear)
-    ])
-    
-    homeTeamGames.value = homeGames || []
-    awayTeamGames.value = awayGames || []
-  } catch (error) {
-    console.error('Error loading team statistics:', error)
-  } finally {
-    statsLoading.value = false
-  }
-}
-
-// Helper function to calculate team statistics
-const calculateTeamStats = (teamId: number, teamGames: Game[], teamConference: string, teamDivision: string) => {
-  const stats = {
-    season: { won: 0, lost: 0 },
-    conference: { won: 0, lost: 0 },
-    division: { won: 0, lost: 0 }
-  }
-
-  teamGames.forEach(gameRecord => {
-    // Skip games that haven't been played yet
-    if (gameRecord.homeScore === null || gameRecord.homeScore === undefined || 
-        gameRecord.awayScore === null || gameRecord.awayScore === undefined) {
-      return
-    }
-
-    const isHomeTeam = gameRecord.homeTeamId === teamId
-    const teamScore = isHomeTeam ? gameRecord.homeScore : gameRecord.awayScore
-    const opponentScore = isHomeTeam ? gameRecord.awayScore : gameRecord.homeScore
-    const opponentTeam = isHomeTeam ? gameRecord.awayTeam : gameRecord.homeTeam
-    
-    const won = teamScore > opponentScore
-    
-    // Season record
-    if (won) {
-      stats.season.won++
-    } else {
-      stats.season.lost++
-    }
-    
-    // Conference record (same conference, different team)
-    if (opponentTeam.conference === teamConference) {
-      if (won) {
-        stats.conference.won++
-      } else {
-        stats.conference.lost++
-      }
-    }
-    
-    // Division record (same division, different team)
-    if (opponentTeam.division === teamDivision) {
-      if (won) {
-        stats.division.won++
-      } else {
-        stats.division.lost++
-      }
-    }
-  })
-
-  return stats
-}
-
-// Computed statistics for both teams
-const homeTeamStats = computed(() => {
-  if (!game.value || homeTeamGames.value.length === 0) {
-    return { season: { won: 0, lost: 0 }, conference: { won: 0, lost: 0 }, division: { won: 0, lost: 0 } }
-  }
-  
-  return calculateTeamStats(
-    game.value.homeTeamId, 
-    homeTeamGames.value, 
-    game.value.homeTeam.conference || '', 
-    game.value.homeTeam.division || ''
-  )
-})
-
-const awayTeamStats = computed(() => {
-  if (!game.value || awayTeamGames.value.length === 0) {
-    return { season: { won: 0, lost: 0 }, conference: { won: 0, lost: 0 }, division: { won: 0, lost: 0 } }
-  }
-  
-  return calculateTeamStats(
-    game.value.awayTeamId, 
-    awayTeamGames.value, 
-    game.value.awayTeam.conference || '', 
-    game.value.awayTeam.division || ''
-  )
+  // Load any related data if needed
 })
 
 const formatDate = (date: Date | string | undefined) => {
@@ -155,10 +51,13 @@ const getGameStatusSeverity = (status: string | undefined) => {
 const getTeamLogo = (team: any): string => {
   if (!team || !team.name || !team.conference) return ''
 
-  const lastWord = team.name.trim().split(/\s+/).pop() || ''
+  const lastWord = team.name.trim().split(' ').pop()
   const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
 
-  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
+  return new URL(
+    `../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`,
+    import.meta.url
+  ).href
 }
 
 const getGameResult = computed(() => {
@@ -192,7 +91,7 @@ const getWeekDisplay = computed(() => {
 </script>
 
 <template>
-  <Card v-if="game" class="game-details">
+  <Card v-if="game && game.homeTeam && game.awayTeam" class="game-details">
     <template #title>
       <div class="game-title">
         <div class="matchup-header">
@@ -219,6 +118,7 @@ const getWeekDisplay = computed(() => {
           </div>
 
           <div class="team-info">
+
             <h3 class="team-name-with-logo">
               <img :src="getTeamLogo(game.homeTeam)" :alt="game.homeTeam.name" class="inline-logo" />
               {{ game.homeTeam.name }}
@@ -320,166 +220,74 @@ const getWeekDisplay = computed(() => {
             <span class="label">Game ID:</span>
             <span class="data-value">{{ game.id }}</span>
           </div>
-          <div class="info-row" v-if="game.createdAt">
-            <span class="label">Created:</span>
-            <span class="data-value">{{ formatDate(game.createdAt) }}</span>
+          <div class="info-row" v-if="game.gameDate">
+            <span class="label">Played:</span>
+            <span class="data-value">{{ formatDate(game.gameDate) }}</span>
           </div>
-          <div class="info-row" v-if="game.updatedAt">
-            <span class="label">Last Updated:</span>
-            <span class="data-value">{{ formatDate(game.updatedAt) }}</span>
+          <div class="info-row" v-if="game.homeScore && game.awayScore">
+            <span class="label">Home Score: {{ game.homeScore}}</span>
+            <span class="label">Away Score: {{ game.awayScore}}</span>
           </div>
         </div>
       </div>
 
       <Accordion class="relationships-accordion">
-        <!-- Home Team Details with Statistics -->
-        <AccordionTab :header="`${game.homeTeam.name} Details & Statistics`">
+        <!-- Home Team Details -->
+        <AccordionTab header="Home Team Details">
           <div class="team-details">
-            <!-- Team Basic Info -->
-            <div class="team-basic-info">
-              <h4>Team Information</h4>
-              <div class="info-row">
-                <span class="label">Team Name:</span>
-                <span class="data-value">{{ game.homeTeam.name }}</span>
-              </div>
-              <div class="info-row" v-if="game.homeTeam.city">
-                <span class="label">City:</span>
-                <span class="data-value">{{ game.homeTeam.city }}</span>
-              </div>
-              <div class="info-row" v-if="game.homeTeam.state">
-                <span class="label">State:</span>
-                <span class="data-value">{{ game.homeTeam.state }}</span>
-              </div>
-              <div class="info-row" v-if="game.homeTeam.conference">
-                <span class="label">Conference:</span>
-                <span class="data-value">{{ game.homeTeam.conference }}</span>
-              </div>
-              <div class="info-row" v-if="game.homeTeam.division">
-                <span class="label">Division:</span>
-                <span class="data-value">{{ game.homeTeam.division }}</span>
-              </div>
-              <div class="info-row" v-if="game.homeTeam.stadium">
-                <span class="label">Stadium:</span>
-                <span class="data-value">{{ game.homeTeam.stadium }}</span>
-              </div>
+            <div class="info-row">
+              <span class="label">Team Name:</span>
+              <span class="data-value">{{ game.homeTeam.name }}</span>
             </div>
-
-            <Divider />
-
-            <!-- Team Statistics -->
-            <div class="team-statistics">
-              <h4>STANDING</h4>
-              <div v-if="statsLoading" class="loading-stats">
-                Loading statistics...
-              </div>
-              <div v-else class="standings-grid">
-                <div class="standing-section">
-                  <h5>Conference</h5>
-                  <div class="record-row">
-                    <span class="record-label">won:</span>
-                    <span class="record-value">{{ homeTeamStats.conference.won }}</span>
-                  </div>
-                  <div class="record-row">
-                    <span class="record-label">lost:</span>
-                    <span class="record-value">{{ homeTeamStats.conference.lost }}</span>
-                  </div>
-                </div>
-
-                <div class="standing-section">
-                  <h5>Division</h5>
-                  <div class="record-row">
-                    <span class="record-label">won:</span>
-                    <span class="record-value">{{ homeTeamStats.division.won }}</span>
-                  </div>
-                  <div class="record-row">
-                    <span class="record-label">lost:</span>
-                    <span class="record-value">{{ homeTeamStats.division.lost }}</span>
-                  </div>
-                </div>
-
-                <div class="standing-section season-section">
-                  <h5>Season:</h5>
-                  <span class="season-record">
-                    won: {{ homeTeamStats.season.won }} lost: {{ homeTeamStats.season.lost }}
-                  </span>
-                </div>
-              </div>
+            <div class="info-row" v-if="game.homeTeam.city">
+              <span class="label">City:</span>
+              <span class="data-value">{{ game.homeTeam.city }}</span>
+            </div>
+            <div class="info-row" v-if="game.homeTeam.state">
+              <span class="label">State:</span>
+              <span class="data-value">{{ game.homeTeam.state }}</span>
+            </div>
+            <div class="info-row" v-if="game.homeTeam.conference">
+              <span class="label">Conference:</span>
+              <span class="data-value">{{ game.homeTeam.conference }}</span>
+            </div>
+            <div class="info-row" v-if="game.homeTeam.division">
+              <span class="label">Division:</span>
+              <span class="data-value">{{ game.homeTeam.division }}</span>
+            </div>
+            <div class="info-row" v-if="game.homeTeam.stadium">
+              <span class="label">Stadium:</span>
+              <span class="data-value">{{ game.homeTeam.stadium }}</span>
             </div>
           </div>
         </AccordionTab>
 
-        <!-- Away Team Details with Statistics -->
-        <AccordionTab :header="`${game.awayTeam.name} Details & Statistics`">
+        <!-- Away Team Details -->
+        <AccordionTab header="Away Team Details">
           <div class="team-details">
-            <!-- Team Basic Info -->
-            <div class="team-basic-info">
-              <h4>Team Information</h4>
-              <div class="info-row">
-                <span class="label">Team Name:</span>
-                <span class="data-value">{{ game.awayTeam.name }}</span>
-              </div>
-              <div class="info-row" v-if="game.awayTeam.city">
-                <span class="label">City:</span>
-                <span class="data-value">{{ game.awayTeam.city }}</span>
-              </div>
-              <div class="info-row" v-if="game.awayTeam.state">
-                <span class="label">State:</span>
-                <span class="data-value">{{ game.awayTeam.state }}</span>
-              </div>
-              <div class="info-row" v-if="game.awayTeam.conference">
-                <span class="label">Conference:</span>
-                <span class="data-value">{{ game.awayTeam.conference }}</span>
-              </div>
-              <div class="info-row" v-if="game.awayTeam.division">
-                <span class="label">Division:</span>
-                <span class="data-value">{{ game.awayTeam.division }}</span>
-              </div>
-              <div class="info-row" v-if="game.awayTeam.stadium">
-                <span class="label">Stadium:</span>
-                <span class="data-value">{{ game.awayTeam.stadium }}</span>
-              </div>
+            <div class="info-row">
+              <span class="label">Team Name:</span>
+              <span class="data-value">{{ game.awayTeam.name }}</span>
             </div>
-
-            <Divider />
-
-            <!-- Team Statistics -->
-            <div class="team-statistics">
-              <h4>STANDING</h4>
-              <div v-if="statsLoading" class="loading-stats">
-                Loading statistics...
-              </div>
-              <div v-else class="standings-grid">
-                <div class="standing-section">
-                  <h5>Conference</h5>
-                  <div class="record-row">
-                    <span class="record-label">won:</span>
-                    <span class="record-value">{{ awayTeamStats.conference.won }}</span>
-                  </div>
-                  <div class="record-row">
-                    <span class="record-label">lost:</span>
-                    <span class="record-value">{{ awayTeamStats.conference.lost }}</span>
-                  </div>
-                </div>
-
-                <div class="standing-section">
-                  <h5>Division</h5>
-                  <div class="record-row">
-                    <span class="record-label">won:</span>
-                    <span class="record-value">{{ awayTeamStats.division.won }}</span>
-                  </div>
-                  <div class="record-row">
-                    <span class="record-label">lost:</span>
-                    <span class="record-value">{{ awayTeamStats.division.lost }}</span>
-                  </div>
-                </div>
-
-                <div class="standing-section season-section">
-                  <h5>Season:</h5>
-                  <span class="season-record">
-                    won: {{ awayTeamStats.season.won }} lost: {{ awayTeamStats.season.lost }}
-                  </span>
-                </div>
-              </div>
+            <div class="info-row" v-if="game.awayTeam.city">
+              <span class="label">City:</span>
+              <span class="data-value">{{ game.awayTeam.city }}</span>
+            </div>
+            <div class="info-row" v-if="game.awayTeam.state">
+              <span class="label">State:</span>
+              <span class="data-value">{{ game.awayTeam.state }}</span>
+            </div>
+            <div class="info-row" v-if="game.awayTeam.conference">
+              <span class="label">Conference:</span>
+              <span class="data-value">{{ game.awayTeam.conference }}</span>
+            </div>
+            <div class="info-row" v-if="game.awayTeam.division">
+              <span class="label">Division:</span>
+              <span class="data-value">{{ game.awayTeam.division }}</span>
+            </div>
+            <div class="info-row" v-if="game.awayTeam.stadium">
+              <span class="label">Stadium:</span>
+              <span class="data-value">{{ game.awayTeam.stadium }}</span>
             </div>
           </div>
         </AccordionTab>
@@ -644,87 +452,6 @@ const getWeekDisplay = computed(() => {
   padding: 1rem 0;
 }
 
-/* Team Statistics Styling */
-.team-basic-info h4,
-.team-statistics h4 {
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
-.team-statistics {
-  margin-top: 1rem;
-}
-
-.standings-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 1rem;
-}
-
-.season-section {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 1rem;
-  background: var(--surface-100);
-  border-radius: 6px;
-  border: 2px solid var(--primary-color);
-}
-
-.standing-section h5 {
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.record-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: var(--surface-50);
-  border-radius: 4px;
-}
-
-.record-label {
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.record-value {
-  font-weight: bold;
-  color: var(--primary-color);
-  font-size: 1.1rem;
-}
-
-.season-section h5 {
-  display: inline;
-  margin-right: 1rem;
-  border: none;
-  padding: 0;
-}
-
-.season-record {
-  font-weight: bold;
-  color: var(--primary-color);
-  font-size: 1.1rem;
-}
-
-.loading-stats {
-  text-align: center;
-  color: var(--text-secondary);
-  font-style: italic;
-  padding: 2rem;
-}
-
 /* Additional enhancement for better visual hierarchy */
 .info-row:hover .data-value {
   color: var(--primary-color);
@@ -749,26 +476,5 @@ const getWeekDisplay = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-/* Responsive design for smaller screens */
-@media (max-width: 768px) {
-  .standings-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .season-section {
-    grid-column: 1;
-  }
-  
-  .matchup-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .score-display {
-    margin: 0;
-  }
 }
 </style>

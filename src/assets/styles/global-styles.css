@@ -1,453 +1,214 @@
 /* src/global_styles.css */
-/* Complete NFL Team Color System */
+/* NFL-Themed Global Styles (Navy • Red • Electric Blue • Neutral Accents) */
 
 :root {
-  /* Default Colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #780000;
-  --bg-datatable: #1f8067;
-  --text-primary: #780000;
-  --text-secondary: #bd7c7c;
-  --accent-color: #fdf0d5;
-  --border-color: #669bbc;
-  /* Default NFL Colors */
-  --team-primary: #013369;
-  --team-secondary: #d50a0a;
-  --team-accent: #ad7b7b;
+  /* --- Core NFL Palette --- */
+  --nfl-red: #D50A0A;      /* NFL official strong red */
+  --nfl-navy: #013369;     /* NFL official deep navy */
+  --nfl-blue: #004FFF;     /* Electric blue accent */
+  --nfl-white: #FFFFFF;    /* Neutral for contrast */
+  --nfl-silver: #C0C0C0;   /* Accent neutral */
 
-  /* RGB versions for transparency effects */
-  --team-primary-rgb: 1, 51, 105;
-  --team-secondary-rgb: 213, 10, 10;
-  --team-accent-rgb: 255, 255, 255;
+  --bg-panel-alt: #D9E3F0;   /* soft steel blue */
 
-  /* Semantic color mappings */
-  --color-primary: var(--team-primary);
-  --color-secondary: var(--team-secondary);
-  --color-accent: var(--team-accent);
-  /* Team-specific RGB variables (example for Patriots) */
-  .team-patriots {
-    --team-primary-rgb: 0, 34, 68;
-    --team-secondary-rgb: 198, 12, 48;
-    --team-accent-rgb: 176, 183, 188;
-  }
+  /* --- App-Level Backgrounds --- */
+  --bg-primary: #D9E3F0;             /* Light neutral for main body */
+  --bg-secondary: #E8EEF5;           /* Slightly darker variant of body */
+  --bg-datatable: var(--bg-panel-alt);  /* Tables/data blocks */
+  --bg-form: #E0E9F7;                /* Form container background (contrasts with body, not pure white) */
 
-  body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-  }
-  nav-menu {
-    color: #d1d5db;
-  }
-  .p-menuitem-text {
-    color: #d1d5db;
-  }
-  .p-menuitem-link:hover {
-    background-color: var(--bg-primary);
-  }
-  /* Component-specific mappings */
-  --header-bg: var(--team-primary);
-  --button-primary-bg: var(--team-primary);
-  --button-secondary-bg: var(--team-secondary);
-  --accent-text: var(--team-accent);
+  /* --- Text Colors --- */
+  --text-primary: var(--nfl-navy); 
+  --text-secondary: #444C5C;         /* Softer dark gray */
+  --text-accent: var(--nfl-red);
 
-  /* Neutral colors that don't change */
-  --color-neutral-50: #f9fafb;
-  --color-neutral-100: #f3f4f6;
-  --color-neutral-200: #e5e7eb;
-  --color-neutral-300: #d1d5db;
-  --color-neutral-400: #9ca3af;
-  --color-neutral-500: #6b7280;
-  --color-neutral-600: #4b5563;
-  --color-neutral-700: #374151;
-  --color-neutral-800: #1f2937;
-  --color-neutral-900: #111827;
+  /* --- Component Colors --- */
+  --accent-color: var(--nfl-blue);   /* Focus rings, buttons, highlights */
+  --highlight: var(--nfl-red);       /* Badges, active states */
+  --danger: var(--nfl-red);
+  --border-color: var(--nfl-silver);
+
+  /* --- Nav/Menu Colors --- */
+  --nav-bg: var(--nfl-navy);         /* Navigation menu background */
+  --nav-text: var(--nfl-red);        /* Navigation menu text */
+  --nav-hover-bg: var(--nfl-blue);   /* Hover background */
+  --nav-hover-text: var(--bg-panel-alt);
+
+  /* --- Header/Nav Containers --- */
+  --headerbar-bg: var(--nfl-navy);
+  --sidebar-bg: var(--nfl-navy);
 }
 
-/* Custom NFL styling with default colors */
-.nfl-header {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #013369 0%, #d50a0a 100%);
-  color: white;
-  border-radius: 12px;
+/* ---- Body ---- */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
 }
 
-.nfl-datatable {
-  background-color: var(--team-primary);
-  border: 1px solid #013369;
-  border-radius: 12px;
-}
-.p-datatable-odd {
-  background-color: #e0f2f7; /* A light blue background */
-}
-.p-datatable-even {
-  background-color: #e0f2f7; /* A light blue background */
-}
-/* Team-aware utility classes */
-.bg-team-primary {
-  background-color: var(--team-primary);
+/* ---- Headers ---- */
+.app-header,
+.page-header {
+  background: var(--headerbar-bg);
+  color: var(--bg-panel-alt);
+  padding: 1rem 1.25rem;
+  border-bottom: 3px solid var(--nfl-red);
 }
 
-.bg-team-secondary {
-  background-color: var(--team-secondary);
+/* ---- Navigation (menu & sidebar) ---- */
+nav,
+.p-menubar,
+.sidebar,
+.app-sidebar {
+  background-color: var(--nav-bg);   /* NFL navy */
+  color: var(--nav-text);            /* NFL red text */
 }
 
-.bg-team-accent {
-  background-color: var(--team-accent);
+.nav a,
+.p-menuitem-link,
+.p-menubar .p-menuitem-link {
+  color: var(--nav-text);
 }
 
-.text-team-primary {
-  color: var(--team-primary);
+.nav a:hover,
+.p-menuitem-link:hover,
+.p-menubar .p-menuitem-link:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-hover-text);
 }
 
-.text-team-secondary {
-  color: var(--team-secondary);
-}
-
-.text-team-accent {
-  color: var(--team-accent);
-}
-
-.border-team-primary {
-  border-color: var(--team-primary);
-}
-
-.border-team-secondary {
-  border-color: var(--team-secondary);
-}
-
-.border-team-accent {
-  border-color: var(--team-accent);
-}
-
-/* Transparent background utilities */
-.bg-team-primary-10 {
-  background-color: rgba(var(--team-primary-rgb), 0.1);
-}
-
-.bg-team-primary-20 {
-  background-color: rgba(var(--team-primary-rgb), 0.2);
-}
-
-.bg-team-secondary-10 {
-  background-color: rgba(var(--team-secondary-rgb), 0.1);
-}
-
-.bg-team-secondary-20 {
-  background-color: rgba(var(--team-secondary-rgb), 0.2);
-}
-
-/* Hover effects */
-.hover-team-primary:hover {
-  background-color: var(--team-primary);
-  color: var(--team-accent);
-}
-
-.hover-team-secondary:hover {
-  background-color: var(--team-secondary);
-  color: var(--team-accent);
-}
-
-/* Smooth transitions for all elements */
-* {
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease,
-    border-color 0.3s ease;
-}
-
-/* PrimeVue component overrides */
-.p-button.p-button-primary {
-  --p-button-primary-background: var(--team-primary);
-  --p-button-primary-border-color: var(--team-primary);
-  --p-button-primary-color: var(--team-accent);
-  --p-button-primary-hover-background: var(--team-secondary);
-  --p-button-primary-hover-border-color: var(--team-secondary);
-}
-
-.p-dropdown {
-  --p-dropdown-background: white;
-  --p-dropdown-border-color: var(--team-primary);
-  --p-dropdown-focus-border-color: var(--team-secondary);
-}
-
-.p-card {
-  --p-card-background: white;
-  --p-card-border-color: var(--color-neutral-200);
-}
-
-/* DataTable theming */
-.p-datatable {
-  border: 1px solid var(--team-primary);
-}
-
-.p-datatable .p-datatable-header {
-  background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
-  color: var(--team-accent);
-  border-bottom: 2px solid var(--team-secondary);
-}
-
-.p-datatable .p-datatable-thead > tr > th {
-  background-color: var(--team-primary);
-  color: var(--team-accent);
-  border-bottom: 1px solid var(--team-secondary);
+/* ---- Forms ---- */
+.form-label,
+label {
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
-.p-datatable .p-datatable-tbody > tr:nth-child(even) {
-  background-color: rgba(var(--team-primary-rgb), 0.05);
+.form-input,
+.p-inputtext {
+  color: var(--text-primary);
+  background: var(--bg-form);   /* Light contrasting blue-gray */
+  border: 1px solid var(--border-color);
 }
 
-.p-datatable .p-datatable-tbody > tr:hover {
-  background-color: rgba(var(--team-primary-rgb), 0.1);
+.p-inputtext:focus,
+.form-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(0, 79, 255, 0.25); /* Electric blue focus ring */
+  outline: none;
 }
 
-.p-datatable .p-paginator {
-  background-color: var(--color-neutral-50);
-  border-top: 1px solid var(--team-primary);
+.form-help {
+  color: var(--text-secondary);
 }
 
-.p-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-  background-color: var(--team-primary);
-  color: var(--team-accent);
+/* ---- DataTables ---- */
+.nfl-datatable {
+  background-color: var(--bg-datatable);
+  border: 1px solid var(--nfl-navy);
+  border-radius: 12px;
 }
 
-.p-datatable .p-paginator .p-paginator-pages .p-paginator-page:not(.p-highlight):hover {
-  background-color: var(--team-secondary);
-  color: var(--team-accent);
+.p-datatable-odd {
+  background-color: rgba(1, 51, 105, 0.04);
+}
+.p-datatable-even {
+  background-color: rgba(1, 51, 105, 0.02);
 }
 
-/* Tag component styling */
-.p-tag {
-  font-weight: 500;
+/* ---- Utility Classes ---- */
+.bg-nfl-red { background-color: var(--nfl-red); }
+.bg-nfl-navy { background-color: var(--nfl-navy); }
+.bg-nfl-blue { background-color: var(--nfl-blue); }
+
+.text-nfl-red { color: var(--nfl-red); }
+.text-nfl-navy { color: var(--nfl-navy); }
+.text-nfl-blue { color: var(--nfl-blue); }
+
+.border-nfl-red { border-color: var(--nfl-red); }
+.border-nfl-navy { border-color: var(--nfl-navy); }
+.border-nfl-blue { border-color: var(--nfl-blue); }
+
+/* —— NFL Nav Menu Styles —— */
+.nav-menu.p-menu {
+  /* Whole menu background + base text */
+  background-color: var(--nav-bg);   /* NFL navy */
+  color: var(--nav-text);            /* NFL red */
+  border: none;
+  box-shadow: none;
+  width: 100%;
+}
+/* Apply NFL theming to Buttons */
+:deep(.action-card .p-button) {
+  background: var(--nfl-blue);
+  background-color: var(--nfl-blue);
+  border-color: var(--nfl-blue);
+  color: var(--nfl-white);
+}
+:deep(.action-card .p-button:hover) {
+  background: var(--nfl-navy);
+  border-color: var(--nfl-navy);
+}
+/* Menu items (rows) */
+.nav-menu .p-menuitem > .p-menuitem-content {
+  background-color: transparent;
+  color: inherit;
+  border-radius: 8px;
 }
 
-/* Additional PrimeVue overrides for consistency */
-.p-button.p-button-secondary {
-  background-color: var(--team-secondary);
-  border-color: var(--team-secondary);
-  color: var(--team-accent);
+.nav-menu .p-menuitem > .p-menuitem-content:hover {
+  background-color: var(--nav-hover-bg);   /* electric blue */
+  color: var(--nav-hover-text);           /* white */
 }
 
-.p-button.p-button-secondary:hover {
-  background-color: var(--team-primary);
-  border-color: var(--team-primary);
-}
-
-.p-inputtext:focus {
-  border-color: var(--team-primary);
-  box-shadow: 0 0 0 1px var(--team-primary);
-}
-
-.p-checkbox .p-checkbox-box.p-highlight {
-  background-color: var(--team-primary);
-  border-color: var(--team-primary);
-}
-
-.p-radiobutton .p-radiobutton-box.p-highlight {
-  background-color: var(--team-primary);
-  border-color: var(--team-primary);
-}
-
-/* Custom utility classes for common patterns */
-.team-gradient {
-  background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
-  color: var(--team-accent);
-}
-
-.team-border {
-  border: 2px solid var(--team-primary);
-}
-
-.team-shadow {
-  box-shadow: 0 4px 6px rgba(var(--team-primary-rgb), 0.2);
-}
-
-.team-shadow-lg {
-  box-shadow: 0 10px 15px rgba(var(--team-primary-rgb), 0.3);
-}
-
-/* Focus states for accessibility */
-.focus-team:focus {
-  outline: 2px solid var(--team-primary);
+.nav-menu .p-menuitem > .p-menuitem-content:focus {
+  outline: 2px solid var(--nfl-blue);
   outline-offset: 2px;
 }
 
-/* Loading and disabled states */
-.loading-overlay {
-  background-color: rgba(var(--team-primary-rgb), 0.1);
-}
-
-.disabled-team {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-/* Responsive text colors */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-neutral-50: #1f2937;
-    --color-neutral-100: #374151;
-    --color-neutral-200: #4b5563;
-    --color-neutral-900: #f9fafb;
-  }
-}
-
-/* Print styles */
-@media print {
-  .bg-team-primary,
-  .bg-team-secondary {
-    background-color: transparent !important;
-    color: black !important;
-  }
-}
-
-.app-container {
-  min-height: 100vh;
-  background-color: var(--bg-primary);
-}
-
-/* Custom Grid and Flex Utilities (replacing PrimeFlex) */
-.flex {
-  display: flex;
-}
-
-.flex-column {
-  flex-direction: column;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-.justify-content-center {
-  justify-content: center;
-}
-
-.justify-content-between {
-  justify-content: space-between;
-}
-
-.justify-content-end {
-  justify-content: flex-end;
-}
-
-.align-items-center {
-  align-items: center;
-}
-
-.grid {
-  display: grid;
-}
-
-.col-12 {
-  grid-column: span 12;
-}
-
-.col-6 {
-  grid-column: span 6;
-}
-
-.col-4 {
-  grid-column: span 4;
-}
-
-.col-3 {
-  grid-column: span 3;
-}
-
-.gap-2 {
+/* Link inside row (label + icon) */
+.nav-menu .p-menuitem-link {
+  color: inherit;
   gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
 }
 
-.gap-3 {
-  gap: 1rem;
+.nav-menu .p-menuitem-icon,
+.nav-menu .p-menuitem-text {
+  color: inherit;
 }
 
-.gap-4 {
-  gap: 1.5rem;
-}
-
-.p-2 {
-  padding: 0.5rem;
-}
-
-.p-3 {
-  padding: 1rem;
-}
-
-.p-4 {
-  padding: 1.5rem;
-}
-
-.m-2 {
-  margin: 0.5rem;
-}
-
-.m-3 {
-  margin: 1rem;
-}
-
-.m-4 {
-  margin: 1.5rem;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-
-.mb-3 {
-  margin-bottom: 1rem;
-}
-
-.mb-4 {
-  margin-bottom: 1.5rem;
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-.mt-3 {
-  margin-top: 1rem;
-}
-
-.mt-4 {
-  margin-top: 1.5rem;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.border-round {
+/* Submenu headers */
+.nav-menu .p-submenu-header {
+  background-color: rgba(255,255,255,0.06);
+  color: var(--nav-hover-text);
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 0.5rem 0.9rem;
   border-radius: 6px;
 }
 
-.shadow-2 {
-  box-shadow:
-    0 3px 6px rgba(0, 0, 0, 0.16),
-    0 3px 6px rgba(0, 0, 0, 0.23);
-}
-.nfl-logo {
-  display: flex;
-  align-items: flex-start;
-  /* align top edges */
-  gap: 0.5rem;
-  /* space between logo and text */
+/* Separator lines */
+.nav-menu .p-menu-separator {
+  border-top: 1px solid rgba(255,255,255,0.15);
+  margin: 0.35rem 0;
 }
 
-.inline-logo {
-  height: 45px;
-  /* or your preferred size */
-  width: auto;
+/* Overlay submenu panels */
+.nav-menu.p-menu.p-menu-overlay {
+  background-color: var(--nav-bg);
+  color: var(--nav-text);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* Active/current page item (if you add .is-active to model items) */
+.nav-menu .p-menuitem.is-active > .p-menuitem-content {
+  background-color: var(--nfl-blue);
+  color: var(--nav-hover-text);
+}
+
+/* Special green-icon style class (used in your items array) */
+.nav-menu .green-icon .p-menuitem-icon {
+  color: #16a34a;
 }

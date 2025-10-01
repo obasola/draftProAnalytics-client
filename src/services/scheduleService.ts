@@ -49,18 +49,30 @@ export class ScheduleService {
     return response.data.data
   }
 
-  async getByTeam(teamId: number): Promise<Schedule[]> {
-    const response = await apiService.get<ApiResponse<Schedule[]>>(
-      `${this.endpoint}/team/${teamId}`
-    )
-    return response.data.data
+  // ✅ Replace old "no such route" call with filtered index route
+  async getByTeam(teamId: number, page = 1, limit = 10): Promise<PaginatedResponse<Schedule>> {
+    const url = `${this.endpoint}?teamId=${Number(teamId)}&page=${Number(page)}&limit=${Number(limit)}`
+    const { data } = await apiService.get<{ success: boolean; data: Schedule[]; pagination: any }>(url)
+    return { data: data.data, pagination: data.pagination }
   }
 
-  async getBySeason(seasonYear: number): Promise<Schedule[]> {
-    const response = await apiService.get<ApiResponse<Schedule[]>>(
-      `${this.endpoint}/season/${seasonYear}`
-    )
-    return response.data.data
+  // ✅ Replace old "no such route" call with filtered index route
+  async getBySeason(seasonYear: number, page = 1, limit = 10): Promise<PaginatedResponse<Schedule>> {
+    const url = `${this.endpoint}?seasonYear=${Number(seasonYear)}&page=${Number(page)}&limit=${Number(limit)}`
+    const { data } = await apiService.get<{ success: boolean; data: Schedule[]; pagination: any }>(url)
+    return { data: data.data, pagination: data.pagination }
+  }
+
+  // ✅ Add explicit team+season method to use the existing param route
+  async getByTeamSeason(teamId: number, seasonYear: number, page = 1, limit = 10): Promise<PaginatedResponse<Schedule>> {
+    // Option 1: use the param route (no pagination on that path today)
+    // const { data } = await apiService.get<ApiResponse<Schedule[]>>(`${this.endpoint}/team/${teamId}/season/${seasonYear}`)
+    // return { data: data.data, pagination: { page, limit, total: data.data.length } }
+
+    // Option 2 (prefer): keep one code path via filtered index route, with pagination
+    const url = `${this.endpoint}?teamId=${Number(teamId)}&seasonYear=${Number(seasonYear)}&page=${Number(page)}&limit=${Number(limit)}`
+    const { data } = await apiService.get<{ success: boolean; data: Schedule[]; pagination: any }>(url)
+    return { data: data.data, pagination: data.pagination }
   }
 
   async create(data: Omit<Schedule, 'id'>): Promise<Schedule> {

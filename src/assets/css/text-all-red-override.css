@@ -1,0 +1,74 @@
+/* GLOBAL TEXT OVERRIDE — ALL TEXT BRIGHT RED */
+.theme-nfl {
+  --text-global: #FFFFFF;
+  --text-on-dark: var(--text-global) !important;
+  --text-on-light: var(--text-global) !important;
+  --muted-on-dark: var(--text-global) !important;
+  --muted-on-light: var(--text-global) !important;
+  --nav-item-color: var(--text-global) !important;
+}
+
+.theme-nfl,
+.theme-nfl body,
+.theme-nfl *,
+.theme-nfl *::before,
+.theme-nfl *::after {
+  color: var(--text-global) !important;
+  -webkit-text-fill-color: var(--text-global);
+}
+
+.theme-nfl h1, .theme-nfl h2, .theme-nfl h3,
+.theme-nfl h4, .theme-nfl h5, .theme-nfl h6,
+.theme-nfl p, .theme-nfl span, .theme-nfl small,
+.theme-nfl strong, .theme-nfl em, .theme-nfl label,
+.theme-nfl legend, .theme-nfl caption, .theme-nfl th,
+.theme-nfl td, .theme-nfl li, .theme-nfl dt, .theme-nfl dd {
+  color: var(--text-global) !important;
+}
+
+.theme-nfl a,
+.theme-nfl a:hover,
+.theme-nfl a:focus,
+.theme-nfl a:visited {
+  color: var(--text-global) !important;
+}
+
+.theme-nfl input, 
+.theme-nfl textarea, 
+.theme-nfl select, 
+.theme-nfl .p-inputtext {
+  color: var(--text-global) !important;
+}
+
+.theme-nfl ::placeholder {
+  color: var(--text-global) !important;
+  opacity: 1 !important;
+}
+
+.theme-nfl .p-submenu-header,
+.theme-nfl .p-menuitem-link,
+.theme-nfl .p-menuitem-icon,
+.theme-nfl .pi,
+.theme-nfl .p-icon {
+  color: var(--text-global) !important;
+  fill: var(--text-global) !important;
+}
+
+/* Force editable form text back to black */
+.theme-nfl input,
+.theme-nfl textarea,
+.theme-nfl select,
+.theme-nfl .p-inputtext,
+.theme-nfl .p-dropdown,
+.theme-nfl .p-multiselect,
+.theme-nfl .p-calendar {
+  color: #000000 !important;          /* text inside inputs */
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Also fix placeholders */
+.theme-nfl input::placeholder,
+.theme-nfl textarea::placeholder {
+  color: #333333 !important;          /* dark gray for subtle placeholder */
+  opacity: 1 !important;
+}

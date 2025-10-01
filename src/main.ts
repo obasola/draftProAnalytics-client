@@ -18,6 +18,11 @@ import Tooltip from 'primevue/tooltip'
 import 'primevue/resources/themes/lara-light-indigo/theme.css'
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
+
+// main.ts (or App.vue <style src>)
+import './assets/styles/global-forms.css';   // your existing file
+import './assets/css/theme-five-colors.css';  // the new one
+
 // import 'primeflex/primeflex.css'
 
 // Custom Icons

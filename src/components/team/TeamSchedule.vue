@@ -46,7 +46,7 @@ const loadTeamGames = async () => {
   try {
     // Load both regular season and preseason games for complete schedule
     await Promise.all([
-      gameStore.fetchAllGamesForSeason(team.value.id, currentSeason),
+      gameStore.fetchTeamSeason(team.value.id, currentSeason),
     ])
   } catch (error) {
     console.error('Error loading team games:', error)

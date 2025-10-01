@@ -223,7 +223,7 @@ const toast = useToast()
 // Reactive data
 const selectedSeason = ref('2025')
 const selectedWeek = ref(1);
-
+const seasonYear = 2025;
 const selectedTeam = ref('')
 const loading = ref(false)
 const error = ref('')
@@ -414,46 +414,73 @@ const scheduleGames = computed(() => {
 
 // Methods
 const loadSchedule = async () => {
-  if (!selectedSeason.value || !selectedTeam.value || !selectedWeek.value) return
-
-  if (selectedWeek.value >= 1 && selectedWeek.value <= 18) {
-    return loadScheduleByWeek();
-  }
+  if (!selectedSeason.value || !selectedTeam.value) return
   loading.value = true
   error.value = ''
 
   try {
-    console.log("Query for Week: "+selectedWeek.value)
-    if (Number(selectedWeek.value) === 99) {
-      await gameStore.fetchPreSeasonGames(Number(selectedTeam.value), selectedSeason.value)
+    const year = selectedSeason.value
+    const week = Number(selectedWeek.value)
+
+    if (selectedTeam.value === 'league') {
+      // League-wide
+      if (week === 99) {
+        await gameStore.fetchLeaguePreseason(year)
+      } else if (week >= 1 && week <= 18) {
+        await gameStore.fetchLeagueWeek(year, week)
+      } else {
+        await gameStore.fetchByYear(year)
+      }
     } else {
-      // Load all games for the selected season
-      await gameStore.fetchAll(1, 1000, true)
+      // Team-specific
+      const teamId = Number(selectedTeam.value)
+      if (!Number.isFinite(teamId)) {
+        error.value = 'Invalid team selected'
+        return
+      }
+
+      if (week === 99) {
+        await gameStore.fetchTeamPreseason(teamId, year)
+      } else if (week >= 1 && week <= 18) {
+        await gameStore.fetchTeamSeasonWeekGames(teamId, year, week)
+      } else {
+        await gameStore.fetchTeamSeason(teamId, year)
+      }
     }
   } catch (err) {
-    error.value = 'Failed to load schedule data'
     console.error('Schedule load error:', err)
+    error.value = 'Failed to load schedule data'
   } finally {
     loading.value = false
   }
 }
 
+// If you keep a separate week-only loader:
 const loadScheduleByWeek = async () => {
-  if (!selectedWeek.value || !selectedWeek.value) return
-
+  if (!selectedSeason.value || !selectedTeam.value) return
   loading.value = true
   error.value = ''
 
   try {
-    // Load all games for the selected season
-    await gameStore.fetchTeamSeasonWeekGames(Number(selectedTeam.value), selectedSeason.value, Number(selectedWeek.value))
+    const year = selectedSeason.value
+    const week = Number(selectedWeek.value)
+
+    if (selectedTeam.value === 'league') {
+      if (week === 99) await gameStore.fetchLeaguePreseason(year)
+      else await gameStore.fetchLeagueWeek(year, week)
+    } else {
+      const teamId = Number(selectedTeam.value)
+      if (week === 99) await gameStore.fetchTeamPreseason(teamId, year)
+      else await gameStore.fetchTeamSeasonWeekGames(teamId, year, week)
+    }
   } catch (err) {
-    error.value = 'Failed to load schedule data'
     console.error('Schedule load error:', err)
+    error.value = 'Failed to load schedule data'
   } finally {
     loading.value = false
   }
 }
+
 
 const startEdit = (game: any) => {
   const gameId = game.id
@@ -608,7 +635,7 @@ const getStatusClass = (status: string) => {
 // Load initial data
 onMounted(() => {
   // Pre-load some games data
-  gameStore.fetchAll(1, 1000, true)
+  gameStore.fetchByYear(seasonYear)
 })
 </script>
 

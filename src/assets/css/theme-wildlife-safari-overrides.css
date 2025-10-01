@@ -1,0 +1,30 @@
+/* Wildlife Safari — User Overrides (load AFTER theme-wildlife-safari-v2.css)
+   Maps eyedropper-detected colors to theme tokens.
+   Requested:
+   - backgroundColor -> #A0522C
+   - foreGroundColor -> #D47E29
+   - HeaderCardColor -> #D47E29
+   - menuItemColor   -> #7D5B3A
+*/
+.theme-safari {
+  /* Page content background */
+  --content-bg: #A0522C;
+
+  /* Primary surface (cards/panels) + "header card" */
+  --surface-100: #D47E29;
+
+  /* Header bar background */
+  --header-bg: #D47E29;
+
+  /* Navigation background */
+  --nav-bg: #7D5B3A;
+}
+
+/* Optional: if text contrast looks too low on the new lighter surfaces,
+   uncomment the next block to darken text on all sections. */
+/*
+.theme-safari {
+  --text-primary: #1B1209;
+  --text-secondary: #2E2418;
+}
+*/

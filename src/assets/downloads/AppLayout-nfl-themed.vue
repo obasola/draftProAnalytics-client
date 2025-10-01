@@ -6,7 +6,7 @@ import '@/assets/css/theme-nfl-fan.css'
 </script>
 
 <template>
-  <div class="app-container theme-five">
+  <div class="app-container theme-nfl">
     <AppHeader />
     <div class="main-content">
       <AppNavigation />

@@ -16,6 +16,7 @@ import TeamSelectionView from '@/views/TeamSelectionView.vue'
 // import { onMounted } from 'vue'
 // import { useThemeStore } from '@/stores/theme.store'
 // import { useRoute } from 'vue-router'
+const JobsPage = () => import('@/views/JobsPage.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -86,7 +87,11 @@ const router = createRouter({
         requiresAuth: true, // if you have authentication
       },
     },
-
+    { 
+      path: '/jobs', 
+      name: 'jobs', 
+      component: JobsPage 
+    },
     /*
     {
       path: '/team-needs/:id?',

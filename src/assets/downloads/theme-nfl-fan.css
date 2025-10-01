@@ -1,0 +1,180 @@
+/* ==================================================
+   NFL FAN THEME (Navy / Action Green / Gold / Wolf Gray)
+   Scope with .theme-nfl on your app shell.
+   Goals: high contrast, no white backgrounds, distinct sections.
+   ================================================== */
+
+.theme-nfl {
+  /* Brand core */
+  --brand-navy:   #002244;  /* primary anchors */
+  --brand-green:  #69BE28;  /* action / CTAs */
+  --brand-gold:   #FFB612;  /* prestige accent */
+  --neutral-gray: #A5ACAF;  /* wolf gray */
+
+  /* App sections */
+  --body-bg:    #0A1830;    /* darker than navy to reduce glare */
+  --header-bg:  #032B52;    /* slightly lighter navy for separation */
+  --nav-bg:     #8E949B;    /* darker wolf gray for sidebar */
+  --content-bg: #12213D;    /* content canvas (not white) */
+
+  /* Surfaces (cards/panels) */
+  --surface-100: #A5ACAF;   /* light gray cards */
+  --surface-200: #90979F;   /* slightly darker gray */
+  --surface-300: #7C848D;   /* even darker gray */
+
+  /* Text */
+  --text-on-dark: #F2F6FA;  /* off-white for dark areas */
+  --text-on-light: #0B1220; /* deep navy for light cards */
+  --muted-on-dark: #C9D1DA;
+  --muted-on-light: #25324A;
+
+  /* Borders & states */
+  --border-dark:  #2B3A57;
+  --border-light: #5C6773;
+  --hover-dark:   #172745;
+  --hover-light:  #9AA0A7;
+
+  /* Buttons */
+  --btn-primary-bg:   var(--brand-green);
+  --btn-primary-bg-h: #7ED63B;
+  --btn-secondary-bg: var(--brand-gold);
+  --btn-secondary-bg-h: #FFC646;
+  --btn-ghost-fg:     var(--brand-gold); /* navy ghost buttons */
+}
+
+/* ---- App Shell ---- */
+.theme-nfl,
+.theme-nfl body {
+  background: var(--body-bg);
+  color: var(--text-on-dark);
+}
+
+.theme-nfl .app-header {
+  background: var(--header-bg) !important;
+  color: var(--text-on-dark) !important;
+  border-bottom: 1px solid var(--border-dark) !important;
+}
+
+.theme-nfl .app-navigation {
+  background: var(--nav-bg) !important;
+  color: var(--text-on-dark) !important;
+  border-right: 1px solid var(--border-dark) !important;
+}
+
+.theme-nfl .content-area,
+.theme-nfl main[role="main"] {
+  background: var(--content-bg) !important;
+  color: var(--text-on-dark) !important;
+}
+
+/* ---- Cards / Panels ---- */
+.theme-nfl .p-card,
+.theme-nfl .p-panel,
+.theme-nfl .p-dialog,
+.theme-nfl .p-overlaypanel {
+  background: var(--surface-100) !important;
+  color: var(--text-on-light) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 12px !important;
+}
+
+.theme-nfl .card-accent--green    { border-top: 3px solid var(--brand-green) !important; }
+.theme-nfl .card-accent--gold     { border-top: 3px solid var(--brand-gold) !important; }
+.theme-nfl .card-accent--navy     { border-top: 3px solid var(--brand-navy) !important; }
+
+/* ---- Buttons (PrimeVue) ---- */
+.theme-nfl .p-button.solid-primary,
+.theme-nfl .btn-primary {
+  background: var(--btn-primary-bg) !important;
+  border-color: var(--btn-primary-bg) !important;
+  color: #0E1A09 !important; /* dark text on bright green for contrast */
+  font-weight: 600;
+}
+.theme-nfl .p-button.solid-primary:hover,
+.theme-nfl .btn-primary:hover {
+  background: var(--btn-primary-bg-h) !important;
+  border-color: var(--btn-primary-bg-h) !important;
+}
+
+.theme-nfl .p-button.solid-secondary,
+.theme-nfl .btn-secondary {
+  background: var(--btn-secondary-bg) !important;
+  border-color: var(--btn-secondary-bg) !important;
+  color: #0F1220 !important; /* dark text on gold */
+  font-weight: 600;
+}
+.theme-nfl .p-button.solid-secondary:hover,
+.theme-nfl .btn-secondary:hover {
+  background: var(--btn-secondary-bg-h) !important;
+  border-color: var(--btn-secondary-bg-h) !important;
+}
+
+.theme-nfl .p-button.ghost-navy,
+.theme-nfl .btn-ghost {
+  background: transparent !important;
+  border-color: var(--brand-gold) !important;
+  color: var(--btn-ghost-fg) !important;
+}
+.theme-nfl .p-button.ghost-navy:hover,
+.theme-nfl .btn-ghost:hover {
+  background: rgba(255, 182, 18, 0.12) !important;
+}
+
+/* ---- Links / Focus ---- */
+.theme-nfl a        { color: var(--brand-gold); }
+.theme-nfl a:hover  { color: #FFD35E; }
+.theme-nfl :focus-visible {
+  outline: 3px solid var(--brand-green);
+  outline-offset: 2px;
+}
+
+/* ---- Menu (PrimeVue) ---- */
+.theme-nfl .p-menu { background: transparent !important; border: none !important; }
+.theme-nfl .p-menu .p-menuitem-link {
+  color: var(--text-on-dark) !important;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+}
+.theme-nfl .p-menu .p-menuitem-link:hover {
+  background: var(--hover-dark) !important;
+  color: var(--brand-gold) !important;
+}
+.theme-nfl .p-menu .p-submenu-list {
+  background: var(--surface-200) !important;
+  border-left: 2px solid var(--brand-navy) !important;
+}
+
+/* ---- Accordion ---- */
+.theme-nfl .p-accordion .p-accordion-header .p-accordion-header-link {
+  background: var(--surface-200) !important;
+  color: var(--text-on-light) !important;
+  border-color: var(--border-light) !important;
+}
+.theme-nfl .p-accordion .p-accordion-content {
+  background: var(--surface-100) !important;
+  color: var(--text-on-light) !important;
+  border-color: var(--border-light) !important;
+}
+.theme-nfl .p-accordion .p-accordion-header .p-accordion-header-link:hover {
+  background: var(--hover-light) !important;
+}
+
+/* ---- Tables (DataTable) ---- */
+.theme-nfl .p-datatable .p-datatable-thead > tr > th {
+  background: var(--surface-200) !important;
+  color: var(--text-on-light) !important;
+  border-color: var(--border-light) !important;
+}
+.theme-nfl .p-datatable .p-datatable-tbody > tr {
+  background: var(--surface-100) !important;
+  color: var(--text-on-light) !important;
+}
+.theme-nfl .p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--hover-light) !important;
+}
+
+/* ---- Scrollbars ---- */
+.theme-nfl ::-webkit-scrollbar { width: 12px; height: 12px; }
+.theme-nfl ::-webkit-scrollbar-track { background: var(--content-bg); }
+.theme-nfl ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 6px; }
+.theme-nfl ::-webkit-scrollbar-thumb:hover { background: var(--brand-gold); }

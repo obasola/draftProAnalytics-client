@@ -1,266 +1,262 @@
-import { gameService } from '@/services/gameService'
 // src/stores/gameStore.ts
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import axios from 'axios'
+import { gameService } from '@/services/gameService'
 import type { Game, CrudMode, PaginationMeta } from '@/types'
 
-export const useGameStore = defineStore('game', () => {
-  // State - in memory only, fetched from server
-  const games = ref<Game[]>([])
-  const currentGame = ref<Game | null>(null)
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-  const mode = ref<CrudMode>('read')
-
-  // Pagination state
-  const pagination = ref<PaginationMeta | null>(null)
-  const currentPage = ref(1)
-  const itemsPerPage = ref(10)
-
-  // Getters
-  const getGameById = computed(() => {
-    return (id: number) => games.value.find(item => item.id === id)
-  })
-
-  // Actions - All data from REST API with pagination support
-  const fetchAll = async (page = 1, limit = 10, refresh = false) => {
-    // Only fetch if we don't have data or if explicitly refreshing
-    if (games.value.length > 0 && !refresh && currentPage.value === page) {
-      console.log(`🔍 Game Store: Using cached data for page ${page}`)
-      return
-    }
-
-    console.log(`🔍 Game Store: Fetching games page ${page}, limit ${limit}, refresh: ${refresh}`)
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await gameService.getAll(page, limit)
-      console.log(`🔍 Game Store: Received ${response.data.length} games`)
-
-      if (page === 1 || refresh) {
-        // Replace data for first page or refresh
-        games.value = response.data
-        console.log(`🔍 Game Store: Replaced games data with ${response.data.length} items`)
-      } else {
-        // Append data for subsequent pages (if implementing infinite scroll)
-        games.value = [...games.value, ...response.data]
-        console.log(`🔍 Game Store: Appended games data, total now: ${games.value.length}`)
-      }
-
-      pagination.value = response.pagination
-      currentPage.value = page
-      itemsPerPage.value = limit
-
-      console.log(`🔍 Game Store: Updated pagination state:`, {
-        currentPage: currentPage.value,
-        itemsPerPage: itemsPerPage.value,
-        total: pagination.value?.total || 0,
-        pages: pagination.value?.pages || 0,
-      })
-
-      // Check if we're using client-side pagination fallback
-      if (response.pagination && response.pagination.total > 0) {
-        const isClientSide = !response.pagination.page || response.pagination.total <= limit
-        if (isClientSide && page === 1) {
-          console.log('🔍 Game Store: Using client-side pagination fallback')
-        }
-      }
-    } catch (err: any) {
-      let errorMessage = 'Failed to fetch games from server'
-      console.error('❌ Game Store:', errorMessage, err)
-
-      // Enhanced error handling based on error type
-      if (err.response?.status === 400) {
-        errorMessage = 'Games API configuration issue (400) - check server logs'
-      } else if (err.response?.status === 404) {
-        errorMessage = 'Games API endpoint not found (404)'
-      } else if (err.response?.status === 500) {
-        errorMessage = 'Server error while fetching games (500)'
-      } else if (err.code === 'NETWORK_ERROR' || err.message?.includes('fetch')) {
-        errorMessage = 'Network error: Unable to connect to games API'
-      } else if (err.message?.includes('Invalid response structure')) {
-        errorMessage = 'API response format error - check backend structure'
-      }
-
-      error.value = errorMessage
-      throw err
-    } finally {
-      loading.value = false
-    }
+export interface GameRow {
+  id: number
+  seasonYear: string
+  gameWeek: number | null
+  preseason: number | null
+  gameDate: string
+  homeTeamId: number
+  awayTeamId: number
+  homeTeam?: {
+    id: number
+    name: string
+    conference?: string | null
+    division?: string | null
+    city?: string | null
+    state?: string | null
+    stadium?: string | null
   }
-
-  const fetchById = async (id: number, useCache = true) => {
-    if (useCache) {
-      const cached = getGameById.value(id)
-      if (cached) {
-        currentGame.value = cached
-        return cached
-      }
-    }
-
-    loading.value = true
-    error.value = null
-    try {
-      currentGame.value = await gameService.getById(id)
-
-      const index = games.value.findIndex(item => item.id === id)
-      if (index !== -1 && currentGame.value) {
-        games.value[index] = currentGame.value
-      }
-
-      return currentGame.value
-    } catch (err) {
-      error.value = 'Failed to fetch game from server'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
+  awayTeam?: {
+    id: number
+    name: string
+    conference?: string | null
+    division?: string | null
+    city?: string | null
+    state?: string | null
+    stadium?: string | null
   }
+  gameLocation?: string | null
+  gameCity?: string | null
+  gameStateProvince?: string | null
+  gameCountry?: string | null
+  homeScore?: number | null
+  awayScore?: number | null
+  gameStatus: string
+}
 
-  const fetchAllGamesForSeason = async (teamId: number, seasonYear?: string) => {
-    try {
-      const games = await gameService.getRegularSeasonGames(teamId, seasonYear)
-      return games
-    } catch (error) {
-      console.log('Error: ' + error)
-    }
-  }
-
-  const fetchTeamSeasonWeekGames = async (teamId: number, seasonYear?: string, gameWeek?: number) => {
-    try {
-      const games = await gameService.getByTeamSeasonWeek(teamId, seasonYear, gameWeek)
-      return games
-    } catch (error) {
-      console.log('Error: ' + error)
-    }
-  }
-
-  const fetchRegularSeasonGames = async (teamId: number, seasonYear?: string) => {
-    try {
-      const games = await gameService.getRegularSeasonGames(teamId, seasonYear)
-      return games
-    } catch (error) {
-      console.log('Error: ' + error)
-    }
-  }
-
-  const fetchPreSeasonGames = async (
-    teamId: number,
-    seasonYear?: string
-  ) => {
-    try {
-      let searchYear: number = parseInt(seasonYear ? seasonYear : '0')
-      const games = await gameService.getPreseasonGames(teamId, searchYear)
-      return games
-    } catch (error) {
-      console.log('Error: ' + error)
-    }
-  }
-
-  const create = async (
-    data: Omit<Game, 'id' | 'homeTeam' | 'awayTeam' | 'createdAt' | 'updatedAt'>
-  ) => {
-    loading.value = true
-    error.value = null
-    try {
-      console.log('Calling clientside - gameService.create')
-      const newGame = await gameService.create(data)
-      games.value.push(newGame)
-      currentGame.value = newGame
-      return newGame
-    } catch (err) {
-      error.value = 'Failed to create game on server'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const update = async (
-    id: number,
-    data: Partial<Omit<Game, 'id' | 'homeTeam' | 'awayTeam' | 'createdAt' | 'updatedAt'>>
-  ) => {
-    loading.value = true
-    error.value = null
-    try {
-      const updatedGame = await gameService.update(id, data)
-      const index = games.value.findIndex(item => item.id === id)
-      if (index !== -1) {
-        games.value[index] = updatedGame
-      }
-      currentGame.value = updatedGame
-      return updatedGame
-    } catch (err) {
-      error.value = 'Failed to update game on server'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const remove = async (id: number) => {
-    loading.value = true
-    error.value = null
-    try {
-      await gameService.delete(id)
-      games.value = games.value.filter(item => item.id !== id)
-      if (currentGame.value?.id === id) {
-        currentGame.value = null
-      }
-    } catch (err) {
-      error.value = 'Failed to delete game on server'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const setMode = (newMode: CrudMode) => {
-    mode.value = newMode
-  }
-
-  const clearCurrent = () => {
-    currentGame.value = null
-  }
-
-  const clearError = () => {
-    error.value = null
-  }
-
-  const refreshData = (page = currentPage.value, limit = itemsPerPage.value) => {
-    return fetchAll(page, limit, true)
-  }
-
-  return {
-    // State
-    games,
-    currentGame,
-    loading,
-    error,
-    mode,
-    pagination,
-    currentPage,
-    itemsPerPage,
-    // Getters
-    getGameById,
-    // Actions
-    fetchAll,
-    fetchById,
-    fetchRegularSeasonGames,
-    fetchTeamSeasonWeekGames,
-    fetchPreSeasonGames,
-    fetchAllGamesForSeason,
-    create,
-    update,
-    remove,
-    setMode,
-    clearCurrent,
-    clearError,
-    refreshData,
-  }
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE || '/api',
+  withCredentials: false,
 })
+
+export const useGameStore = defineStore('games', {
+  state: () => ({
+    games: [] as GameRow[],
+    currentGame: null as GameRow | null,
+    loading: false,
+    error: null as string | null,
+    mode: 'read' as CrudMode,
+
+    pagination: null as PaginationMeta | null,
+    currentPage: 1,
+    itemsPerPage: 10,
+  }),
+
+  actions: {
+    async getGameById(id: number) {
+      return this.fetchById(id)
+    },
+
+    async fetchById(id: number) {
+      this.loading = true
+      this.error = null
+      try {
+        const { data } = await api.get<GameRow | { data: GameRow }>(`/games/${id}`)
+        const payload =
+          data && typeof data === 'object' && 'data' in data ? (data as any).data : data
+        this.currentGame = payload as GameRow
+        const i = this.games.findIndex(g => g.id === (payload as GameRow).id)
+        if (i >= 0) this.games[i] = payload as GameRow
+        else this.games.push(payload as GameRow)
+        return payload
+      } catch (err) {
+        this.error = 'Failed to load game by id'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // Generic server-paginated fetch
+    async fetchAll(
+      page = 1,
+      limit = 10,
+      extraParams: Record<string, unknown> = {},
+      refresh = false
+    ) {
+      this.loading = true
+      this.error = null
+      try {
+        const { data, headers } = await api.get('/games', {
+          params: { page, limit, ...extraParams },
+        })
+
+        const rows = normalizeToRows(data)
+        this.games = rows
+
+        // read total from payload.pagination.total, or X-Total-Count, or fallback to rows length
+        const total =
+          (data?.pagination?.total as number) ??
+          (parseInt(headers['x-total-count'] || '0', 10) || rows.length)
+
+        this.pagination = toPaginationMeta(total, page, limit)
+        this.currentPage = page
+        this.itemsPerPage = limit
+
+        return { data: rows, pagination: this.pagination }
+      } catch (err) {
+        this.error = 'Failed to load games'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchByYear(year: string | number, page = 1, limit = 10) {
+      return this.fetchAll(page, limit, { year })
+    },
+
+    async fetchLeagueWeek(year: string | number, week: number, page = 1, limit = 10) {
+      return this.fetchAll(page, limit, { year, week })
+    },
+
+    async fetchLeaguePreseason(year: string | number, page = 1, limit = 10) {
+      return this.fetchAll(page, limit, { year, preseason: 1 })
+    },
+
+    async fetchTeamSeason(teamId: number, year: string | number, page = 1, limit = 10) {
+      return this.fetchAll(page, limit, { teamId, year })
+    },
+
+    async fetchTeamSeasonWeekGames(
+      teamId: number,
+      year: string | number,
+      week: number,
+      page = 1,
+      limit = 10
+    ) {
+      return this.fetchAll(page, limit, { teamId, year, week })
+    },
+
+    async fetchTeamPreseason(teamId: number, year: string | number, page = 1, limit = 10) {
+      return this.fetchAll(page, limit, { teamId, year, preseason: 1 })
+    },
+
+    async create(data: Omit<Game, 'id' | 'homeTeam' | 'awayTeam' | 'createdAt' | 'updatedAt'>) {
+      this.loading = true
+      this.error = null
+      try {
+        const newGame = await gameService.create(data)
+        const row: GameRow = normalizeToRow(newGame)
+        this.games.unshift(row)
+        this.currentGame = row
+        return row
+      } catch (err) {
+        this.error = 'Failed to create game on server'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async update(
+      id: number,
+      data: Partial<Omit<Game, 'id' | 'homeTeam' | 'awayTeam' | 'createdAt' | 'updatedAt'>>
+    ) {
+      this.loading = true
+      this.error = null
+      try {
+        const updated = await gameService.update(id, data)
+        const updatedRow = normalizeToRow(updated)
+        const idx = this.games.findIndex(g => g.id === id)
+        if (idx !== -1) this.games[idx] = updatedRow
+        this.currentGame = updatedRow
+        return updatedRow
+      } catch (err) {
+        this.error = 'Failed to update game on server'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async remove(id: number) {
+      this.loading = true
+      this.error = null
+      try {
+        await gameService.delete(id)
+        this.games = this.games.filter(g => g.id !== id)
+        if (this.currentGame?.id === id) this.currentGame = null
+      } catch (err) {
+        this.error = 'Failed to delete game on server'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
+    setMode(newMode: CrudMode) {
+      this.mode = newMode
+    },
+    clearCurrent() {
+      this.currentGame = null
+    },
+    clearError() {
+      this.error = null
+    },
+    refreshData() {
+      return this.fetchAll(this.currentPage, this.itemsPerPage)
+    },
+  },
+})
+
+// ---------- helpers ----------
+// --- add this helper near the bottom of the file (before export or with other helpers) ---
+function toPaginationMeta(total: number, page: number, limit: number): PaginationMeta {
+  const totalPages = Math.max(1, Math.ceil((total || 0) / (limit || 1)))
+  return {
+    total,
+    page,
+    limit,
+    totalPages,
+    hasNext: page < totalPages,
+    hasPrev: page > 1,
+  }
+}
+
+function normalizeToRow(g: Game): GameRow {
+  return {
+    id: g.id,
+    seasonYear: String(g.seasonYear),
+    gameWeek: g.gameWeek ?? null,
+    preseason: (g as any).preseason ?? null,
+    gameDate: g.gameDate as unknown as string,
+    homeTeamId: g.homeTeamId,
+    awayTeamId: g.awayTeamId,
+    homeTeam: g.homeTeam as any,
+    awayTeam: g.awayTeam as any,
+    gameLocation: (g as any).gameLocation ?? null,
+    gameCity: (g as any).gameCity ?? null,
+    gameStateProvince: (g as any).gameStateProvince ?? null,
+    gameCountry: (g as any).gameCountry ?? null,
+    homeScore: (g as any).homeScore ?? null,
+    awayScore: (g as any).awayScore ?? null,
+    gameStatus: (g as any).gameStatus ?? 'scheduled',
+  }
+}
+
+function normalizeToRows(payload: unknown): GameRow[] {
+  if (Array.isArray(payload)) return payload as GameRow[]
+  if (payload && typeof payload === 'object') {
+    const obj = payload as Record<string, unknown>
+    if (Array.isArray(obj.data)) return obj.data as GameRow[]
+    if (Array.isArray(obj.items)) return obj.items as GameRow[]
+    if (Array.isArray(obj.results)) return obj.results as GameRow[]
+  }
+  return []
+}

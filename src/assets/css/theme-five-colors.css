@@ -1,0 +1,171 @@
+/* ================================
+   NFL Fan 5-Color Theme (PrimeVue)
+   ================================ */
+
+.theme-five {
+  /* Provided colors */
+  --bg1: #9E4B03; /* background-color1  | text: white  */
+  --bg2: #CC7B00; /* background-color2  | text: black  */
+  --bg3: #8495D5; /* background-color3  | text: black  */
+  --bg4: #054DBD; /* background-color4  | text: white  */
+  --bg5: #062D92; /* background-color5  | text: white  */
+
+  /* Derived/supporting */
+  --body-bg: var(--bg2);
+  --content-bg: #B66E00;   /* deeper than bg2 to make cards pop */
+  --header-bg: var(--bg5);
+  --nav-bg: var(--bg1);
+
+  /* Text tokens per surface */
+  --text-on-bg1: #FFFFFF;
+  --text-on-bg2: #111111;
+  --text-on-bg3: #0B0B14;  /* slightly warmer black */
+  --text-on-bg4: #FFFFFF;
+  --text-on-bg5: #FFFFFF;
+
+  /* Components (cards/forms/tables/buttons) */
+  --card-bg: var(--bg1);
+  --card-border: rgba(255,255,255,0.18);
+
+  --field-bg: var(--bg3);           /* inputs inside cards */
+  --field-text: #000000;            /* requested black */
+  --field-placeholder: #222222;
+  --field-border: rgba(0,0,0,0.3);
+  --field-focus: #062D92;           /* bg5 as focus ring */
+
+  --table-bg: var(--bg4);
+  --table-header-bg: #073D98;       /* darker than bg4 for header row */
+  --table-row-alt: #0A5FE6;         /* subtle zebra on bg4 */
+  --table-text: var(--text-on-bg4);
+  --table-border: rgba(255,255,255,0.25);
+
+  --btn-solid: var(--bg4);          /* default CTA uses bg4 */
+  --btn-solid-hover: #073D98;       /* darker blue for hover */
+  --btn-outline: var(--bg5);        /* outline on dark surfaces */
+  --focus-ring: #FFDA77;            /* warm, highly visible */
+}
+
+/* ---------- App Shell ---------- */
+.theme-five,
+.theme-five body { background: var(--body-bg); color: var(--text-on-bg2); }
+
+.theme-five .app-header {
+  background: var(--header-bg) !important;
+  color: var(--text-on-bg5) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+
+.theme-five .app-navigation {
+  background: var(--nav-bg) !important;
+  color: var(--text-on-bg1) !important;
+  border-right: 1px solid rgba(0,0,0,0.35);
+}
+
+.theme-five .content-area,
+.theme-five main[role="main"] {
+  background: var(--content-bg) !important;
+  color: var(--text-on-bg2) !important;
+}
+
+/* ---------- Navigation (PrimeVue Menu) ---------- */
+.theme-five .p-menu { background: transparent !important; border: none !important; }
+.theme-five .p-menu .p-menuitem-link,
+.theme-five .p-submenu-header {
+  color: var(--text-on-bg1) !important;     /* white on bg1 */
+  font-weight: 700 !important;              /* bolder for nav */
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+}
+.theme-five .p-menu .p-menuitem-link:hover {
+  background: rgba(255,255,255,0.1) !important;
+  color: #FFF !important;
+}
+
+/* ---------- Cards & Forms ---------- */
+.theme-five .p-card,
+.theme-five .p-panel,
+.theme-five .p-dialog,
+.theme-five .p-overlaypanel {
+  background: var(--card-bg) !important;      /* bg1 */
+  color: var(--text-on-bg1) !important;       /* white labels/body */
+  border: 1px solid var(--card-border) !important;
+  border-radius: 12px !important;
+}
+
+/* form controls inside cards */
+.theme-five input,
+.theme-five textarea,
+.theme-five select,
+.theme-five .p-inputtext,
+.theme-five .p-dropdown,
+.theme-five .p-multiselect,
+.theme-five .p-calendar {
+  background: var(--field-bg) !important;     /* bg3 */
+  color: var(--field-text) !important;        /* black text (requested) */
+  -webkit-text-fill-color: var(--field-text) !important;
+  border: 1px solid var(--field-border) !important;
+}
+.theme-five input::placeholder,
+.theme-five textarea::placeholder { color: var(--field-placeholder) !important; opacity: 1 !important; }
+
+/* focus state for fields */
+.theme-five input:focus,
+.theme-five textarea:focus,
+.theme-five select:focus,
+.theme-five .p-inputtext:focus,
+.theme-five .p-dropdown.p-focus,
+.theme-five .p-calendar.p-focus {
+  outline: 3px solid var(--field-focus) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(6,45,146,0.35) !important;
+}
+
+/* ---------- Buttons ---------- */
+.theme-five .p-button,
+.theme-five .btn {
+  background: var(--btn-solid) !important;           /* bg4 */
+  border-color: var(--btn-solid) !important;
+  color: var(--text-on-bg4) !important;              /* white */
+  font-weight: 600;
+}
+.theme-five .p-button:hover,
+.theme-five .btn:hover {
+  background: var(--btn-solid-hover) !important;
+  border-color: var(--btn-solid-hover) !important;
+}
+
+/* Quick Actions override: "Go" buttons blend with page body */
+.theme-five .quick-actions .p-button {
+  background: var(--body-bg) !important;             /* matches page background (bg2 family) */
+  border: 1px solid rgba(0,0,0,0.35) !important;
+  color: #000 !important;                            /* readable on body-bg */
+}
+
+/* ---------- DataTable ---------- */
+.theme-five .p-datatable .p-datatable-thead > tr > th {
+  background: var(--table-header-bg) !important;
+  color: var(--table-text) !important;
+  border-color: var(--table-border) !important;
+}
+.theme-five .p-datatable .p-datatable-tbody > tr {
+  background: var(--table-bg) !important;            /* bg4 */
+  color: var(--table-text) !important;
+  border-color: var(--table-border) !important;
+}
+.theme-five .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background: var(--table-row-alt) !important;       /* subtle zebra */
+}
+.theme-five .p-datatable .p-datatable-tbody > tr:hover {
+  filter: brightness(1.06);
+}
+
+/* ---------- Links & Focus ---------- */
+.theme-five a { color: #FFE29F; }                    /* warm link on dark */
+.theme-five a:hover { color: #FFFFFF; }
+.theme-five :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ---------- Scrollbars ---------- */
+.theme-five ::-webkit-scrollbar { width: 12px; height: 12px; }
+.theme-five ::-webkit-scrollbar-track { background: var(--content-bg); }
+.theme-five ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.35); border-radius: 6px; }
+.theme-five ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.5); }

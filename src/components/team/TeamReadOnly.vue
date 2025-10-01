@@ -12,12 +12,15 @@ import Button from 'primevue/button'
 import { useRouter } from 'vue-router'
 import { apiService } from '@/services/api'
 import type { Player, PaginatedResponse } from '@/types'
-
+import TeamDraftPickTable from './TeamDraftPickTable.vue'
+import TeamScheduleTableTable from './TeamScheduleTable.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
 
 const route = useRoute()
 const themeStore = useThemeStore()
+const currentDate: Date = new Date(); // Creates a Date object representing the current date and time
+const currentYear: number = currentDate.getFullYear(); // Extracts the full year
 
 const teamStore = useTeamStore()
 const router = useRouter()
@@ -216,9 +219,12 @@ const createPlayer = () => {
                 <div class="stat-item">
                   <span class="stat-label">Average Height:</span>
                   <span class="stat-value">
-                    {{ 
-                      players.filter(p => p.height).length > 0 
-                        ? Math.round(players.filter(p => p.height).reduce((sum, p) => sum + p.height, 0) / players.filter(p => p.height).length)
+                    {{
+                      players.filter(p => p.height).length > 0
+                        ? Math.round(
+                          players.filter(p => p.height).reduce((sum, p) => sum + p.height, 0) / 
+                          players.filter(p => p.height).length
+                          ) + 'feet'
                         : 'N/A'
                     }}
                   </span>
@@ -226,10 +232,13 @@ const createPlayer = () => {
                 <div class="stat-item">
                   <span class="stat-label">Average Weight:</span>
                   <span class="stat-value">
-                    {{ 
-                      players.filter(p => p.weight).length > 0 
-                        ? Math.round(players.filter(p => p.weight).reduce((sum, p) => sum + p.weight, 0) / players.filter(p => p.weight).length) + ' lbs'
-                        : 'N/A'
+                    {{
+                      players.filter(p => p.weight).length > 0
+                        ? Math.round(
+                          players.filter(p => p.weight).reduce((sum, p) => sum + p.weight, 0) /
+                          players.filter(p => p.weight).length
+                        ) + ' lbs'
+                    : 'N/A'
                     }}
                   </span>
                 </div>
@@ -239,11 +248,11 @@ const createPlayer = () => {
         </AccordionTab>
 
         <AccordionTab header="Schedule">
-          <p>Team schedule will be displayed here when schedule relationships are implemented.</p>
+          <TeamScheduleTable :team-id="team?.id" :initialSeasonYear="currentYear" />
         </AccordionTab>
 
         <AccordionTab header="Draft Picks">
-          <p>Team draft history will be displayed here when draft pick relationships are implemented.</p>
+          <TeamDraftPickTable :team-id="team?.id" :initialYear="currentYear" />
         </AccordionTab>
 
         <AccordionTab header="Team Needs">

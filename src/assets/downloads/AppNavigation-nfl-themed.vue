@@ -1,4 +1,4 @@
-<!-- src/components/ui/AppNavigation.vue -->
+<!-- AppNavigation.vue — NFL Fan Theme -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -36,7 +36,7 @@ const menuItems = ref([
 </script>
 
 <template>
-  <nav class="app-navigation" role="navigation" aria-label="Main Navigation">
+  <nav class="app-navigation theme-nfl" role="navigation" aria-label="Main Navigation">
     <Menu :model="menuItems" class="nav-menu" />
   </nav>
 </template>
@@ -44,9 +44,9 @@ const menuItems = ref([
 <style scoped>
 .app-navigation {
   width: 260px;
-  background: var(--nav-bg);          /* bg1 #9E4B03 */
-  color: var(--text-on-bg1);          /* white */
-  border-right: 1px solid rgba(0,0,0,0.35);
+  background: var(--nav-bg);
+  color: var(--text-on-dark);
+  border-right: 1px solid var(--border-dark);
   padding: 0.75rem 0.5rem;
   overflow-y: auto;
 }
@@ -56,7 +56,7 @@ const menuItems = ref([
   background: transparent;
   border: none;
   width: 100%;
-  color: var(--text-on-bg1);
+  color: var(--text-on-dark);
 }
 
 :deep(.p-menuitem-link) {
@@ -65,24 +65,30 @@ const menuItems = ref([
   gap: 0.75rem;
   padding: 0.6rem 0.9rem;
   border-radius: 8px;
-  color: var(--text-on-bg1);
-  font-weight: 700;                   /* darker/bolder per your ask */
+  color: var(--text-on-dark);
   transition: background 0.18s, color 0.18s;
 }
 
 :deep(.p-menuitem-link:hover) {
-  background: rgba(255,255,255,0.1);
-  color: #FFFFFF;
+  background: var(--hover-dark);
+  color: var(--brand-gold);
 }
 
-:deep(.p-menuitem-icon) { color: var(--text-on-bg1); }
-:deep(.p-menuitem-link:hover .p-menuitem-icon) { color: #FFFFFF; }
+:deep(.p-menuitem-icon) { color: var(--muted-on-dark); }
+:deep(.p-menuitem-link:hover .p-menuitem-icon) { color: var(--brand-gold); }
+
+/* Active state mock (if using router active class) */
+:deep(.p-menuitem-link.router-link-active),
+:deep(.p-menuitem-link.p-highlight) {
+  background: rgba(105, 190, 40, 0.18);
+  color: var(--brand-green);
+}
 
 /* Submenus */
 :deep(.p-submenu-list) {
-  background: var(--card-bg);         /* bg1 inside */
+  background: var(--surface-200);
   padding-left: 0.4rem;
-  border-left: 2px solid rgba(255,255,255,0.25);
+  border-left: 2px solid var(--brand-navy);
   border-radius: 6px;
   margin-left: 0.35rem;
 }
@@ -90,6 +96,6 @@ const menuItems = ref([
 /* Scrollbar styling */
 :deep(::-webkit-scrollbar) { width: 10px; }
 :deep(::-webkit-scrollbar-track) { background: var(--content-bg); }
-:deep(::-webkit-scrollbar-thumb) { background: rgba(0,0,0,0.35); border-radius: 5px; }
-:deep(::-webkit-scrollbar-thumb:hover) { background: rgba(0,0,0,0.5); }
+:deep(::-webkit-scrollbar-thumb) { background: var(--border-dark); border-radius: 5px; }
+:deep(::-webkit-scrollbar-thumb:hover) { background: var(--brand-gold); }
 </style>
