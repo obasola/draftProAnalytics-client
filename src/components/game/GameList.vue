@@ -10,7 +10,9 @@ import Dialog from 'primevue/dialog'
 import { FilterMatchMode } from 'primevue/api'
 import GameCreateForm from '@/components/game/GameCreateForm.vue'
 import GameEditForm from '@/components/game/GameEditForm.vue'
+import { useThemeStore } from '@/stores/theme.store'
 
+const themeStore = useThemeStore()
 const gameStore = useGameStore()
 const router = useRouter()
 
@@ -32,6 +34,7 @@ const filters = ref({
 })
 
 onMounted(async () => {
+  await themeStore.loadTeams() // Ensure teams are loaded
   await gameStore.fetchAll(1, rows.value, { year: seasonYear.value }) // first load
 })
 
@@ -71,12 +74,24 @@ const onGameCreated = async () => {
 
 // Helpers
 const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: string } => {
-  if (!team || !team.name || !team.conference) return { shortName: 'Unknown', logoPath: '' }
-  const nameParts = team.name.trim().split(' ')
-  const shortName = nameParts[nameParts.length - 1]
-  const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
-  const logoFile = `${shortName}.${fileExt}`
-  return { shortName, logoPath: `/images/${team.conference.toLowerCase()}/${logoFile}` }
+  // If team object exists, use it
+  if (team && team.name && team.conference) {
+    const nameParts = team.name.trim().split(' ')
+    const shortName = nameParts[nameParts.length - 1]
+    const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
+    const logoFile = `${shortName}.${fileExt}`
+    return { shortName, logoPath: `/images/${team.conference.toLowerCase()}/${logoFile}` }
+  }
+  
+  // Fallback: lookup by ID if team object missing
+  if (typeof team === 'number') {
+    const foundTeam = themeStore.teams.find(t => Number(t.id) === team)
+    if (foundTeam) {
+      return getTeamShortNameAndLogo(foundTeam)
+    }
+  }
+  
+  return { shortName: 'Unknown', logoPath: '' }
 }
 </script>
 

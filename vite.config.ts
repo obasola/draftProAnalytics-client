@@ -11,6 +11,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    sourcemap: true,
+  },
+  // For dev mode, source maps are enabled by default in Vite 5
+  // but you can explicitly ensure it:
+  css: {
+    devSourcemap: true,
+  },
   server: {
     port: 8080,
     proxy: {
@@ -29,3 +37,4 @@ export default defineConfig({
     },
   },
 })
+

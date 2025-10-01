@@ -33,10 +33,6 @@ const navigateTo = (route: string) => { router.push(route) }
   <AppLayout>
     <main class="home-view" role="main" aria-label="Home Dashboard">
       <!-- Welcome / Hero -->
-      <section class="welcome-section" aria-labelledby="home-title">
-        <h1 id="home-title">Sports Management System</h1>
-        <p>Comprehensive management solution for professional sports teams</p>
-      </section>
 
       <!-- Stats Overview -->
       <section class="stats-overview" aria-label="Summary Statistics">

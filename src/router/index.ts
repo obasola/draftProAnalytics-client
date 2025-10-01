@@ -10,6 +10,9 @@ import DraftPickDetail from '@/views/DraftPickDetail.vue'
 import ProspectDetail from '@/views/ProspectDetail.vue'
 import GameDetail from '@/views/GameDetail.vue'
 
+import JobDetail from '../views/jobs/JobDetail.vue'
+import JobList from '@/views/jobs/JobList.vue'
+
 import ScheduleDetail from '@/views/GameScheduleView.vue'
 import TeamSelectionView from '@/views/TeamSelectionView.vue'
 

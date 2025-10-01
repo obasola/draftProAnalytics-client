@@ -1,3 +1,4 @@
+<!-- sports_mgmt_app_client/src/components/schedule/scheduleList.vue -->
 <template>
   <div class="schedule-list">
     <div class="list-header bg-team-primary text-team-accent p-4 rounded-lg shadow-lg mb-6">
@@ -9,19 +10,19 @@
     </div>
 
     <DataTable
-      :value="scheduleStore.schedules"
+      :value="enrichedSchedules"
       :loading="scheduleStore.loading"
       dataKey="id"
       :lazy="true"
-      paginator
+      :paginator="true"
       :rows="rows"
       :first="first"
-      :totalRecords="scheduleStore.pagination?.total || 0"
+      :totalRecords="totalRecords"
       :rowsPerPageOptions="[5,10,20,50]"
       @page="onPage"
       responsiveLayout="scroll"
       sortMode="multiple"
-      :globalFilterFields="['gameLocation', 'gameCity', 'oppTeamConference']"
+      :globalFilterFields="['gameLocation', 'gameCity']"
       class="themed-datatable"
     >
       <Column field="seasonYear" header="Season" sortable>
@@ -30,10 +31,10 @@
         </template>
       </Column>
 
-      <Column field="scheduleWeek" header="Week" sortable>
+      <Column field="gameWeek" header="Week" sortable>
         <template #body="{ data }">
           <div class="week-badge bg-team-secondary text-team-accent px-2 py-1 rounded text-sm font-medium">
-            Week {{ data.scheduleWeek }}
+            Week {{ data.gameWeek || 'TBD' }}
           </div>
         </template>
       </Column>
@@ -44,68 +45,57 @@
         </template>
       </Column>
 
-      <Column field="oppTeamId" header="Opponent" sortable>
+      <!-- ✅ FIXED: Use enriched team objects -->
+      <Column header="Matchup">
         <template #body="{ data }">
-          <div class="opponent-info">
-            <span class="font-bold text-gray-900">{{ getOpponentName(String(data.oppTeamId)) }}</span>
-            <div class="opponent-colors mt-1" v-if="getOpponentColors(String(data.oppTeamId))">
-              <div
-                v-for="(color, index) in getOpponentColors(String(data.oppTeamId))"
-                :key="index"
-                class="color-dot"
-                :style="{ backgroundColor: color }"
-              />
-            </div>
+          <div class="matchup">
+            <span class="team">{{ data.awayTeam?.name || 'TBD' }}</span>
+            <span class="mx-1">@</span>
+            <span class="team">{{ data.homeTeam?.name || 'TBD' }}</span>
           </div>
-        </template>
-      </Column>
-
-      <Column field="homeOrAway" header="Home/Away">
-        <template #body="{ data }">
-          <TeamAwareTag
-            :value="data.homeOrAway || 'TBD'"
-            :is-home="(data.homeOrAway || '').toUpperCase() === 'HOME'"
-            class="home-away-tag"
-          />
         </template>
       </Column>
 
       <Column field="gameLocation" header="Location">
         <template #body="{ data }">
-          <span class="text-gray-600">{{ data.gameLocation }}</span>
+          <span class="text-gray-600">{{ data.gameLocation || 'TBD' }}</span>
         </template>
       </Column>
 
-      <Column field="teamScore" header="Team Score" sortable>
+      <Column field="homeScore" header="Home Score" sortable>
         <template #body="{ data }">
           <div
-            v-if="data.teamScore != null"
+            v-if="data.homeScore != null"
             class="score-display team-score"
-            :class="{ 'winning-score': isWinningScore(data.teamScore, data.oppTeamScore) }"
+            :class="{ 'winning-score': isWinningScore(data.homeScore, data.awayScore) }"
           >
-            {{ data.teamScore }}
+            {{ data.homeScore }}
           </div>
           <span v-else class="text-gray-400">-</span>
         </template>
       </Column>
 
-      <Column field="oppTeamScore" header="Opp Score" sortable>
+      <Column field="awayScore" header="Away Score" sortable>
         <template #body="{ data }">
           <div
-            v-if="data.oppTeamScore != null"
+            v-if="data.awayScore != null"
             class="score-display opp-score"
-            :class="{ 'winning-score': isWinningScore(data.oppTeamScore, data.teamScore) }"
+            :class="{ 'winning-score': isWinningScore(data.awayScore, data.homeScore) }"
           >
-            {{ data.oppTeamScore }}
+            {{ data.awayScore }}
           </div>
           <span v-else class="text-gray-400">-</span>
         </template>
       </Column>
 
-      <Column field="wonLostFlag" header="Result">
+      <Column field="gameStatus" header="Status">
         <template #body="{ data }">
-          <GameResultTag v-if="data.wonLostFlag" :result="data.wonLostFlag" />
-          <span v-else class="text-gray-400 text-sm">TBD</span>
+          <span 
+            class="status-badge px-2 py-1 rounded text-xs font-medium"
+            :class="getStatusClass(data.gameStatus)"
+          >
+            {{ formatStatus(data.gameStatus) }}
+          </span>
         </template>
       </Column>
 
@@ -119,11 +109,19 @@
         </template>
       </Column>
     </DataTable>
+
+    <!-- Debug Info (remove in production) -->
+    <div v-if="false" class="mt-4 p-4 bg-gray-100 rounded text-xs">
+      <p>Teams loaded: {{ teams.length }}</p>
+      <p>Schedules: {{ scheduleStore.schedules.length }}</p>
+      <p>Total records: {{ totalRecords }}</p>
+      <p>Pagination: {{ JSON.stringify(scheduleStore.pagination) }}</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useScheduleStore } from '@/stores/scheduleStore'
@@ -134,6 +132,7 @@ import Column from 'primevue/column'
 import ThemedButton from '@/components/ThemedButton.vue'
 import TeamAwareTag from '@/components/TeamAwareTag.vue'
 import GameResultTag from '@/components/GameResultTag.vue'
+import type { Team } from '@/types/team.types'
 
 const scheduleStore = useScheduleStore()
 const themeStore = useThemeStore()
@@ -144,12 +143,60 @@ const rows = ref(10)
 const first = ref(0)
 const { teams } = storeToRefs(themeStore)
 
+// ✅ FIXED: Compute total records for pagination
+const totalRecords = computed(() => {
+  const total = scheduleStore.pagination?.total
+  console.log('📊 Total records for pagination:', total)
+  return total ?? scheduleStore.schedules.length
+})
+
+// ✅ FIXED: Enrich schedules with actual team objects
+const enrichedSchedules = computed(() => {
+  if (teams.value.length === 0) {
+    console.warn('⚠️ Teams not loaded yet')
+    return scheduleStore.schedules
+  }
+
+  return scheduleStore.schedules.map(schedule => {
+    const homeTeam = findTeamById(schedule.teamId)
+    const awayTeam = findTeamById(schedule.oppTeamId)
+    
+    if (!homeTeam || !awayTeam) {
+      console.warn(`⚠️ Missing team for schedule ${schedule.id}:`, {
+        homeTeamId: schedule.teamId,
+        awayTeamId: schedule.oppTeamId,
+        homeTeamFound: !!homeTeam,
+        awayTeamFound: !!awayTeam
+      })
+    }
+
+    return {
+      ...schedule,
+      homeTeam,
+      awayTeam
+    }
+  })
+})
+
 onMounted(async () => {
+  console.log('🔄 Component mounting...')
+  
+  // CRITICAL: Load teams FIRST
+  if (teams.value.length === 0) {
+    console.log('📥 Loading teams...')
+    await themeStore.initializeTheme()
+    console.log('✅ Teams loaded:', teams.value.length)
+  }
+  
+  // Then load schedules
+  console.log('📥 Loading schedules...')
   await scheduleStore.fetchAll(1, rows.value)
-  if (teams.value.length === 0) await themeStore.initializeTheme()
+  console.log('✅ Schedules loaded:', scheduleStore.schedules.length)
+  console.log('📊 Pagination:', scheduleStore.pagination)
 })
 
 const onPage = async (event: any) => {
+  console.log('📄 Page event:', event)
   const page = event.page + 1
   const limit = event.rows
   first.value = event.first
@@ -174,16 +221,33 @@ const formatDate = (date: Date | string | undefined) => {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-const getOpponentName = (oppTeamId: string | undefined): string => {
-  if (!oppTeamId) return 'TBD'
-  const team = teams.value.find(t => String(t.id) === oppTeamId || t.abbreviation === oppTeamId)
-  return team ? team.name : oppTeamId
+const formatStatus = (status: string | undefined) => {
+  if (!status) return 'Unknown'
+  return status.charAt(0).toUpperCase() + status.slice(1)
 }
 
-const getOpponentColors = (oppTeamId: string | undefined): string[] | null => {
-  if (!oppTeamId) return null
-  const team = teams.value.find(t => String(t.id) === oppTeamId || t.abbreviation === oppTeamId)
-  return team ? [team.colors.primary, team.colors.secondary] : null
+const getStatusClass = (status: string | undefined) => {
+  switch(status?.toLowerCase()) {
+    case 'scheduled': return 'bg-blue-100 text-blue-800'
+    case 'completed': return 'bg-green-100 text-green-800'
+    case 'cancelled': return 'bg-red-100 text-red-800'
+    case 'postponed': return 'bg-yellow-100 text-yellow-800'
+    default: return 'bg-gray-100 text-gray-800'
+  }
+}
+
+// ✅ FIXED: Simple, reliable team lookup by numeric ID
+const findTeamById = (teamId: number | string | undefined): Team | undefined => {
+  if (teamId == null) return undefined
+  
+  const numericId = typeof teamId === 'number' ? teamId : parseInt(String(teamId), 10)
+  
+  if (isNaN(numericId)) {
+    console.warn('⚠️ Invalid team ID:', teamId)
+    return undefined
+  }
+  
+  return teams.value.find(t => Number(t.id) === numericId)
 }
 
 const isWinningScore = (score1: number | undefined, score2: number | undefined) => {
@@ -200,9 +264,20 @@ const isWinningScore = (score1: number | undefined, score2: number | undefined) 
 .opponent-info { @apply flex flex-col; }
 .opponent-colors { @apply flex gap-1; }
 .color-dot { @apply w-3 h-3 rounded-full border border-gray-300; }
-.score-display { @apply px-2 py-1 rounded text-sm font-bold text-center; background-color: var(--color-neutral-100); color: var(--color-neutral-700); }
-.score-display.winning-score { background-color: var(--team-secondary); color: var(--team-accent); }
-.score-display.team-score.winning-score { background-color: var(--team-primary); }
-/* keep your themed styles */
+.score-display { 
+  @apply px-2 py-1 rounded text-sm font-bold text-center; 
+  background-color: var(--color-neutral-100); 
+  color: var(--color-neutral-700); 
+}
+.score-display.winning-score { 
+  background-color: var(--team-secondary); 
+  color: var(--team-accent); 
+}
+.score-display.team-score.winning-score { 
+  background-color: var(--team-primary); 
+}
 .themed-datatable { @apply shadow-lg rounded-lg overflow-hidden; }
+.matchup { @apply flex items-center gap-1; }
+.team { @apply font-semibold; }
+.status-badge { @apply inline-block; }
 </style>

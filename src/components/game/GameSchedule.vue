@@ -313,12 +313,12 @@ const getTeamShortNameAndLogo = (team: any): { fullName: string; logoPath: strin
   const shortName = nameParts[nameParts.length - 1]
   const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
   const logoFile = `${shortName}.${fileExt}`
-  const logoPath = new URL(`../../../public/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
+  const logoPath = new URL(`../../images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
   console.log("logoPath: " + logoPath)
   return { fullName, logoPath }
 }
 function getNflLogo() {
-  return new URL('../../../public/images/NFLogo.jpeg', import.meta.url).href
+  return new URL('../../images/NFLogo.jpeg', import.meta.url).href
 }
 const cancelRequest = () => {
   alert('BTN CLICKED!')
@@ -598,7 +598,7 @@ const getTeamLogo = (team: any) => {
   const shortName = getTeamShortName(team)
   const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
   const logoFile = `${shortName}.${fileExt}`
-  const logoPath = new URL(`../../../public/images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
+  const logoPath = new URL(`../../images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
   return logoPath
   // return `../../images/${team.conference.toLowerCase()}/${logoFile}`
 }
