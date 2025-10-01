@@ -74,6 +74,13 @@ export class ScheduleService {
     const { data } = await apiService.get<{ success: boolean; data: Schedule[]; pagination: any }>(url)
     return { data: data.data, pagination: data.pagination }
   }
+  // '/team/:teamId/season/:seasonYear'
+  async getByTeamSeason(teamId: number, seasonYear: number): Promise<Schedule[]> {
+    const response = await apiService.get<ApiResponse<Schedule[]>>(
+      `${this.endpoint}/teamId/${teamId}/season/${seasonYear}`
+    )
+    return response.data.data
+  }
 
   async create(data: Omit<Schedule, 'id'>): Promise<Schedule> {
     const response = await apiService.post<ApiResponse<Schedule>>(this.endpoint, data)

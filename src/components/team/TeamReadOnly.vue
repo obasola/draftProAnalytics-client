@@ -16,6 +16,7 @@ import TeamDraftPickTable from './TeamDraftPickTable.vue'
 import TeamScheduleTableTable from './TeamScheduleTable.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
+import TeamScheduleEditor from '@/components/team/TeamScheduleEditor.vue'
 
 const route = useRoute()
 const themeStore = useThemeStore()

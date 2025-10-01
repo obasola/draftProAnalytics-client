@@ -164,7 +164,6 @@ const getTeamRecord = computed(() => {
           <p>Players roster will be displayed here when player relationships are implemented.</p>
         </AccordionTab>
         
-        <!-- ✅ UPDATED: Actual Schedule Implementation -->
         <AccordionTab header="Schedule">
           <div class="schedule-section">
             <div class="schedule-header">
@@ -189,7 +188,7 @@ const getTeamRecord = computed(() => {
               class="schedule-table"
               :emptyMessage="`No games scheduled for ${team.name}`"
             >
-              <Column field="gameWeek" header="Week" sortable style="width: 120px">
+              <Column field="gameWeek" header="Week" sortable>
                 <template #body="{ data }">
                   <span v-if="data.preseason" class="preseason-badge">
                     Preseason {{ data.preseason }}
@@ -201,21 +200,21 @@ const getTeamRecord = computed(() => {
                 </template>
               </Column>
               
-              <Column field="gameDate" header="Date" sortable style="width: 120px">
+              <Column field="gameDate" header="Date" sortable>
                 <template #body="{ data }">
                   {{ data.gameDate ? new Date(data.gameDate).toLocaleDateString() : 'TBD' }}
                 </template>
               </Column>
               
-              <Column header="Opponent" style="width: 200px">
+              <Column header="Opponent">
                 <template #body="{ data }">
                   {{ formatGame(data) }}
                 </template>
               </Column>
               
-              <Column field="gameLocation" header="Location" style="width: 150px" />
+              <Column field="gameLocation" header="Location" />
               
-              <Column header="Result" style="width: 100px">
+              <Column header="Result">
                 <template #body="{ data }">
                   <span :class="formatGameResult(data).startsWith('W') ? 'win' : formatGameResult(data).startsWith('L') ? 'loss' : 'tie'">
                     {{ formatGameResult(data) }}
@@ -223,7 +222,7 @@ const getTeamRecord = computed(() => {
                 </template>
               </Column>
               
-              <Column header="Actions" style="width: 100px">
+              <Column header="Actions">
                 <template #body="{ data }">
                   <Button
                     icon="pi pi-eye"
@@ -249,13 +248,12 @@ const getTeamRecord = computed(() => {
         </AccordionTab>
       </Accordion>
 
-      <!-- ✅ Game Creation Modal -->
       <Dialog
         v-model:visible="showCreateGameModal"
         modal
         header="Add Game to Schedule"
-        :style="{ width: '50rem' }"
-        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+        :style="{ width: '90vw' }"
+        :breakpoints="{ '1199px': '95vw', '575px': '100vw' }"
       >
         <GameCreateForm 
           :preselected-team="team"
@@ -269,17 +267,20 @@ const getTeamRecord = computed(() => {
 
 <style scoped>
 .team-details {
-  max-width: 1000px;
-  margin: 0 auto;
+  width: 100%;       /* use full width */
+  margin: 0;         /* remove centering margin */
+  padding: 0;        /* no horizontal padding */
+  box-sizing: border-box;
 }
 
 .team-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* narrower min col */
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
+/* rest of your styles unchanged */
 .info-section h3 {
   color: var(--text-primary);
   margin-bottom: 1rem;
@@ -300,18 +301,18 @@ const getTeamRecord = computed(() => {
 }
 
 .relationships-accordion {
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 .schedule-section {
-  padding: 1rem 0;
+  padding: 0.5rem 0;
 }
 
 .schedule-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .schedule-title {
@@ -332,47 +333,28 @@ const getTeamRecord = computed(() => {
 }
 
 .schedule-table {
-  margin-top: 1rem;
+  width: 100%;
+  margin-top: 0.5rem;
 }
 
-.win {
-  color: #22c55e;
-  font-weight: bold;
-}
-
-.loss {
-  color: #ef4444;
-  font-weight: bold;
-}
-
-.tie {
-  color: #f59e0b;
-  font-weight: bold;
-}
+/* badges and result colors unchanged */
+.win { color: #22c55e; font-weight: bold; }
+.loss { color: #ef4444; font-weight: bold; }
+.tie { color: #f59e0b; font-weight: bold; }
 
 .preseason-badge {
-  background: #6366f1;
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.8rem;
-  font-weight: bold;
+  background: #6366f1; color: white;
+  padding: 0.2rem 0.5rem; border-radius: 0.25rem;
+  font-size: 0.8rem; font-weight: bold;
 }
-
 .regular-season-badge {
-  background: #059669;
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.8rem;
-  font-weight: bold;
+  background: #059669; color: white;
+  padding: 0.2rem 0.5rem; border-radius: 0.25rem;
+  font-size: 0.8rem; font-weight: bold;
 }
-
 .tbd-badge {
-  background: #6b7280;
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
+  background: #6b7280; color: white;
+  padding: 0.2rem 0.5rem; border-radius: 0.25rem;
   font-size: 0.8rem;
 }
 </style>
