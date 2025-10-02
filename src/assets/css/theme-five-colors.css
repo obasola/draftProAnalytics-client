@@ -34,6 +34,7 @@
   --field-focus: #062D92;           /* bg5 as focus ring */
 
   --table-bg: var(--bg4);
+  --p-card-subtitle: var(--bg4);
   --table-header-bg: #073D98;       /* darker than bg4 for header row */
   --table-row-alt: #0A5FE6;         /* subtle zebra on bg4 */
   --table-text: var(--text-on-bg4);
@@ -169,3 +170,23 @@
 .theme-five ::-webkit-scrollbar-track { background: var(--content-bg); }
 .theme-five ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.35); border-radius: 6px; }
 .theme-five ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.5); }
+
+/* ----- Accordion Tab background color overrides ------- */
+/* ---------- Accordion (PrimeVue) ---------- */
+.theme-five .p-accordion .p-accordion-header .p-accordion-header-link {
+  background: #059abd !important;   /* header background */
+  color: #fff !important;           /* text color for contrast */
+  border: none !important;
+  border-radius: 8px !important;
+}
+
+.theme-five .p-accordion .p-accordion-header .p-accordion-header-link:hover {
+  background: #0487a8 !important;   /* slightly darker hover */
+}
+
+.theme-five .p-accordion .p-accordion-content {
+  background: #059abd !important;   /* content background */
+  color: #fff !important;           /* ensure text is visible */
+  border: none !important;
+}
+

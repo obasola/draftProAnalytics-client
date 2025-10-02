@@ -1,5 +1,3 @@
-// ReadOnly Component
-// File: `src/components/team/TeamReadOnly.vue`**
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useTeamStore } from '@/stores/teamStore'
@@ -11,17 +9,18 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import { useRouter } from 'vue-router'
 import { apiService } from '@/services/api'
+import { gameService } from '@/services/gameService'
 import type { Player, PaginatedResponse } from '@/types'
+import type { TeamStatistics } from '@/services/gameService'
 import TeamDraftPickTable from './TeamDraftPickTable.vue'
 import TeamScheduleTableTable from './TeamScheduleTable.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
-import TeamScheduleEditor from '@/components/team/TeamScheduleEditor.vue'
 
 const route = useRoute()
 const themeStore = useThemeStore()
-const currentDate: Date = new Date(); // Creates a Date object representing the current date and time
-const currentYear: number = currentDate.getFullYear(); // Extracts the full year
+const currentDate: Date = new Date()
+const currentYear: number = currentDate.getFullYear()
 
 const teamStore = useTeamStore()
 const router = useRouter()
@@ -31,19 +30,78 @@ const players = ref<Player[]>([])
 const playersLoading = ref(false)
 const playersError = ref<string | null>(null)
 
+const teamStats = ref<TeamStatistics | null>(null)
+const statsLoading = ref(false)
+const statsError = ref<string | null>(null)
+
+// Computed values for display
+const calc = computed(() => {
+  if (!teamStats.value) {
+    return {
+      wlRecord: 'Loading...',
+      conferenceRecord: 'Loading...',
+      divisionRecord: 'Loading...',
+      homeWL: 'Loading...',
+      awayWL: 'Loading...',
+      positionInDivision: 'Loading...',
+    }
+  }
+
+  const {
+    overallRecord,
+    conferenceRecord,
+    divisionRecord,
+    homeRecord,
+    awayRecord,
+    divisionPosition,
+    divisionTotal
+  } = teamStats.value
+
+  const formatRecord = (rec: { wins: number; losses: number; ties: number }) =>
+    `${rec.wins}-${rec.losses}${rec.ties > 0 ? `-${rec.ties}` : ''}`
+
+  let position = 'Out of running'
+  if (divisionPosition === 1) position = '1st place'
+  else if (divisionPosition === 2) position = '2nd place'
+  else if (divisionPosition === 3) position = '3rd place'
+  else if (divisionPosition === 4) position = '4th place'
+
+  return {
+    wlRecord: formatRecord(overallRecord),
+    conferenceRecord: formatRecord(conferenceRecord),
+    divisionRecord: formatRecord(divisionRecord),
+    homeWL: formatRecord(homeRecord),
+    awayWL: formatRecord(awayRecord),
+    positionInDivision: `${position} (${divisionPosition}/${divisionTotal})`,
+  }
+})
+
 const loadTeamPlayers = async (teamId: number) => {
   playersLoading.value = true
   playersError.value = null
   try {
-    // Fetch players for this team with proper typing
     const response = await apiService.get<PaginatedResponse<Player>>(`/players/team/${teamId}`)
-    players.value = response.data.data || response.data // Handle both response structures
+    players.value = response.data.data || response.data
   } catch (error) {
     console.error('Failed to load team players:', error)
     playersError.value = 'Failed to load team players'
     players.value = []
   } finally {
     playersLoading.value = false
+  }
+}
+
+const loadTeamStatistics = async (teamId: number, seasonYear: number) => {
+  statsLoading.value = true
+  statsError.value = null
+  try {
+    teamStats.value = await gameService.getTeamStatistics(teamId, seasonYear.toString())
+  } catch (error) {
+    console.error('Failed to load team statistics:', error)
+    statsError.value = 'Failed to load team statistics'
+    teamStats.value = null
+  } finally {
+    statsLoading.value = false
   }
 }
 
@@ -57,25 +115,25 @@ const getTeamLogo = (team: any): string => {
 }
 
 onMounted(async () => {
-
-})
-onMounted(async () => {
-  // Apply theme based on route parameter if present
   if (route.params.teamId && typeof route.params.teamId === 'string') {
     await themeStore.selectTeam(route.params.teamId)
   }
   if (team.value?.id) {
-    await loadTeamPlayers(team.value.id)
+    await Promise.all([
+      loadTeamPlayers(team.value.id),
+      loadTeamStatistics(team.value.id, currentYear)
+    ])
   }
 })
 
-
-// Watch for team changes
 watch(
   () => team.value?.id,
   async (newTeamId) => {
     if (newTeamId) {
-      await loadTeamPlayers(newTeamId)
+      await Promise.all([
+        loadTeamPlayers(newTeamId),
+        loadTeamStatistics(newTeamId, currentYear)
+      ])
     }
   }
 )
@@ -98,7 +156,7 @@ const createPlayer = () => {
     <template #title>
       {{ team.name }}
     </template>
-    <template #subtitle>
+    <template #subtitle style="background-color: #054DBD;">
       {{ team.city }}, {{ team.state }} - {{ team.conference }} {{ team.division }}
     </template>
 
@@ -112,7 +170,6 @@ const createPlayer = () => {
             </h3>
           </div>
           <h3>Team Information</h3>
-
 
           <div class="info-row">
             <span class="label">City:</span>
@@ -133,18 +190,30 @@ const createPlayer = () => {
         </div>
 
         <div class="info-section">
-          <h3>League Information</h3>
+          <h3>Season Statistics</h3>
           <div class="info-row">
-            <span class="label">Conference:</span>
-            <span class="value">{{ team.conference }}</span>
+            <span class="label">Won/Loss):</span>
+            <span class="value">{{ calc.wlRecord }}</span>
           </div>
           <div class="info-row">
-            <span class="label">Division:</span>
-            <span class="value">{{ team.division }}</span>
+            <span class="label">Conference (W/L):</span>
+            <span class="value">{{ calc.conferenceRecord }}</span>
           </div>
-          <div class="info-row" v-if="team.scheduleId">
-            <span class="label">Schedule ID:</span>
-            <span class="value">{{ team.scheduleId }}</span>
+          <div class="info-row">
+            <span class="label">Division (W/L):</span>
+            <span class="value">{{ calc.divisionRecord }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Home W/L:</span>
+            <span class="value">{{ calc.homeWL }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Away W/L:</span>
+            <span class="value">{{ calc.awayWL }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Division Standing:</span>
+            <span class="value">{{ calc.positionInDivision }}</span>
           </div>
         </div>
       </div>
@@ -223,9 +292,9 @@ const createPlayer = () => {
                     {{
                       players.filter(p => p.height).length > 0
                         ? Math.round(
-                          players.filter(p => p.height).reduce((sum, p) => sum + p.height, 0) / 
+                          players.filter(p => p.height).reduce((sum, p) => sum + p.height, 0) /
                           players.filter(p => p.height).length
-                          ) + 'feet'
+                        ) + 'feet'
                         : 'N/A'
                     }}
                   </span>
@@ -239,7 +308,7 @@ const createPlayer = () => {
                           players.filter(p => p.weight).reduce((sum, p) => sum + p.weight, 0) /
                           players.filter(p => p.weight).length
                         ) + ' lbs'
-                    : 'N/A'
+                        : 'N/A'
                     }}
                   </span>
                 </div>
@@ -268,7 +337,6 @@ const createPlayer = () => {
   </Card>
 </template>
 
-<!-- STYLE SECTION - Replace your existing <style scoped> -->
 <style scoped>
 .team-details {
   max-width: 1000px;
@@ -304,13 +372,6 @@ const createPlayer = () => {
 .value {
   font-weight: 500;
   color: #2563eb;
-  /* Blue color for data values */
-  /* Alternative color options:
-     color: #059669; - Green
-     color: #7c3aed; - Purple  
-     color: #dc2626; - Red
-     color: #0891b2; - Cyan
-  */
 }
 
 .relationships-accordion {
@@ -396,14 +457,11 @@ const createPlayer = () => {
 .team-name-with-logo {
   display: flex;
   align-items: flex-start;
-  /* align top edges */
   gap: 0.5rem;
-  /* space between logo and text */
 }
 
 .inline-logo {
   height: 32px;
-  /* or your preferred size */
   width: auto;
 }
 </style>

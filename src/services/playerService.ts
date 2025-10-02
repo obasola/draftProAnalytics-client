@@ -2,8 +2,13 @@
 import { apiService } from './api'
 import type { ApiResponse, Player } from '@/types'
 
-
-
+export interface TeamStatistics {
+  overallRecord: { wins: number; losses: number; ties: number }
+  conferenceRecord: { wins: number; losses: number; ties: number }
+  divisionRecord: { wins: number; losses: number; ties: number }
+  divisionPosition: number
+  divisionTotal: number
+}
 export class PlayerService {
   private readonly endpoint = '/players'
 
@@ -42,6 +47,18 @@ export class PlayerService {
 
   async delete(id: number): Promise<void> {
     await apiService.delete(`${this.endpoint}/${id}`)
+  }
+
+  /****************************************************************
+  * Calculate conference record for a team in a season
+  *  (new methods added for Team Info Statistics)
+  ****************************************************************/
+
+  async getTeamStatistics(teamId: number, seasonYear: string): Promise<TeamStatistics> {
+    const response = await apiService.get<ApiResponse<TeamStatistics>>(
+      `${this.endpoint}/team/${teamId}/statistics?seasonYear=${seasonYear}`
+    )
+    return response.data.data
   }
 }
 
