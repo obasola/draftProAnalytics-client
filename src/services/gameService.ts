@@ -1,11 +1,25 @@
 // src/services/gameService.ts
 import { apiService } from './api'
 import type { Game, ApiResponse, PaginatedResponse } from '@/types'
-
+export interface TeamStatistics {
+  overallRecord: { wins: number; losses: number; ties: number }
+  conferenceRecord: { wins: number; losses: number; ties: number }
+  divisionRecord: { wins: number; losses: number; ties: number }
+  homeRecord: { wins: number; losses: number; ties: number }
+  awayRecord: { wins: number; losses: number; ties: number }
+  divisionPosition: number
+  divisionTotal: number
+}
 export class GameService {
   private readonly endpoint = '/games'
   private paginationSupported: boolean | null = null // Cache pagination support detection
 
+  async getTeamStatistics(teamId: number, seasonYear: string): Promise<TeamStatistics> {
+    const response = await apiService.get<ApiResponse<TeamStatistics>>(
+      `${this.endpoint}/team/${teamId}/statistics?seasonYear=${seasonYear}`
+    )
+    return response.data.data
+  }
   // CRITICAL: Enhanced pagination with fallback for unsupported endpoints
   async getAll(page = 1, limit = 10): Promise<PaginatedResponse<Game>> {
     const pageNum = Number(page)
@@ -166,13 +180,16 @@ export class GameService {
         const endIndex = startIndex + limit
         const paginatedData = allGames.slice(startIndex, endIndex)
 
-        const result = {
+        
+        const result: PaginatedResponse<Game> = {
           data: paginatedData,
           pagination: {
             page: page,
             limit: limit,
             total: total,
-            pages: Math.ceil(total / limit),
+            totalPages: Math.ceil(total / limit),
+            hasNext: page < Math.ceil(total / limit),
+            hasPrev: page > 1,
           },
         }
 
@@ -331,21 +348,16 @@ export class GameService {
     console.log(`🔍 Game Service: Fetching games by season: ${seasonYear}`)
     const res = await apiService.get<ApiResponse<Game[]> | Game[]>(
       `/games/team/${teamId}/season/${seasonYear}`
-    );
-    return this.unwrapArray<Game>(res.data);
+    )
+    return this.unwrapArray<Game>(res.data)
   }
 
   // Helper: unwrap envelope-or-array into a plain array
-async unwrapArray<T>(payload: ApiResponse<T[]> | T[]): T[] {
-  return Array.isArray(payload) ? payload : (payload?.data ?? []);
-}
-  async getPreseasonGames(
-    teamId?: number,
-    seasonYear?: number
-  ): Promise<Game[]> {
-    console.log(
-      `🔍 Game Service: Fetching games by season: ${seasonYear}` + ` and team:${teamId}`
-    )
+  async unwrapArray<T>(payload: ApiResponse<T[]> | T[]): Promise<T[]> {
+    return Array.isArray(payload) ? payload : (payload?.data ?? [])
+  }
+  async getPreseasonGames(teamId?: number, seasonYear?: number): Promise<Game[]> {
+    console.log(`🔍 Game Service: Fetching games by season: ${seasonYear}` + ` and team:${teamId}`)
     try {
       const response = await apiService.get<ApiResponse<Game[]> | Game[]>(
         `${this.endpoint}/filter`,
@@ -368,10 +380,7 @@ async unwrapArray<T>(payload: ApiResponse<T[]> | T[]): T[] {
         return []
       }
     } catch (error: any) {
-      console.error(
-        `❌ Failed to fetch games by season ${seasonYear} and teamId ${teamId}:`,
-        error
-      )
+      console.error(`❌ Failed to fetch games by season ${seasonYear} and teamId ${teamId}:`, error)
       throw error
     }
   }
@@ -439,8 +448,8 @@ async unwrapArray<T>(payload: ApiResponse<T[]> | T[]): T[] {
     }
   }
 
-//async getUpcomingGames(teamId?: number, limit?: number): Promise<Game[]> {}
-//async getCompletedGames(teamId?: number, limit?: number): Promise<Game[]> {}
+  //async getUpcomingGames(teamId?: number, limit?: number): Promise<Game[]> {}
+  //async getCompletedGames(teamId?: number, limit?: number): Promise<Game[]> {}
 
   async create(
     data: Omit<Game, 'id' | 'homeTeam' | 'awayTeam' | 'createdAt' | 'updatedAt'>
