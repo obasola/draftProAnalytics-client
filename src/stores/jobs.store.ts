@@ -36,6 +36,7 @@ export const useJobsStore = defineStore('jobs', () => {
   }
 
   function startPolling() {
+    alert("pollTimer.value = "+pollTimer.value);
     if (pollTimer.value) return
     pollTimer.value = window.setInterval(async () => {
       // only poll while jobs are active and tab is visible

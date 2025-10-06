@@ -51,7 +51,7 @@ class ApiService {
       baseURL: API_BASE_URL,
       headers: { 'Content-Type': 'application/json' },
       timeout: 10000,
-      withCredentials: false, // keep behavior from original snippet
+      withCredentials: true, // keep behavior from original snippet
     })
 
     this.setupInterceptors()

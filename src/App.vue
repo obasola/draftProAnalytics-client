@@ -4,10 +4,10 @@
 </script>
 
 <template>
-  <div id="app">
-    <RouterView />
+  <div id="app">    
     <Toast />
     <ConfirmDialog />
+    <RouterView />
   </div>
 </template>
 

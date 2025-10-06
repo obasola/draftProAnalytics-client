@@ -55,10 +55,7 @@ const getHomeAwayTagSeverity = (homeAway: string | undefined) => {
           </div>
           <div class="info-row">
             <span class="label">Home/Away:</span>
-            <Tag 
-              :value="schedule.homeOrAway || 'TBD'" 
-              :severity="getHomeAwayTagSeverity(schedule.homeOrAway)"
-            />
+            <Tag :value="schedule.homeOrAway || 'TBD'" :severity="getHomeAwayTagSeverity(schedule.homeOrAway)" />
           </div>
         </div>
 
@@ -72,21 +69,19 @@ const getHomeAwayTagSeverity = (homeAway: string | undefined) => {
             <span class="label">Opponent ID:</span>
             <span>{{ schedule.oppTeamId || 'TBD' }}</span>
           </div>
-          <div class="info-row">
-            <span class="label">Team Score:</span>
-            <span>{{ schedule.teamScore ?? 'TBD' }}</span>
-          </div>
+
           <div class="info-row">
             <span class="label">Opponent Score:</span>
             <span>{{ schedule.oppTeamScore ?? 'TBD' }}</span>
           </div>
           <div class="info-row">
+            <span class="label">Team Score:</span>
+            <span>{{ schedule.teamScore ?? 'TBD' }}</span>
+          </div>
+          <div class="info-row">
             <span class="label">Result:</span>
-            <Tag 
-              v-if="schedule.wonLostFlag"
-              :value="schedule.wonLostFlag" 
-              :severity="getWonLostTagSeverity(schedule.wonLostFlag)"
-            />
+            <Tag v-if="schedule.wonLostFlag" :value="schedule.wonLostFlag"
+              :severity="getWonLostTagSeverity(schedule.wonLostFlag)" />
             <span v-else>TBD</span>
           </div>
         </div>

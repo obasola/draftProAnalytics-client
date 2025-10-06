@@ -62,19 +62,6 @@
         </template>
       </Column>
 
-      <Column field="homeScore" header="Home Score" sortable>
-        <template #body="{ data }">
-          <div
-            v-if="data.homeScore != null"
-            class="score-display team-score"
-            :class="{ 'winning-score': isWinningScore(data.homeScore, data.awayScore) }"
-          >
-            {{ data.homeScore }}
-          </div>
-          <span v-else class="text-gray-400">-</span>
-        </template>
-      </Column>
-
       <Column field="awayScore" header="Away Score" sortable>
         <template #body="{ data }">
           <div
@@ -83,6 +70,19 @@
             :class="{ 'winning-score': isWinningScore(data.awayScore, data.homeScore) }"
           >
             {{ data.awayScore }}
+          </div>
+          <span v-else class="text-gray-400">-</span>
+        </template>
+      </Column>
+      
+      <Column field="homeScore" header="Home Score" sortable>
+        <template #body="{ data }">
+          <div
+            v-if="data.homeScore != null"
+            class="score-display team-score"
+            :class="{ 'winning-score': isWinningScore(data.homeScore, data.awayScore) }"
+          >
+            {{ data.homeScore }}
           </div>
           <span v-else class="text-gray-400">-</span>
         </template>

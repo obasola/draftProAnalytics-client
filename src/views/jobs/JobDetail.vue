@@ -1,71 +1,85 @@
+
+// ──────────────────────────────────────────
+// src/views/jobs/JobDetail.vue
+// ──────────────────────────────────────────
+//export const __views_jobs_JobDetail_vue = `
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useJobStore } from '../../stores/jobStore'
-import Card from 'primevue/card'
-import Tag from 'primevue/tag'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
+import { onMounted, onUnmounted, watch, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useJobStore } from '../../stores/jobStore';
+import JobLogsPanel from '@/components/jobs/JobLogsPanel.vue';
 
-const route = useRoute()
-const jobStore = useJobStore()
-const id = Number(route.params.id)
+const route = useRoute();
+const store = useJobStore();
+const timer = ref<number | null>(null);
 
-onMounted(async () => {
-  await jobStore.fetchJob(id)
-  await jobStore.fetchLogs(id)
-})
+watch(() => route.params.id, async (id) => {
+  if (!id) return;
+  await store.detail(Number(id));
+  await store.fetchLogs(Number(id), false);
+}, { immediate: true });
+
+onMounted(() => {
+  timer.value = window.setInterval(async () => {
+    const id = Number(route.params.id);
+    if (id) await store.fetchLogs(id, true);
+  }, 1500);
+});
+
+onUnmounted(() => { if (timer.value) clearInterval(timer.value); store.disconnectSse(); });
 </script>
 
 <template>
-  <div class="page">
-    <Card v-if="jobStore.current" class="block">
-      <template #title>
-        Job #{{ jobStore.current.id }} — {{ jobStore.current.type }}
-      </template>
+  <div class="p-4 space-y-3">
+    <Card v-if="store.current">
+      <template #title>Job #{{ store.current.id }} — {{ store.current.type }}</template>
       <template #content>
-        <div class="grid2">
-          <div>Status: <Tag :value="jobStore.current.status" /></div>
-          <div>Result: {{ jobStore.current.resultCode || '—' }}</div>
-          <div>Created: {{ jobStore.current.createdAt }}</div>
-          <div>Started: {{ jobStore.current.startedAt || '—' }}</div>
-          <div>Finished: {{ jobStore.current.finishedAt || '—' }}</div>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div><b>Status:</b> {{ store.current.status }}</div>
+          <div><b>Created:</b> {{ store.current.createdAt }}</div>
+          <div><b>Started:</b> {{ store.current.startedAt || '-' }}</div>
+          <div><b>Finished:</b> {{ store.current.finishedAt || '-' }}</div>
+          <div><b>Result:</b> {{ store.current.resultCode || '-' }}</div>
+          <div><b>Cancel Reason:</b> {{ store.current.cancelReason || '-' }}</div>
         </div>
-        <pre class="payload">
-{{ JSON.stringify(jobStore.current.resultJson, null, 2) }}
-        </pre>
       </template>
     </Card>
 
-    <Card class="block">
-      <template #title>Logs</template>
-      <template #content>
-        <DataTable :value="jobStore.logs" dataKey="id" stripedRows>
-          <Column field="createdAt" header="Time" />
-          <Column field="level" header="Level" />
-          <Column field="message" header="Message" />
-        </DataTable>
-      </template>
-    </Card>
+    <Accordion multiple>
+      <AccordionTab header="Logs">
+        <JobLogsPanel :job-id="Number(route.params.id)" />
+      </AccordionTab>
+      <AccordionTab header="Payload / Result">
+        <div class="grid md:grid-cols-2 gap-4">
+          <Panel header="Payload JSON">
+            <pre class="text-xs overflow-auto max-h-[40vh]">{{ JSON.stringify(store.current?.payload ?? {}, null, 2) }}</pre>
+          </Panel>
+          <Panel header="Result JSON">
+            <pre class="text-xs overflow-auto max-h-[40vh]">{{ JSON.stringify(store.current?.resultJson ?? {}, null, 2) }}</pre>
+          </Panel>
+        </div>
+      </AccordionTab>
+      <AccordionTab header="Metadata">
+        <div class="grid md:grid-cols-2 gap-4">
+          <Panel header="Timestamps">
+            <ul class="text-sm space-y-1">
+              <li><b>createdAt:</b> {{ store.current?.createdAt }}</li>
+              <li><b>startedAt:</b> {{ store.current?.startedAt || '-' }}</li>
+              <li><b>finishedAt:</b> {{ store.current?.finishedAt || '-' }}</li>
+              <li><b>cancelAt:</b> {{ store.current?.cancelAt || '-' }}</li>
+            </ul>
+          </Panel>
+          <Panel header="Status / Codes">
+            <ul class="text-sm space-y-1">
+              <li><b>status:</b> {{ store.current?.status }}</li>
+              <li><b>resultCode:</b> {{ store.current?.resultCode || '-' }}</li>
+              <li><b>cancelReason:</b> {{ store.current?.cancelReason || '-' }}</li>
+            </ul>
+          </Panel>
+        </div>
+      </AccordionTab>
+    </Accordion>
   </div>
 </template>
+ 
 
-<style scoped>
-.page { padding: 16px; }
-.block { margin-bottom: 16px; }
-.grid2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-.payload {
-  margin-top: 12px;
-  background: #111;
-  color: #eaeaea;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  max-height: 320px;
-  overflow: auto;
-}
-</style>
