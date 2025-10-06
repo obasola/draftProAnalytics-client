@@ -49,9 +49,17 @@
       <Column header="Matchup">
         <template #body="{ data }">
           <div class="matchup">
-            <span class="team">{{ data.awayTeam?.name || 'TBD' }}</span>
+            <span class="team">
+              <img :src="getTeamLogo(data.awayTeam)" :alt="data.awayTeam.name" class="inline-logo" />
+              {{ data.awayTeam?.name || 'TBD' }}
+            </span>
             <span class="mx-1">@</span>
-            <span class="team">{{ data.homeTeam?.name || 'TBD' }}</span>
+            <span class="team">
+              <div v-if="data.homeTeam !== null && data.homeTeam !== undefined"> 
+              <img :src="getTeamLogo(data.homeTeam)" :alt="data.homeTeam.name" class="inline-logo" />
+              </div>
+              {{ data.homeTeam?.name || 'TBD' }}
+            </span>
           </div>
         </template>
       </Column>
@@ -204,6 +212,23 @@ const onPage = async (event: any) => {
   await scheduleStore.fetchAll(page, limit)
 }
 
+const getTeamLogo = (team: any): string => {
+  
+  if (!team || !team.name || !team.conference) {
+    alert("NULL TEAM object passed");
+    return ''
+  }
+  const lastWord = team.name.trim().split(' ').pop()
+  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
+
+  alert('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
+  console.log('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
+
+  return new URL(
+    `../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`,
+    import.meta.url
+  ).href
+}
 const viewSchedule = (id: number) => router.push(`/schedules/${id}?mode=read`)
 const editSchedule = (id: number) => router.push(`/schedules/${id}?mode=edit`)
 const createSchedule = () => router.push('/schedules?mode=create')

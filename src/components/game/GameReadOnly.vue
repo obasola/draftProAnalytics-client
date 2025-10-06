@@ -49,6 +49,7 @@ const getGameStatusSeverity = (status: string | undefined) => {
 }
 
 const getTeamLogo = (team: any): string => {
+  
   if (!team || !team.name || !team.conference) return ''
 
   const lastWord = team.name.trim().split(' ').pop()

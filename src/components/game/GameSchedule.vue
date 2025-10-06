@@ -96,7 +96,7 @@
                 <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'away')" class="pi pi-check winner-check"></i>
                 </span>
-                <img v-if="data.awayTeam" :src="getTeamLogo(data.awayTeam)" :alt="data.awayTeam.name"
+                <img v-if="data.awayTeam" :src="getTeamLogo(data.awayTeam)" 
                   class="team-icon" />
                 <span class="team-name">{{ getTeamShortName(data.awayTeam) }}</span>
               </div>
@@ -107,7 +107,7 @@
               <div class="team-display">
               
                 <span class="team-name">{{getTeamShortName(data.homeTeam) }}</span>
-                <img v-if="data.homeTeam" :src="getTeamLogo(data.homeTeam)" :alt="data.homeTeam.name"
+                <img v-if="data.homeTeam" :src="getTeamLogo(data.homeTeam)" 
                   class="team-icon" />
                  <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'home')" class="pi pi-check winner-check"></i>
@@ -147,18 +147,6 @@
           </template>team
         </Column>
 
-        <!-- Home Score Column -->
-        <Column header="Home Score" class="score-column">
-          <template #body="{ data }">
-            <div class="score-cell">
-              <span v-if="!isRowEditing(data.id)" class="score-display">
-                {{ data.homeScore !== null ? data.homeScore : '-' }}
-              </span>
-              <input v-else type="number" v-model="data.homeScore" class="score-input" min="0" placeholder="0" />
-            </div>
-          </template>
-        </Column>
-
         <!-- Visitor Score Column -->
         <Column header="Visitor Score" class="score-column">
           <template #body="{ data }">
@@ -167,6 +155,18 @@
                 {{ data.awayScore !== null ? data.awayScore : '-' }}
               </span>
               <input v-else type="number" v-model="data.awayScore" class="score-input" min="0" placeholder="0" />
+            </div>
+          </template>
+        </Column>
+
+        <!-- Home Score Column -->
+        <Column header="Home Score" class="score-column">
+          <template #body="{ data }">
+            <div class="score-cell">
+              <span v-if="!isRowEditing(data.id)" class="score-display">
+                {{ data.homeScore !== null ? data.homeScore : '-' }}
+              </span>
+              <input v-else type="number" v-model="data.homeScore" class="score-input" min="0" placeholder="0" />
             </div>
           </template>
         </Column>
@@ -592,17 +592,25 @@ const getTeamShortName = (team: any) => {
   return nameParts[nameParts.length - 1] // Last word
 }
 
-const getTeamLogo = (team: any) => {
-  if (!team || !team.name || !team.conference) return ''
 
-  const shortName = getTeamShortName(team)
-  const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
-  const logoFile = `${shortName}.${fileExt}`
-  const logoPath = new URL(`../../images/${team.conference.toLowerCase()}/${logoFile}`, import.meta.url).href
-  return logoPath
-  // return `../../images/${team.conference.toLowerCase()}/${logoFile}`
+
+const getTeamLogo = (team: any): string => {
+  
+  if (!team || !team.name || !team.conference) {
+    alert("NULL TEAM object passed");
+    return ''
+  }
+  const lastWord = team.name.trim().split(' ').pop()
+  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
+
+  //alert('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
+  console.log('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
+
+  return new URL(
+    `../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`,
+    import.meta.url
+  ).href
 }
-
 const isWinner = (game: any, side: 'home' | 'away') => {
   if (game.homeScore === null || game.awayScore === null) return false
   if (game.homeScore === game.awayScore) return false // Tie
