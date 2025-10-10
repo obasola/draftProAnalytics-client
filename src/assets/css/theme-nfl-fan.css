@@ -144,7 +144,7 @@
   border-left: 2px solid var(--brand-navy) !important;
 }
 
-// overrides
+/* overrides */
 .theme-nfl {
   --nav-item-color: #125BFF;
 }

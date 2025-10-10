@@ -1,11 +1,100 @@
 // src/services/api.ts
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
+import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosHeaders } from 'axios'
 
-// ---- Env/base URL (align both implementations) ----
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+/* ==================== base URL resolution ==================== */
+const dropTrailingSlash = (u?: string) => (u ? u.replace(/\/+$/, '') : '')
+const hasApiSuffix = (u: string) => /\/api(?:\/|$)/i.test(u)
 
-// ---- Domain types (from first snippet) ----
+/**
+ * If VITE_API_BASE_URL is set, use it as-is (may or may not include /api).
+ * Otherwise:
+ *   - when on http://localhost:5173  -> http://localhost:5000/api
+ *   - else                            -> ${origin}/api  (works behind nginx)
+ */
+function computeBase(): string {
+  const fromEnv = dropTrailingSlash(import.meta.env.VITE_API_BASE_URL?.trim())
+  if (fromEnv) return fromEnv
+
+  const origin = window.location.origin
+  if (origin.includes('localhost:5173')) return 'http://localhost:5000/api'
+  return hasApiSuffix(origin) ? origin : `${origin}/api`
+}
+
+export const API_BASE = dropTrailingSlash(computeBase())
+
+/* ==================== shared axios instance ==================== */
+const axiosInstance = axios.create({
+  baseURL: API_BASE, // e.g. http://localhost:5000/api  OR  https://draftproanalytics.local/api
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 20000,
+  withCredentials: true,
+})
+
+/* ==================== interceptors ==================== */
+function setupInterceptors(instance: AxiosInstance): void {
+  instance.interceptors.request.use(
+    config => {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        const headers = (config.headers ??= new AxiosHeaders())
+        headers.set('Authorization', `Bearer ${token}`)
+        // optionally: headers.set('Content-Type', 'application/json');
+      }
+      const method = (config.method || 'get').toUpperCase()
+      const base = config.baseURL?.replace(/\/+$/, '') || ''
+      const url = `${base}${config.url || ''}`
+      console.log(`🔄 ${method} ${url}`)
+      return config
+    },
+    error => {
+      console.error('❌ Request Error:', error)
+      return Promise.reject(error)
+    }
+  )
+
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => {
+      const method = (response.config.method || 'get').toUpperCase()
+      console.log(`✅ ${method} ${response.config.url} - ${response.status}`)
+      return response
+    },
+    (error: AxiosError) => {
+      const method = (error.config?.method || 'get').toUpperCase()
+      const url = error.config?.url || '(unknown url)'
+      const status = error.response?.status
+      console.error(`❌ ${method} ${url} - ${status ?? 'NO_RESPONSE'}`)
+
+      switch (status) {
+        case 401:
+          localStorage.removeItem('auth_token')
+          window.location.href = '/login'
+          break
+        case 403:
+          console.error('Access forbidden')
+          break
+        case 404:
+          console.error('Resource not found')
+          break
+        case 500:
+          console.error('Server error')
+          break
+        default:
+          console.error('API Error:', error.response?.data || error.message)
+      }
+      return Promise.reject(error)
+    }
+  )
+}
+setupInterceptors(axiosInstance)
+
+/* ==================== safe path helpers ==================== */
+const ensureLeadingSlash = (p: string) => (p.startsWith('/') ? p : `/${p}`)
+/** Be defensive: if callers accidentally pass "/api/xyz", strip the leading "/api" */
+const sanitizePath = (p: string) => ensureLeadingSlash(p).replace(/^\/api(\/|$)/i, '/')
+
+/* ==================== domain types ==================== */
 export type JobType = 'PLAYER_SYNC' | 'TEAM_SYNC' | 'FULL_SYNC' | 'VALIDATION' | 'ENRICHMENT'
+
 export type JobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
 
 export interface JobRow {
@@ -33,7 +122,7 @@ export interface ScoreboardSyncResult {
   missingMappings: Array<{ espnGameId?: string; homeEspnId?: number; awayEspnId?: number }>
 }
 
-export type Day = 'SUN'|'MON'|'TUE'|'WED'|'THU'|'FRI'|'SAT'
+export type Day = 'SUN' | 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT'
 export interface ScoreboardSchedule {
   enabled: boolean
   days: Day[]
@@ -43,105 +132,55 @@ export interface ScoreboardSchedule {
   mode?: 'by-date'
 }
 
+/* ==================== OO wrapper (reuses shared instance) ==================== */
 class ApiService {
   private api: AxiosInstance
 
-  constructor() {
-    this.api = axios.create({
-      baseURL: API_BASE_URL,
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 10000,
-      withCredentials: true, // keep behavior from original snippet
-    })
-
-    this.setupInterceptors()
+  constructor(instance: AxiosInstance = axiosInstance) {
+    this.api = instance
   }
 
-  private setupInterceptors(): void {
-    // Request interceptor
-    this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('auth_token')
-        if (token) config.headers.Authorization = `Bearer ${token}`
-        console.log(`🔄 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`)
-        return config
-      },
-      (error) => {
-        console.error('❌ Request Error:', error)
-        return Promise.reject(error)
-      }
-    )
-
-    // Response interceptor
-    this.api.interceptors.response.use(
-      (response: AxiosResponse) => {
-        console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`)
-        return response
-      },
-      (error: AxiosError) => {
-        console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status}`)
-        switch (error.response?.status) {
-          case 401:
-            localStorage.removeItem('auth_token')
-            window.location.href = '/login'
-            break
-          case 403:
-            console.error('Access forbidden')
-            break
-          case 404:
-            console.error('Resource not found')
-            break
-          case 500:
-            console.error('Server error')
-            break
-          default:
-            console.error('API Error:', error.response?.data || error.message)
-        }
-        return Promise.reject(error)
-      }
-    )
-  }
-
-  // Generic HTTP methods
+  // Generic HTTP methods (paths should be relative to API base, e.g., "/jobs")
   public get<T>(url: string, params?: any): Promise<AxiosResponse<T>> {
-    return this.api.get<T>(url, { params })
+    return this.api.get<T>(sanitizePath(url), { params })
   }
   public post<T>(url: string, data?: any): Promise<AxiosResponse<T>> {
-    return this.api.post<T>(url, data)
+    return this.api.post<T>(sanitizePath(url), data)
   }
   public put<T>(url: string, data: any): Promise<AxiosResponse<T>> {
-    return this.api.put<T>(url, data)
+    return this.api.put<T>(sanitizePath(url), data)
   }
   public patch<T>(url: string, data: any): Promise<AxiosResponse<T>> {
-    return this.api.patch<T>(url, data)
+    return this.api.patch<T>(sanitizePath(url), data)
   }
   public delete<T>(url: string): Promise<AxiosResponse<T>> {
-    return this.api.delete<T>(url)
+    return this.api.delete<T>(sanitizePath(url))
   }
 
   // Helper methods for common REST patterns
   public async getAll<T>(endpoint: string, params?: any): Promise<T[]> {
-    const response = await this.get<T[]>(endpoint, params)
-    return response.data
+    const { data } = await this.get<T[]>(endpoint, params)
+    return data
   }
   public async getById<T>(endpoint: string, id: number): Promise<T> {
-    const response = await this.get<T>(`${endpoint}/${id}`)
-    return response.data
+    const { data } = await this.get<T>(`${endpoint}/${id}`)
+    return data
   }
-  public async create<T>(endpoint: string, data: Omit<T, 'id'>): Promise<T> {
-    const response = await this.post<T>(endpoint, data)
-    return response.data
+  public async create<T>(endpoint: string, payload: Omit<T, 'id'>): Promise<T> {
+    const { data } = await this.post<T>(endpoint, payload)
+    return data
   }
-  public async update<T>(endpoint: string, id: number, data: Partial<T>): Promise<T> {
-    const response = await this.put<T>(`${endpoint}/${id}`, data)
-    return response.data
+  public async update<T>(endpoint: string, id: number, payload: Partial<T>): Promise<T> {
+    const { data } = await this.put<T>(`${endpoint}/${id}`, payload)
+    return data
   }
   public async remove(endpoint: string, id: number): Promise<void> {
     await this.delete(`${endpoint}/${id}`)
   }
 
+  // Job-specific helpers
   public async listJobs(limit = 50) {
-    const { data } = await this.api.get<JobRow[]>(`/jobs`, { params: { limit } })
+    const { data } = await this.api.get<JobRow[]>('/jobs', { params: { limit } })
     return data
   }
   public async getJob(id: number) {
@@ -158,53 +197,37 @@ class ApiService {
   }
 }
 
+/* ==================== exports ==================== */
+export const api = axiosInstance
 export const apiService = new ApiService()
-// src/services/api.ts (additions)
-export const ScoreboardApi = {
-  // Manual refresh
-  async refreshByDate(date: string) {
-    const res = await apiService.post<ScoreboardSyncResult>(`/jobs/kickoff/scoreboard/by-date`, { date })
-    return res.data
-  },
-  async refreshByWeek(season: number, seasonType: 1|2|3, week: number) {
-    const res = await apiService.post<ScoreboardSyncResult>(`/jobs/kickoff/scoreboard/by-week`, { season, seasonType, week })
-    return res.data
-  },
 
-  // Scheduling controls
-  /*
-  async getSchedule(): Promise<{
-    enabled: boolean
-    days: Array<'SUN'|'MON'|'TUE'|'WED'|'THU'|'FRI'|'SAT'>
-    hour: number
-    minute: number
-    timezone: string
-  }> {
-    const res = await apiService.get(`/jobs/scoreboard/schedule`)
+/* ---- Scoreboard API ---- */
+export const ScoreboardApi = {
+  async refreshByDate(date: string) {
+    const res = await apiService.post<ScoreboardSyncResult>(`/jobs/kickoff/scoreboard/by-date`, {
+      date,
+    })
     return res.data
   },
-  async saveSchedule(payload: {
-    enabled: boolean
-    days: Array<'SUN'|'MON'|'TUE'|'WED'|'THU'|'FRI'|'SAT'>
-    hour: number
-    minute: number
-    timezone: string
-  }) {
-    const res = await apiService.put(`/jobs/scoreboard/schedule`, payload)
+  async refreshByWeek(season: number, seasonType: 1 | 2 | 3, week: number) {
+    const res = await apiService.post<ScoreboardSyncResult>(`/jobs/kickoff/scoreboard/by-week`, {
+      season,
+      seasonType,
+      week,
+    })
     return res.data
-  }
-    */
-   async getSchedule(): Promise<ScoreboardSchedule> {
+  },
+  async getSchedule(): Promise<ScoreboardSchedule> {
     const res = await apiService.get<ScoreboardSchedule>(`/jobs/scoreboard/schedule`)
     return res.data
   },
   async saveSchedule(payload: ScoreboardSchedule): Promise<ScoreboardSchedule> {
     const res = await apiService.put<ScoreboardSchedule>(`/jobs/scoreboard/schedule`, payload)
     return res.data
-  }
+  },
 }
 
-// ---- Jobs API (merged from first snippet; typed + uses ApiService) ----
+/* ---- Jobs API ---- */
 export const JobsApi = {
   async list(limit = 50): Promise<JobRow[]> {
     const res = await apiService.get<JobRow[]>('/jobs', { limit })
@@ -219,16 +242,21 @@ export const JobsApi = {
     return res.data
   },
   async kickoffRoster(team: string): Promise<{ id: number; message?: string }> {
-    const res = await apiService.post<{ id: number; message?: string }>(`/jobs/kickoff/roster`, { team })
+    const res = await apiService.post<{ id: number; message?: string }>(`/jobs/kickoff/roster`, {
+      team,
+    })
     return res.data
   },
   async kickoffScoreboardByDate(date: string) {
     const res = await apiService.post(`/jobs/kickoff/scoreboard/by-date`, { date })
     return res.data
   },
-  async kickoffScoreboardByWeek(year: number, seasonType: 1|2|3, week: number) {
-    const res = await apiService.post(`/jobs/kickoff/scoreboard/by-week`, { year, seasonType, week })
+  async kickoffScoreboardByWeek(year: number, seasonType: 1 | 2 | 3, week: number) {
+    const res = await apiService.post(`/jobs/kickoff/scoreboard/by-week`, {
+      year,
+      seasonType,
+      week,
+    })
     return res.data
   },
-  
 }

@@ -1,6 +1,7 @@
 // src/stores/gameStore.ts
+import { apiService } from '@/services/api'
+import { normalizePaged } from '@/util/paging'
 import { defineStore } from 'pinia'
-import axios from 'axios'
 import { gameService } from '@/services/gameService'
 import type { Game, CrudMode, PaginationMeta } from '@/types'
 
@@ -39,11 +40,6 @@ export interface GameRow {
   gameStatus: string
 }
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || '/api',
-  withCredentials: false,
-})
-
 export const useGameStore = defineStore('games', {
   state: () => ({
     games: [] as GameRow[],
@@ -66,7 +62,7 @@ export const useGameStore = defineStore('games', {
       this.loading = true
       this.error = null
       try {
-        const { data } = await api.get<GameRow | { data: GameRow }>(`/games/${id}`)
+        const { data } = await apiService.get<GameRow | { data: GameRow }>(`/games/${id}`)
         const payload =
           data && typeof data === 'object' && 'data' in data ? (data as any).data : data
         this.currentGame = payload as GameRow
@@ -83,54 +79,39 @@ export const useGameStore = defineStore('games', {
     },
 
     // Generic server-paginated fetch
-    async fetchAll(
-      page = 1,
-      limit = 10,
-      extraParams: Record<string, unknown> = {},
-      refresh = false
-    ) {
+    async fetchAll(page = 1, limit = 500, extraParams: Record<string, unknown> = {}) {
       this.loading = true
       this.error = null
       try {
-        const { data, headers } = await api.get('/games', {
-          params: { page, limit, ...extraParams },
-        })
-
-        const rows = normalizeToRows(data)
-        this.games = rows
-
-        // read total from payload.pagination.total, or X-Total-Count, or fallback to rows length
-        const total =
-          (data?.pagination?.total as number) ??
-          (parseInt(headers['x-total-count'] || '0', 10) || rows.length)
-
-        this.pagination = toPaginationMeta(total, page, limit)
-        this.currentPage = page
-        this.itemsPerPage = limit
-
+        const params = mapQueryParams({ page, limit, ...extraParams })
+        console.debug('[games] GET /games params =>', params)
+        const res = await apiService.get<any>('/games', { params })
+        const { rows, total, page: currentPage, pageSize } = normalizePaged<any>(res)
+        this.games = rows as GameRow[]
+        this.pagination = toPaginationMeta(total, currentPage ?? page, pageSize ?? limit)
+        this.currentPage = currentPage ?? page
+        this.itemsPerPage = pageSize ?? limit
         return { data: rows, pagination: this.pagination }
-      } catch (err) {
-        this.error = 'Failed to load games'
-        throw err
       } finally {
         this.loading = false
       }
     },
 
-    async fetchByYear(year: string | number, page = 1, limit = 10) {
-      return this.fetchAll(page, limit, { year })
+
+    async fetchByYear(year: string | number, page = 1, limit = 500) {
+      return this.fetchAll(page, limit, { year, preseason: 0  })
     },
 
-    async fetchLeagueWeek(year: string | number, week: number, page = 1, limit = 10) {
-      return this.fetchAll(page, limit, { year, week })
+    async fetchLeagueWeek(year: string | number, week: number, page = 1, limit = 500) {
+      return this.fetchAll(page, limit, { year, week, preseason: 0  })
     },
 
-    async fetchLeaguePreseason(year: string | number, page = 1, limit = 10) {
+    async fetchLeaguePreseason(year: string | number, page = 1, limit = 500) {
       return this.fetchAll(page, limit, { year, preseason: 1 })
     },
 
-    async fetchTeamSeason(teamId: number, year: string | number, page = 1, limit = 10) {
-      return this.fetchAll(page, limit, { teamId, year })
+    async fetchTeamSeason(teamId: number, year: string | number, page = 1, limit = 500) {
+      return this.fetchAll(page, limit, { teamId, year, preseason: 0 })
     },
 
     async fetchTeamSeasonWeekGames(
@@ -138,12 +119,12 @@ export const useGameStore = defineStore('games', {
       year: string | number,
       week: number,
       page = 1,
-      limit = 10
+      limit = 500
     ) {
-      return this.fetchAll(page, limit, { teamId, year, week })
+      return this.fetchAll(page, limit, { teamId, year, week, preseason: 0  })
     },
 
-    async fetchTeamPreseason(teamId: number, year: string | number, page = 1, limit = 10) {
+    async fetchTeamPreseason(teamId: number, year: string | number, page = 1, limit = 500) {
       return this.fetchAll(page, limit, { teamId, year, preseason: 1 })
     },
 
@@ -216,17 +197,9 @@ export const useGameStore = defineStore('games', {
 })
 
 // ---------- helpers ----------
-// --- add this helper near the bottom of the file (before export or with other helpers) ---
 function toPaginationMeta(total: number, page: number, limit: number): PaginationMeta {
   const totalPages = Math.max(1, Math.ceil((total || 0) / (limit || 1)))
-  return {
-    total,
-    page,
-    limit,
-    totalPages,
-    hasNext: page < totalPages,
-    hasPrev: page > 1,
-  }
+  return { total, page, limit, totalPages, hasNext: page < totalPages, hasPrev: page > 1 }
 }
 
 function normalizeToRow(g: Game): GameRow {
@@ -259,4 +232,26 @@ function normalizeToRows(payload: unknown): GameRow[] {
     if (Array.isArray(obj.results)) return obj.results as GameRow[]
   }
   return []
+}
+// helper near bottom
+// gameStore.ts (add near the helpers)
+function mapQueryParams(p: Record<string, unknown>) {
+  // Accept camelCase from callers, send snake_case the server likely expects.
+  const out: Record<string, unknown> = {}
+
+  // Common aliases
+  const team_id = (p as any).team_id ?? (p as any).teamId
+  const year = p.year ?? (p as any).seasonYear
+  const week = p.week ?? (p as any).gameWeek
+
+  if (team_id != null) out.team_id = team_id
+  if (year != null) out.year = year
+  if (week != null) out.week = week
+
+  // If the caller explicitly sets preseason, forward it (0 or 1)
+  if ('preseason' in p) out.preseason = (p as any).preseason
+
+  // carry the rest through unchanged
+  for (const [k, v] of Object.entries(p)) if (!(k in out)) out[k] = v
+  return out
 }
