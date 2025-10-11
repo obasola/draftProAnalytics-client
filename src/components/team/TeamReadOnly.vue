@@ -1,3 +1,4 @@
+<!-- src/components/team/TeamReadOnly.vue -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useTeamStore } from '@/stores/teamStore'
@@ -13,7 +14,7 @@ import { gameService } from '@/services/gameService'
 import type { Player, PaginatedResponse } from '@/types'
 import type { TeamStatistics } from '@/services/gameService'
 import TeamDraftPickTable from './TeamDraftPickTable.vue'
-import TeamScheduleTableTable from './TeamScheduleTable.vue'
+import TeamScheduleGamesTable from './TeamScheduleGamesTable.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
 
@@ -318,7 +319,7 @@ const createPlayer = () => {
         </AccordionTab>
 
         <AccordionTab header="Schedule">
-          <TeamScheduleTable :team-id="team?.id" :initialSeasonYear="currentYear" />
+          <TeamScheduleGamesTable :team-id="team?.id" :initialSeasonYear="currentYear" />
         </AccordionTab>
 
         <AccordionTab header="Draft Picks">

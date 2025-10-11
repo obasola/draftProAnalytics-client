@@ -40,11 +40,7 @@
       :globalFilterFields="['gameLocation', 'gameCity', 'oppTeamConference']"
       class="themed-datatable"
     >
-      <Column field="seasonYear" header="Season" sortable>
-        <template #body="{ data }">
-          <span class="font-semibold text-team-primary">{{ data.seasonYear }}</span>
-        </template>
-      </Column>
+
 
       <Column field="scheduleWeek" header="Week" sortable>
         <template #body="{ data }">
