@@ -4,7 +4,7 @@ import axios from 'axios'
 import type { DraftOrder, DraftSelection, TradeOffer } from '@/types/draft'
 import type { Prospect } from '@/types'
 
-const API_BASE = process.env.VUE_APP_API_URL || 'http://localhost:3000/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
 export const draftService = {
   async getDraftOrder(year: number): Promise<DraftOrder> {

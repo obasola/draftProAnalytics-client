@@ -339,9 +339,13 @@ const createPlayer = () => {
 </template>
 
 <style scoped>
+/* Replace the .team-details style in TeamReadOnly.vue with: */
+
 .team-details {
-  max-width: 1000px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
+  max-width: none; /* Removed the 1000px constraint */
+  box-sizing: border-box;
 }
 
 .team-info-grid {
@@ -349,6 +353,8 @@ const createPlayer = () => {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .info-section h3 {
@@ -377,10 +383,12 @@ const createPlayer = () => {
 
 .relationships-accordion {
   margin-top: 2rem;
+  width: 100%;
 }
 
 .players-section {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .section-header {
@@ -464,5 +472,13 @@ const createPlayer = () => {
 .inline-logo {
   height: 32px;
   width: auto;
+}
+
+/* Ensure all nested elements use full width */
+:deep(.p-card),
+:deep(.p-datatable),
+:deep(.p-accordion) {
+  width: 100%;
+  box-sizing: border-box;
 }
 </style>

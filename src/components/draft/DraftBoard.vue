@@ -164,8 +164,8 @@ const filteredProspects = computed(() => {
 })
 
 const teamNeeds = computed(() => {
-  if (!currentPickInfo.value) return []
-  return teamStore.getTeamNeeds(currentPickInfo.value.currentTeamId)
+  if (!currentPickInfo) return []
+  return teamStore.getTeamNeeds(currentPickInfo.teamId)
 })
 
 const recentPicks = computed(() => {
@@ -180,7 +180,7 @@ const formatHeight = (height: number) => {
 }
 
 const selectProspect = async (prospect: Prospect) => {
-  if (!isUsersTurn.value || !prospect.id) return
+  if (!isUsersTurn || !prospect.id) return
   
   try {
     await draftStore.makePick(prospect.id)
@@ -194,7 +194,7 @@ const onProspectSelect = (event: any) => {
 }
 
 const toggleAutoPick = () => {
-  draftState.value.autoPickEnabled = !draftState.value.autoPickEnabled
+  draftState.autoPickEnabled = !draftState.autoPickEnabled
 }
 
 const onTradeProposed = () => {
@@ -202,8 +202,8 @@ const onTradeProposed = () => {
 }
 
 // Auto-pick logic
-watch(() => currentPickInfo.value, async (newPick) => {
-  if (!newPick || isUsersTurn.value || !draftState.value.autoPickEnabled) return
+watch(() => currentPickInfo, async (newPick) => {
+  if (!newPick || isUsersTurn || !draftState.autoPickEnabled) return
   
   // Simulate AI pick after delay
   setTimeout(async () => {

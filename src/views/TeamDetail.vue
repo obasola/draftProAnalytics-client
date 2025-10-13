@@ -51,7 +51,7 @@ watch(
 
 <template>
   <AppLayout>
-    <div class="team-detail-view">
+    <div class="team-detail-view-expanded">
       <!-- Show list when no ID -->
       <TeamList v-if="!teamId" />
 
@@ -68,7 +68,50 @@ watch(
 </template>
 
 <style scoped>
-.team-detail-view {
+.team-detail-view-expanded {
+  width: 98%;
+  margin: 0 auto;
+  max-width: none;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Ensure child components also expand */
+.team-detail-view-expanded :deep(.team-details),
+.team-detail-view-expanded :deep(.team-list),
+.team-detail-view-expanded :deep(.team-form) {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Adjust card padding for better spacing */
+.team-detail-view-expanded :deep(.p-card) {
   width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure grids expand properly */
+.team-detail-view-expanded :deep(.team-info-grid) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Keep data tables responsive and full width */
+.team-detail-view-expanded :deep(.p-datatable) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure accordions expand */
+.team-detail-view-expanded :deep(.relationships-accordion) {
+  width: 100%;
+}
+
+/* Ensure sections use full available width */
+.team-detail-view-expanded :deep(.players-section),
+.team-detail-view-expanded :deep(.info-section) {
+  width: 100%;
+  box-sizing: border-box;
 }
 </style>

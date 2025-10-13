@@ -9,7 +9,7 @@ import CombineScoreDetail from '@/views/CombineScoreDetail.vue'
 import DraftPickDetail from '@/views/DraftPickDetail.vue'
 import ProspectDetail from '@/views/ProspectDetail.vue'
 import GameDetail from '@/views/GameDetail.vue'
-
+import DraftBoard from '@/components/draft/DraftBoard.vue'
 import JobDetail from '../views/jobs/JobDetail.vue'
 import JobList from '@/views/jobs/JobList.vue'
 
@@ -54,6 +54,11 @@ const router = createRouter({
       path: '/combine-scores/:id?',
       name: 'CombineScoreDetail',
       component: CombineScoreDetail,
+    },
+    {
+      path: '/draft',
+      name: 'DraftBoard',
+      component: DraftBoard,
     },
     {
       path: '/draft-picks/:id?',
