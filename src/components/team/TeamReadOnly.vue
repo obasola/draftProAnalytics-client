@@ -423,7 +423,7 @@ const createPlayer = () => {
 
 .player-name {
   font-weight: 500;
-  color: var(--text-color);
+  color: #FFFFFF;
 }
 
 .action-buttons {
