@@ -41,6 +41,11 @@ const router = createRouter({
       component: TeamDetail,
     },
     {
+      path: '/standings',
+      name: 'StandingsView',
+      component: () => import('@/views/StandingsView.vue'),
+    },
+    {
       path: '/player-awards/:id?',
       name: 'PlayerAwardDetail',
       component: PlayerAwardDetail,

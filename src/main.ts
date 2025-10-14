@@ -12,7 +12,6 @@ import './assets/styles/global-primevue-enhancements.css' // For PrimeVue compon
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
-import Tooltip from 'primevue/tooltip'
 
 // PrimeVue styles
 import 'primevue/resources/themes/lara-light-indigo/theme.css'
@@ -45,7 +44,7 @@ import Calendar from 'primevue/calendar'
 import Card from 'primevue/card'
 import Menubar from 'primevue/menubar'
 import ProgressSpinner from 'primevue/progressspinner'
-
+import Tooltip from 'primevue/tooltip'
 // main.ts updates
 import { TeamColorsPlugin } from '../src/plug-ins/team-colors.plugin';
 

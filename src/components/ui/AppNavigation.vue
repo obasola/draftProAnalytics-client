@@ -20,6 +20,7 @@ const menuItems = ref([
   { label: 'Player Awards', icon: 'pi pi-trophy', command: () => router.push('/player-awards') },
   { label: 'Player Teams', icon: 'pi pi-users', command: () => router.push('/player-teams') },
   { label: 'Team Needs', icon: 'pi pi-exclamation-triangle', command: () => router.push('/team-needs') },
+  { label: 'Team Standings', icon: 'pi pi-exclamation-triangle', command: () => router.push('/standings') },
   { label: 'Post Season Results', icon: 'pi pi-crown', command: () => router.push('/post-season-results') },
   {
     label: 'Draft Menu', icon: 'pi pi-folder', items: [
