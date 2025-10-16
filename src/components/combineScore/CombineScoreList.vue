@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCombineScoreStore } from '@/stores/combineScoreStore'
+import { useCombineScoreStore } from '../../stores/combineScoreStore'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'

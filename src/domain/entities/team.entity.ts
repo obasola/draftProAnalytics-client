@@ -1,3 +1,5 @@
+import { TeamColors, TeamId } from "@/types/team.types";
+
 // domain/entities/team.entity.ts
 export class TeamEntity {
   constructor(

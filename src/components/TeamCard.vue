@@ -54,14 +54,15 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useThemeStore } from '@/stores/theme.store';
-import type { TeamEntity } from '@/types/team.types';
+import { useThemeStore } from '../stores/theme.store';
+import type { Team } from '../types/team.types';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
+import { storeToRefs } from 'pinia';
 
 // Props
 interface Props {
-  team: TeamEntity;
+  team: Team;
 }
 
 const props = defineProps<Props>();

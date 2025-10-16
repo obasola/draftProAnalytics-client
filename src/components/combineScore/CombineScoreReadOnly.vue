@@ -1,7 +1,7 @@
 <!-- src/components/combineScore/CombineScoreReadOnly.vue -->
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { useCombineScoreStore } from '@/stores/combineScoreStore'
+import { useCombineScoreStore } from '../../stores/combineScoreStore'
 import Card from 'primevue/card'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'

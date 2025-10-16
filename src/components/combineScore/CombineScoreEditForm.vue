@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCombineScoreStore } from '@/stores/combineScoreStore'
+import { useCombineScoreStore } from '../../stores/combineScoreStore'
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'

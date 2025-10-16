@@ -131,9 +131,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useDraftStore } from '@/stores/draftStore'
-import { useTeamStore } from '@/stores/teamStore'
-import type { Prospect } from '@/types'
+import { useDraftStore } from '../../stores/draftStore'
+import { useTeamStore } from '../../stores/teamStore'
+import type { Prospect } from '../../types'
 import Card from 'primevue/card'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'

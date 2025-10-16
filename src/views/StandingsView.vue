@@ -94,20 +94,21 @@ function groupByConferenceAndDivision(standings: any[]) {
 .division-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.25em;
+  gap: 0.5em;
   margin-top: 1em;
+  padding-left: 1em;         /* east-side padding (left for LTR layouts) */
 }
 
 /* --- TAB HEADER BAR --- */
 :deep(.p-tabview-nav) {
-  background-color: #062d92; /* deep navy bar behind tabs */
+  background-color: #062d92;
   border-radius: 0.5em 0.5em 0 0;
   padding: 0.25em 0.5em;
 }
 
 /* --- INACTIVE TABS --- */
 :deep(.p-tabview-nav li .p-tabview-nav-link) {
-  background-color: #b66e00; /* bronze-gold tab background */
+  background-color: #b66e00; /* bronze background */
   color: #062d92;            /* navy text */
   font-weight: 600;
   border: none;
@@ -124,8 +125,8 @@ function groupByConferenceAndDivision(standings: any[]) {
 
 /* --- ACTIVE TAB --- */
 :deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
-  background-color: #9e4c03; /* darker bronze when active */
-  color: #ffffff;            /* white text */
+  background-color: #9e4c03;
+  color: #ffffff;
   border-radius: 0.4em 0.4em 0 0;
 }
 
@@ -134,6 +135,14 @@ function groupByConferenceAndDivision(standings: any[]) {
   background-color: #f6f6f6;
   border-radius: 0 0 0.5em 0.5em;
   padding: 1em;
+  animation: fadeIn 0.25s ease-in-out; /* smooth transition */
 }
+
+/* --- FADE ANIMATION --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 </style>
 

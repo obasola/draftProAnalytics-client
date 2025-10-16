@@ -46,8 +46,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useThemeStore } from '@/stores/theme.store';
-import type { TeamId } from '@/types/team.types';
+import { useThemeStore } from '../stores/theme.store';
+import type { TeamId } from '../types/team.types';
 import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 
@@ -174,9 +174,9 @@ watch(currentTeam, (newTeam) => {
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useThemeStore } from '@/stores/theme.store';
-import TeamSelector from '@/components/TeamSelector.vue';
-import TeamCard from '@/components/TeamCard.vue';
+import { useThemeStore } from '../stores/theme.store';
+import TeamSelector from '../components/TeamSelector.vue';
+import TeamCard from '../components/TeamCard.vue';
 
 // Store
 const themeStore = useThemeStore();
