@@ -17,6 +17,15 @@ export const useScoreboardStore = defineStore('scoreboard', {
     }
   }),
   actions: {
+    async getCurrentWeek(): Promise<{ year: number; seasonType: 1 | 2 | 3; week: number }> {
+      this.loading = true
+      try {
+        const result = await ScoreboardApi.getCurrent()
+        return result
+      } finally {
+        this.loading = false
+      }
+    },
     async refreshByDate(date: string): Promise<ScoreboardSyncResult> {
       this.loading = true
       try {

@@ -98,8 +98,9 @@ export interface PlayerTeam {
   playerId: number
   teamId: number
   currentTeam: boolean
-  startDate: Date 
-  endDate: Date | undefined
+  isActive: boolean
+  startYear: number | null
+  endYear: number | null
 }
 
 // For create operations (omits id and handles optional endDate)
@@ -107,8 +108,9 @@ export interface CreatePlayerTeam {
   playerId: number
   teamId: number
   currentTeam: boolean
-  startDate: Date
-  endDate?: Date
+  isActive: boolean
+  startYear?: number
+  endYear?: number
 }
 
 
@@ -200,6 +202,7 @@ export interface DraftPick {
   teamId: number | undefined
   playerFirstName?: string
   playerLastName?: string
+  position?: string
   pickFrom: number
   pickTo: number
   combineScore: number

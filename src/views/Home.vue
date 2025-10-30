@@ -41,7 +41,7 @@ const navigateTo = (route: string) => { router.push(route) }
             <div class="stat-content">
               <i class="pi pi-users stat-icon" aria-hidden="true"></i>
               <div class="stat-info">
-                <h3>{{ playerStore.players.length }}</h3>
+                <h3>{{ playerStore.players ? playerStore.players.length : 0 }}</h3>
                 <span>Total Players</span>
               </div>
             </div>

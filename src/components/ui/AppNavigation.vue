@@ -24,8 +24,9 @@ const menuItems = ref([
   { label: 'Post Season Results', icon: 'pi pi-crown', command: () => router.push('/post-season-results') },
   {
     label: 'Draft Menu', icon: 'pi pi-folder', items: [
-      { label: 'Draft Tracker', icon: 'pi pi-stopwatch', command: () => router.push('/draft') },
-      { label: 'Track Draft', icon: 'pi pi-stopwatch', command: () => ('draft-tracker'), to: { name: 'draft-tracker' } }
+      { label: 'Draft Simulator', icon: 'pi pi-stopwatch', command: () => router.push('draft-simulator') },
+      { label: 'Draft Tracker', icon: 'pi pi-stopwatch', command: () => router.push('draft-tracker') },
+      { label: 'Draft Pick Scraper', icon: 'pi pi-cloud-download', route: '/admin/draft-pick-scraper'}
     ]
   },
   {

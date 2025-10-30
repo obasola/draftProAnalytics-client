@@ -1,10 +1,12 @@
 // src/stores/standingsStore.ts
 import { defineStore } from 'pinia';
 import { fetchStandings } from '../services/standingsService';
+import StandingsServices  from '../services/teamStandingsService'
 import { TeamStandingDto } from '@/types/TeamStandingDto';
 
-
+const service = new StandingsServices();
 export const useStandingsStore = defineStore('standings', {
+  
   state: () => ({
     standings: [] as TeamStandingDto[],
     loading: false,
@@ -23,6 +25,12 @@ export const useStandingsStore = defineStore('standings', {
       } finally {
         this.loading = false;
       }
+    },
+    async fetchStandings(year: number, seasonType = 2) {
+      this.loading = true;
+      const res = await service.getAll(year, seasonType);
+      this.standings = res.data; 
+      this.loading = false;
     },
   },
 });

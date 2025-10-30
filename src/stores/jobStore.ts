@@ -6,6 +6,7 @@ import { defineStore } from 'pinia';
 import { JobsApi } from '@/services/JobsApi';
 import { JobApiService} from '@/services/Jobs';
 import type { JobDTO, JobLogDTO, ScheduleItem } from '@/services/JobsApi';
+import { JobRow } from '@/services/api';
 
 const USE_SSE_LOGS = false; // feature flag; future-ready
 
@@ -45,6 +46,15 @@ export const useJobStore = defineStore('jobStore', {
         this.loading = false;
       }
     },
+    // ✅ The createJob wrapper — uses JobsApi.queue
+    async createJob(payload: { type: string; payload?: any; autoStart?: boolean }) {
+      const res = await JobsApi.queue(payload)
+      if (res && typeof res === 'object' && 'id' in res) {
+        this.items.unshift(res)
+      }
+      return res
+    },
+  
     async detail(id: number) {
       this.current = await JobsApi.detail(id);
       this.logs = [];
@@ -88,9 +98,10 @@ export const useJobStore = defineStore('jobStore', {
     async scheduleAdd(args: { id: string; cron: string; job: { type: string; payload?: any }; active?: boolean }) {
       return JobsApi.schedule.add(args);
     },
-    async scheduleList() {
-      this.scheduling =  JobApiService.schedule.list();
-      return this.scheduling;
+    async scheduleList(): Promise<ScheduleItem[]> {
+      const list = await JobsApi.schedule.list()
+      this.scheduling = list
+      return list
     },
     async scheduleToggle(id: string, enabled: boolean) {
       return JobsApi.schedule.toggle(id, enabled);

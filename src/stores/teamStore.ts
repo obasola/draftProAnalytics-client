@@ -46,8 +46,12 @@ export const useTeamStore = defineStore('team', () => {
       teams.value = response.data
       pagination.value = response.pagination
       
-      console.log('Updated teams count:', teams.value.length)
-      console.log('Updated pagination state:', pagination.value)
+      if(teams) {
+        console.log('Updated teams count:', teams.value.length)
+      }
+      if(pagination) {
+        console.log('Updated pagination state:', pagination.value)
+      }
     } catch (err) {
       error.value = 'Failed to fetch teams from server'
       console.error('fetchAll error:', err)

@@ -26,6 +26,7 @@ const form = reactive({
   teamId: undefined as number | undefined,
   playerFirstName: '',
   playerLastName: '',
+  position: '',
   pickFrom: 1,
   pickTo: 1,
   combineScore: 0
@@ -71,7 +72,8 @@ watch(
       form.pickNumber = draftPick.pickNumber
       form.playerId = draftPick.playerId
       form.teamId = draftPick.teamId
-      form.playerFirstName = draftPick.playerFirstName || ''
+      form.position = draftPick.position || ''
+      form.playerLastName = draftPick.playerLastName || ''
       form.playerLastName = draftPick.playerLastName || ''
       form.pickFrom = draftPick.pickFrom
       form.pickTo = draftPick.pickTo
@@ -262,6 +264,33 @@ const onRoundChange = () => {
                 class="form-input"
               />
             </div>
+            <div class="form-row">
+              <label for="position">Player Position</label>
+              <InputText
+                id="position"
+                v-model="form.position"
+                placeholder="Select position"
+                class="form-input"
+              />
+              <select v-model="form.position">
+              
+                <option label="Cornerback" value="CB"/>
+                <option label="Defensive Lineman" value="DL"/>
+                <option label="EDGE" value="EDGE"/>
+                <option label="Fieldgoal Kicker" value="FG"/>
+                <option label="Linebacker" value="LB"/>
+                <option label="Offensive Center" value="OC"/>
+                <option label="Offensive Guard" value="OG"/>
+                <option label="Offensive Tackle" value="OT"/>
+                <option label="Running Back" value="RB"/>
+                <option label="Punter" value="PT"/>
+                <option label="Safety" value="SAF"/>
+                <option label="Special Teams" value="SP"/>
+                <option label="Tight End" value="TE"/>
+                <option label="Quarterback" value="DB"/>
+                <option label="Wide Receiver" value="WR"/>
+              </select>
+            </div>            
           </div>
 
           <div class="form-section">

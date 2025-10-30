@@ -225,6 +225,11 @@ export const ScoreboardApi = {
     const res = await apiService.put<ScoreboardSchedule>(`/jobs/scoreboard/schedule`, payload)
     return res.data
   },
+  async getCurrent(): Promise<{ year: number; seasonType: 1 | 2 | 3; week: number }> {
+    const res = await apiService.get<{ year: number; seasonType: 1 | 2 | 3; week: number }>(`/scoreboard/current`)
+    return res.data
+  },
+
 }
 
 /* ---- Jobs API ---- */
@@ -251,12 +256,15 @@ export const JobsApi = {
     const res = await apiService.post(`/jobs/kickoff/scoreboard/by-date`, { date })
     return res.data
   },
-  async kickoffScoreboardByWeek(year: number, seasonType: 1 | 2 | 3, week: number) {
-    const res = await apiService.post(`/jobs/kickoff/scoreboard/by-week`, {
-      year,
-      seasonType,
-      week,
-    })
+  async kickoffScoreboardByWeek(
+    year: number,
+    seasonType: 1 | 2 | 3,
+    week: number
+  ): Promise<{ id: number; message?: string }> {
+    const res = await apiService.post<{ id: number; message?: string }>(
+      `/jobs/kickoff/scoreboard/by-week`,
+      { year, seasonType, week }
+    )
     return res.data
   },
 }

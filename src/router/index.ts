@@ -9,7 +9,7 @@ import CombineScoreDetail from '@/views/CombineScoreDetail.vue'
 import DraftPickDetail from '@/views/DraftPickDetail.vue'
 import ProspectDetail from '@/views/ProspectDetail.vue'
 import GameDetail from '@/views/GameDetail.vue'
-import DraftBoard from '@/components/draft/DraftBoard.vue'
+import DraftBoard from '@/views/DraftboardView.vue'
 import JobDetail from '../views/jobs/JobDetail.vue'
 import JobList from '@/views/jobs/JobList.vue'
 
@@ -61,7 +61,7 @@ const router = createRouter({
       component: CombineScoreDetail,
     },
     {
-      path: '/draft',
+      path: '/draft-simulator',
       name: 'DraftBoard',
       component: DraftBoard,
     },
@@ -71,14 +71,43 @@ const router = createRouter({
       component: DraftPickDetail,
     },
     {
-      path: '/jobs',
-      name: 'JobList',
-      component: JobList,
+      path: '/admin/import-draft',
+      name: 'DraftImport',
+      component: () => import('@/views/DraftImportView.vue'),
+      meta: {
+        title: 'Import Draft Picks',
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
     },
     {
-      path: '/jobs/:id?',
+      path: '/admin/draft-pick-scraper',
+      name: 'DraftPickScraper',
+      component: () => import('@/views/admin/DraftPickScraperView.vue'),
+      meta: {
+        requiresAuth: true,
+        adminOnly: true,
+        title: 'Draft Pick Scraper',
+        icon: 'pi-cloud-download',
+      },
+    },
+    {
+      path: '/jobs',
+      name: 'Jobs',
+      component: () => import('@/views/jobs/JobsView.vue'),
+      meta: {
+        title: 'Jobs',
+        requiresAuth: true, // Adjust based on your auth requirements
+      },
+    },
+    {
+      path: '/jobs/:id',
       name: 'JobDetail',
-      component: JobDetail,
+      component: () => import('@/views/jobs/JobDetailView.vue'),
+      meta: {
+        title: 'Job Detail',
+        requiresAuth: true,
+      },
     },
     {
       path: '/prospects/:id?',
@@ -120,10 +149,10 @@ const router = createRouter({
         requiresAuth: true, // if you have authentication
       },
     },
-    { 
-      path: '/jobs', 
-      name: 'jobs', 
-      component: JobsPage 
+    {
+      path: '/jobs',
+      name: 'jobs',
+      component: JobsPage,
     },
     /*
     {

@@ -23,7 +23,7 @@ const menuItems = ref([
   { label: 'Post Season Results', icon: 'pi pi-crown', command: () => router.push('/post-season-results') },
   {
     label: 'Draft Menu', icon: 'pi pi-folder', items: [
-      { label: 'Draft Tracker', icon: 'pi pi-stopwatch', command: () => goToPage('draft'), to: { name: 'draft' } },
+      { label: 'Draft Simulator', icon: 'pi pi-stopwatch', command: () => ('draft-simulator'), to: { name: 'DraftBoard' } },
       { label: 'Track Draft', icon: 'pi pi-stopwatch', command: () => ('draft-tracker'), to: { name: 'draft-tracker' } }
     ]
   },

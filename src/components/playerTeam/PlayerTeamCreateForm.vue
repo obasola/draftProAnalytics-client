@@ -21,6 +21,9 @@ const form = reactive({
   teamId: null as number | null,
   startDate: new Date() as Date,
   endDate: null as Date | null,
+  startYear: null as number | null,
+  endYear: null as number | null,
+  isActive: true,
   currentTeam: true,
 })
 
@@ -41,6 +44,8 @@ const formErrors = reactive({
   playerId: '',
   teamId: '',
   startDate: '',
+  startYear: null,
+  endYear: null,
 })
 
 onMounted(() => {
@@ -100,7 +105,10 @@ const onSubmit = async () => {
       playerId: form.playerId!,
       teamId: form.teamId!,
       startDate: form.startDate!,
+      startYear: form.startYear!,
+      endYear: form.endYear!,
       currentTeam: form.currentTeam,
+      isActive: form.isActive,
     }
 
     // Only include endDate if it has a value
@@ -180,6 +188,15 @@ const onCancel = () => {
                 />
                 <label for="currentTeam">Current Team</label>
               </div>
+
+              <div class="checkbox-container">
+                <Checkbox
+                  id="isActive"
+                  v-model="form.isActive"
+                  binary
+                />
+                <label for="isActive">Active?</label>
+              </div>
             </div>
           </div>
 
@@ -188,25 +205,35 @@ const onCancel = () => {
             <h3>Timeline Information</h3>
             
             <div class="form-row">
-              <label for="startDate">Start Date *</label>
+              <label for="startYear">Start Year *</label>
               <Calendar
-                id="startDate"
+                id="startYear"
                 v-model="form.startDate"
                 dateFormat="mm/dd/yy"
-                placeholder="Select start date"
+                placeholder="Select start year"
                 class="form-input"
-                :class="{ 'p-invalid': formErrors.startDate }"
+                :class="{ 'p-invalid': formErrors.startYear }"
               />
-              <small v-if="formErrors.startDate" class="p-error">{{ formErrors.startDate }}</small>
+              <small v-if="formErrors.startYear" class="p-error">{{ formErrors.startYear }}</small>
             </div>
+            <div class="form-row">
+              <label for="endYear">Start Year *</label>
+              <InputNumber
+                id="startYear"
+                v-model="form.startYear"
+                placeholder="Enter start year"
+                class="form-input"
+                :class="{ 'p-invalid': formErrors.startYear }"
+              />
+              <small v-if="formErrors.startYear" class="p-error">{{ formErrors.startYear }}</small>
+            </div>            
 
             <div class="form-row">
-              <label for="endDate">End Date</label>
-              <Calendar
-                id="endDate"
-                v-model="form.endDate"
-                dateFormat="mm/dd/yy"
-                placeholder="Select end date (optional)"
+              <label for="endDate">End Year</label>
+              <InputNumber
+                id="endYear"
+                v-model="form.endYear"
+                placeholder="Enter end year (optional)"
                 class="form-input"
               />
               <small class="field-help">Leave empty if this is an ongoing relationship</small>

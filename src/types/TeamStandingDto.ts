@@ -1,3 +1,5 @@
+import { Team } from "./team.types";
+
 export interface TeamStandingDto {
   teamId: number;
   teamName: string;
@@ -15,4 +17,5 @@ export interface TeamStandingDto {
   divisionLosses: number;
   conferenceWins: number;
   conferenceLosses: number;
+
 }

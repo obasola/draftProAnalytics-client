@@ -19,9 +19,10 @@ const toast = useToast()
 const form = reactive({
   playerId: null as number | null,
   teamId: null as number | null,
-  startDate: null as Date | null,
-  endDate: null as Date | null,
+  startYear: null as number | null,
+  endYear: null as number | null,
   currentTeam: true,
+  isActive: true,
 })
 
 // Mock data - in real app, these would come from stores
@@ -40,7 +41,8 @@ const teams = ref([
 const formErrors = reactive({
   playerId: '',
   teamId: '',
-  startDate: '',
+  startYear: null,
+  endYear: null,
 })
 
 const loadFormData = () => {
@@ -48,9 +50,10 @@ const loadFormData = () => {
   if (currentPlayerTeam) {
     form.playerId = currentPlayerTeam.playerId
     form.teamId = currentPlayerTeam.teamId
-    form.startDate = currentPlayerTeam.startDate ? new Date(currentPlayerTeam.startDate) : null
-    form.endDate = currentPlayerTeam.endDate ? new Date(currentPlayerTeam.endDate) : null
+    form.startYear = currentPlayerTeam.startYear ? new Date(currentPlayerTeam.startYear) : null
+    form.endYear = currentPlayerTeam.endYear ? currentPlayerTeam.endYear : null
     form.currentTeam = currentPlayerTeam.currentTeam
+    form.isActive = currentPlayerTeam.isActive
   }
 }
 
@@ -85,13 +88,13 @@ const validateForm = () => {
     isValid = false
   }
 
-  if (!form.startDate) {
-    formErrors.startDate = 'Start date is required'
+  if (!form.startYear) {
+    formErrors.startYear = 'Start date is required'
     isValid = false
   }
 
   // Validate end date is after start date
-  if (form.endDate && form.startDate && form.endDate <= form.startDate) {
+  if (form.endYear && form.startYear && form.endYear <= form.startYear) {
     toast.add({
       severity: 'warn',
       summary: 'Validation Error',
@@ -128,13 +131,13 @@ const onSubmit = async () => {
     const updatePayload: Record<string, any> = {
       playerId: form.playerId!,
       teamId: form.teamId!,
-      startDate: form.startDate!,
+      startYear: form.startYear!,
       currentTeam: form.currentTeam,
     }
 
-    // Only include endDate if it has a value
-    if (form.endDate !== null) {
-      updatePayload.endDate = form.endDate
+    // Only include endYear if it has a value
+    if (form.endYear !== null) {
+      updatePayload.endYear = form.endYear
     }
 
     await playerTeamStore.update(currentPlayerTeam.id, updatePayload)
@@ -222,23 +225,23 @@ const onCancel = () => {
             <h3>Timeline Information</h3>
             
             <div class="form-row">
-              <label for="startDate">Start Date *</label>
+              <label for="startYear">Start Date *</label>
               <Calendar
-                id="startDate"
-                v-model="form.startDate"
+                id="startYear"
+                v-model="form.startYear"
                 dateFormat="mm/dd/yy"
                 placeholder="Select start date"
                 class="form-input"
-                :class="{ 'p-invalid': formErrors.startDate }"
+                :class="{ 'p-invalid': formErrors.startYear }"
               />
-              <small v-if="formErrors.startDate" class="p-error">{{ formErrors.startDate }}</small>
+              <small v-if="formErrors.startYear" class="p-error">{{ formErrors.startYear }}</small>
             </div>
 
             <div class="form-row">
-              <label for="endDate">End Date</label>
+              <label for="endYear">End Date</label>
               <Calendar
-                id="endDate"
-                v-model="form.endDate"
+                id="endYear"
+                v-model="form.endYear"
                 dateFormat="mm/dd/yy"
                 placeholder="Select end date (optional)"
                 class="form-input"

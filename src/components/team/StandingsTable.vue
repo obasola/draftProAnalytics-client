@@ -5,36 +5,54 @@
     </div>
 
     <div class="division-body">
-      <table class="standings-table">
-        <thead>
-          <tr>
-            <th>Team</th>
-            <th>W</th>
-            <th>L</th>
-            <th>T</th>
-            <th>Pct</th>
-            <th>PF</th>
-            <th>PA</th>
-            <th>+/-</th>
-            <th>Conf</th>
-            <th>Div</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="team in teams" :key="team.teamId">
-            <td class="left">{{ team.teamName }}</td>
-            <td>{{ team.wins }}</td>
-            <td>{{ team.losses }}</td>
-            <td>{{ team.ties }}</td>
-            <td>{{ formatPct(team) }}</td>
-            <td>{{ team.pointsFor }}</td>
-            <td>{{ team.pointsAgainst }}</td>
-            <td>{{ team.pointsFor - team.pointsAgainst }}</td>
-            <td>{{ team.conferenceWins }}-{{ team.conferenceLosses }}</td>
-            <td>{{ team.divisionWins }}-{{ team.divisionLosses }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <DataTable
+        :value="teams"
+        dataKey="teamId"
+        :rows="10"
+        sortField="winPct"
+        :sortOrder="-1"
+        stripedRows
+        responsiveLayout="scroll"
+        tableStyle="width: 100%"
+      >
+        <!-- Team name -->
+        <Column field="teamName" header="Team" sortable>
+          <template #body="{ data }">
+            <span class="left textContrast">{{ data.teamName }}</span>
+          </template>
+        </Column>
+
+        <!-- Wins / Losses / Ties -->
+        <Column field="wins" header="W" sortable />
+        <Column field="losses" header="L" sortable />
+        <Column field="ties" header="T" sortable />
+
+        <!-- Win Percentage -->
+        <Column field="winPct" header="Pct" sortable>
+          <template #body="{ data }">{{ formatPct(data) }}</template>
+        </Column>
+
+        <!-- PF / PA / +/- -->
+        <Column field="pointsFor" header="PF" sortable />
+        <Column field="pointsAgainst" header="PA" sortable />
+        <Column header="+/-">
+          <template #body="{ data }">
+            {{ data.pointsFor - data.pointsAgainst }}
+          </template>
+        </Column>
+
+        <!-- Conf / Div -->
+        <Column header="Conf">
+          <template #body="{ data }">
+            {{ data.conferenceWins }}-{{ data.conferenceLosses }}
+          </template>
+        </Column>
+        <Column header="Div">
+          <template #body="{ data }">
+            {{ data.divisionWins }}-{{ data.divisionLosses }}
+          </template>
+        </Column>
+      </DataTable>
     </div>
   </div>
 </template>
@@ -46,6 +64,7 @@ defineProps<{
   title: string
   teams: TeamStandingDto[]
 }>()
+
 function formatPct(row: TeamStandingDto) {
   const total = row.wins + row.losses + row.ties
   return total > 0 ? (row.wins / total).toFixed(3) : '0.000'
@@ -53,17 +72,31 @@ function formatPct(row: TeamStandingDto) {
 </script>
 
 <style scoped>
+/* ───────────────────────────────
+   Division box sizing & layout
+   ─────────────────────────────── */
 .division-box {
   background-color: #9e4c03;
   color: #ffffff;
-  border-radius: 0.75em;
-  padding: 0.75em 1em;
+  border-radius: 0.5em;
+  padding: 0.5em;
   margin-bottom: 0.5em;
-  
-  /* 👇 Add this line for right-side spacing */
-  margin-right: 1em;
 
+  /* responsive, cross-browser consistent sizing */
+  flex: 1 1 48%;
+  min-width: 780px;
+  max-width: 820px;
+
+  /* spacing handled by parent gap, not manual margin */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+/* fine-tune offset of first-column boxes */
+.division-box.north,
+.division-box.east {
+  position: relative;
+  left: -12px; /* adjust visually if needed */
 }
 
 .division-header {
@@ -79,45 +112,28 @@ function formatPct(row: TeamStandingDto) {
   text-transform: uppercase;
 }
 
-.standings-table {
-  width: 560px;
-  border-collapse: collapse;
-  background: transparent;
-  color: #ffffff;
-  font-size: 0.9em;
+/* ───────────────────────────────
+   Table + text styling
+   ─────────────────────────────── */
+.p-datatable {
+  width: 100%;
 }
 
-.standings-table thead {
-  background-color: #062d92;
+.textContrast {
+  color: #062d92;
+  font-weight: bolder;
 }
 
-.standings-table th,
-.standings-table td {
-  padding: 0.35em 0.6em;
-  text-align: center;
-}
-
-.standings-table th.left,
-.standings-table td.left {
+.left {
   text-align: left;
 }
 
-.standings-table tbody tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.05);
+/* optional row contrast styles if PrimeVue theme lacks */
+.p-datatable-striped tbody tr:nth-child(even) {
+  background-color: #062d92;
 }
-
-.standings-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+.p-datatable-striped tbody tr:hover {
+  background-color: #062d92;
   transition: background-color 0.2s ease;
-}
-
-.standings-table th {
-  color: #ffffff;
-  font-weight: 600;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.standings-table td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 </style>
