@@ -15,7 +15,8 @@ import JobList from '@/views/jobs/JobList.vue'
 
 import ScheduleDetail from '@/views/GameScheduleView.vue'
 import TeamSelectionView from '@/views/TeamSelectionView.vue'
-
+// Import the new draft pick routes
+import { draftPickRoutes } from './draftPickRoutes'
 // DO NOT import these at module level:
 // import { onMounted } from 'vue'
 // import { useThemeStore } from '@/stores/theme.store'
@@ -65,11 +66,15 @@ const router = createRouter({
       name: 'DraftBoard',
       component: DraftBoard,
     },
-    {
-      path: '/draft-picks/:id?',
-      name: 'DraftPickDetail',
-      component: DraftPickDetail,
-    },
+    // OLD ROUTE - You may want to remove or keep for backward compatibility
+    // {
+    //   path: '/draft-picks/:id?',
+    //   name: 'DraftPickDetail',
+    //   component: DraftPickDetail,
+    // },
+    
+    // NEW DRAFT PICK ROUTES - Spread them into the routes array
+    ...draftPickRoutes,
     {
       path: '/admin/import-draft',
       name: 'DraftImport',

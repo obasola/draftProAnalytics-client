@@ -65,6 +65,26 @@ export class TeamService {
     }
   }
 
+  async getTeamNames(): Promise<{ id: number; name: string }[]> {
+  try {
+    // Request all teams with a high limit (32 NFL teams)
+    const url = `${this.endpoint}?page=1&limit=32`;
+    const response = await apiService.get<ApiResponse<Team[], any>>(url);
+    
+    // Map the response to simple id/name pairs
+    const teamNames = response.data.data.map(team => ({
+      id: team.id ? team.id : 0,
+      name: team.name
+    }));
+    
+    console.log('📋 Team names loaded:', teamNames.length);
+    return teamNames;
+    
+  } catch (error) {
+    console.error('❌ Failed to load team names:', error);
+    throw error;
+  }
+}
   async create(data: Omit<Team, 'id'>): Promise<Team> {
     const response = await apiService.post<ApiResponse<Team>>(this.endpoint, data)
     return response.data.data

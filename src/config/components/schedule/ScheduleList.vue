@@ -221,7 +221,7 @@ const getTeamLogo = (team: any): string => {
   const lastWord = team.name.trim().split(' ').pop()
   const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
 
- // alert('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
+  alert('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
   console.log('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
 
   return new URL(

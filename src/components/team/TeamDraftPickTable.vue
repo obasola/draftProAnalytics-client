@@ -1,202 +1,189 @@
-<template>
-  <div class="team-draftpick-table w-full">
-    <div class="list-header bg-team-primary text-team-accent p-4 rounded-lg shadow-lg mb-6">
-      <h2 class="text-2xl font-bold flex items-center gap-2">
-        <span v-if="currentTeam">{{ currentTeam.name }}</span>
-        <span>Draft Picks</span>
-      </h2>
+<script setup lang="ts">
+import { ref, watch, onMounted } from 'vue';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
+import Dropdown from 'primevue/dropdown';
+import { useDraftPick } from '@/composables/draftPick/useDraftPick';
 
-      <div class="flex items-center gap-3">
-        <label class="text-sm opacity-90">Year</label>
-        <Dropdown
-          v-model="draftYear"
-          :options="yearOptions"
-          optionLabel="label"
+interface Props {
+  teamId?: number;
+  initialYear?: number;
+}
+
+const props = defineProps<Props>();
+
+const {
+  draftPicksWithRelations,
+  loading,
+  error,
+  fetchByTeamAndYear,
+} = useDraftPick();
+
+const selectedYear = ref<number>(props.initialYear || new Date().getFullYear());
+
+const yearOptions = ref<{ label: string; value: number }[]>([]);
+
+const initializeYearOptions = (): void => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let i = currentYear; i >= currentYear - 10; i--) {
+    years.push({ label: i.toString(), value: i });
+  }
+  yearOptions.value = years;
+};
+
+const loadDraftPicks = async (): Promise<void> => {
+  if (props.teamId && selectedYear.value) {
+    await fetchByTeamAndYear(props.teamId, selectedYear.value);
+  }
+};
+
+watch(selectedYear, async () => {
+  await loadDraftPicks();
+});
+
+watch(() => props.teamId, async () => {
+  await loadDraftPicks();
+});
+
+onMounted(async () => {
+  initializeYearOptions();
+  await loadDraftPicks();
+});
+</script>
+
+<template>
+  <div class="draft-pick-table-container">
+    <div class="table-header">
+      <h4>Draft Picks</h4>
+      <div class="year-selector">
+        <label for="yearSelect">Year:</label>
+        <Dropdown 
+          id="yearSelect"
+          v-model="selectedYear" 
+          :options="yearOptions" 
+          optionLabel="label" 
           optionValue="value"
-          class="w-40"
-          @change="reloadFirstPage"
-        />
-        <Button
-          @click="createDraftPick"
-          label="Create Draft Pick"
-          icon="pi pi-plus"
-          class="p-button-success"
+          placeholder="Select Year"
         />
       </div>
     </div>
 
-    <DataTable
-      :value="draftPickStore.draftPicks"
-      :loading="draftPickStore.loading"
-      :lazy="true"
-      paginator
-      :rows="rows"
-      :first="first"
-      :totalRecords="draftPickStore.pagination?.total || 0"
-      :rowsPerPageOptions="[5, 10, 20, 50]"
-      @page="onPage"
+    <div v-if="loading" class="loading-message">
+      <i class="pi pi-spin pi-spinner"></i> Loading draft picks...
+    </div>
+
+    <div v-else-if="error" class="error-message">
+      <i class="pi pi-exclamation-triangle"></i> {{ error }}
+    </div>
+
+    <div v-else-if="draftPicksWithRelations.length === 0" class="empty-message">
+      <i class="pi pi-info-circle"></i> No draft picks found for this team and year.
+    </div>
+
+    <DataTable 
+      v-else
+      :value="draftPicksWithRelations" 
+      :paginator="false"
+      class="draft-picks-table"
       responsiveLayout="scroll"
-      sortField="draftYear"
-      :sortOrder="-1"
-      class="themed-datatable"
     >
-      <Column field="draftYear" header="Draft Year" sortable />
       <Column field="round" header="Round" sortable />
-      <Column field="pickNumber" header="Pick #" sortable />
-      <Column header="Player">
+      <Column field="pickNumber" header="Pick" sortable />
+      <Column field="player" header="Player" sortable>
         <template #body="{ data }">
-          {{ formatPlayerName(data) }}
+          <span v-if="data.player">{{ data.player }}</span>
+          <span v-else class="text-muted">Not selected</span>
         </template>
       </Column>
-      <Column field="teamId" header="Team ID" sortable />
-      <Column field="combineScore" header="Combine Score" sortable>
+      <Column field="position" header="Position" sortable>
         <template #body="{ data }">
-          {{ data.combineScore?.toFixed(2) || 'N/A' }}
+          <span v-if="data.position">{{ data.position }}</span>
+          <span v-else>-</span>
         </template>
       </Column>
-      <Column field="pickFrom" header="From Pick" sortable />
-      <Column field="pickTo" header="To Pick" sortable />
-      <Column header="Actions">
-        <template #body="{ data }">
-          <div class="action-buttons">
-            <Button
-              @click="viewDraftPick(data.id)"
-              icon="pi pi-eye"
-              class="p-button-info p-button-sm"
-              v-tooltip="'View'"
-            />
-            <Button
-              @click="editDraftPick(data.id)"
-              icon="pi pi-pencil"
-              class="p-button-warning p-button-sm"
-              v-tooltip="'Edit'"
-            />
-            <Button
-              @click="deleteDraftPick(data.id)"
-              icon="pi pi-trash"
-              class="p-button-danger p-button-sm"
-              v-tooltip="'Delete'"
-            />
-          </div>
-        </template>
-      </Column>
+      <Column field="team" header="Current Team" sortable />
     </DataTable>
+
+    <div v-if="draftPicksWithRelations.length > 0" class="picks-summary">
+      <span class="summary-text">
+        Total Picks: <strong>{{ draftPicksWithRelations.length }}</strong>
+      </span>
+    </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { onMounted, ref, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import Dropdown from 'primevue/dropdown'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-
-import { useDraftPickStore } from '@/stores/draftPickStore'
-import { useThemeStore } from '@/stores/theme.store'
-import { useTeamColors } from '@/composables/useTeamColors'
-
-// Props (allow passing a team explicitly; otherwise fall back to current themed team)
-const props = defineProps<{
-  teamId?: number | string
-  initialYear?: number
-}>()
-
-const router = useRouter()
-const draftPickStore = useDraftPickStore()
-const themeStore = useThemeStore()
-const { currentTeam } = useTeamColors()
-
-// Pagination
-const rows = ref(10)
-const first = ref(0)
-
-// Year selector (default to current year)
-const nowYear = new Date().getFullYear()
-const draftYear = ref<number>(props.initialYear ?? nowYear)
-
-// Simple recent-years window
-const yearOptions = computed(() =>
-  Array.from({ length: 6 }, (_, i) => {
-    const y = nowYear - i
-    return { label: `${y}`, value: y }
-  })
-)
-
-// Resolve team id
-const effectiveTeamId = computed(() =>
-  props.teamId ?? currentTeam?.value?.id
-)
-
-// Data fetch
-const fetchPage = async (page = 1, limit = rows.value) => {
-  if (!effectiveTeamId.value || !draftYear.value) return
-  await draftPickStore.fetchByTeamYear(effectiveTeamId.value, draftYear.value, page, limit)
-}
-
-onMounted(async () => {
-  // Ensure theme teams loaded (if you rely on them elsewhere)
-  if (themeStore.teams.length === 0) {
-    await themeStore.initializeTheme()
-  }
-  await fetchPage(1, rows.value)
-})
-
-watch([() => props.teamId, draftYear], async () => {
-  first.value = 0
-  await fetchPage(1, rows.value)
-})
-
-const onPage = async (event: any) => {
-  const page = event.page + 1
-  const limit = event.rows
-  first.value = event.first
-  rows.value = limit
-  await fetchPage(page, limit)
-}
-
-const reloadFirstPage = async () => {
-  first.value = 0
-  await fetchPage(1, rows.value)
-}
-
-// Actions
-const viewDraftPick = (id: number) => router.push(`/draft-picks/${id}?mode=read`)
-const editDraftPick = (id: number) => router.push(`/draft-picks/${id}?mode=edit`)
-const createDraftPick = () => router.push('/draft-picks?mode=create')
-const deleteDraftPick = async (id: number) => {
-  if (confirm('Are you sure you want to delete this draft pick?')) {
-    await draftPickStore.remove(id)
-    await fetchPage(draftPickStore.currentPage, draftPickStore.itemsPerPage)
-  }
-}
-
-// Helpers (kept identical to DraftPickList behavior)
-const formatPlayerName = (pick: any) => {
-  if (pick.playerFirstName && pick.playerLastName) {
-    return `${pick.playerFirstName} ${pick.playerLastName}`
-  }
-  return pick.playerId ? `Player ID: ${pick.playerId}` : 'Unassigned'
-}
-</script>
-
 <style scoped>
-.list-header { display: flex; justify-content: space-between; align-items: center; }
-.action-buttons { display: flex; gap: 0.5rem; }
+.draft-pick-table-container {
+  width: 100%;
+  box-sizing: border-box;
+}
 
-/* Optional: match your themed DataTable styling used elsewhere */
-.themed-datatable { box-shadow: var(--shadow-2); border-radius: 0.5rem; overflow: hidden; }
-:deep(.p-datatable) { border: 1px solid var(--team-primary); }
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-  background-color: var(--team-primary);
-  color: var(--team-accent);
-  border-bottom: 1px solid var(--team-secondary);
-  font-weight: 600;
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--surface-border);
 }
-:deep(.p-datatable .p-datatable-tbody > tr:nth-child(even)) {
-  background-color: rgba(var(--team-primary-rgb), 0.05);
+
+.table-header h4 {
+  margin: 0;
+  color: var(--text-color);
 }
-:deep(.p-datatable .p-datatable-tbody > tr:hover) {
-  background-color: rgba(var(--team-primary-rgb), 0.1);
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.year-selector label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.loading-message,
+.error-message,
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+.error-message {
+  color: var(--red-500);
+}
+
+.loading-message i {
+  margin-right: 0.5rem;
+}
+
+.text-muted {
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+.picks-summary {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+  text-align: center;
+}
+
+.summary-text {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+}
+
+.summary-text strong {
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.draft-picks-table {
+  width: 100%;
 }
 </style>
