@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useTeamStore } from '../../stores/teamStore'
-import { useGameStore } from '../../stores/gameStore'
+import { useTeamStore } from '../../../stores/teamStore'
+import { useGameStore } from '../../../stores/gameStore'
 import Card from 'primevue/card'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
@@ -21,7 +21,7 @@ const showCreateGameModal = ref(false)
 const teamGames = computed(() => {
   if (!team.value?.id) return []
   
-  return gameStore.games.filter(game => 
+  return gameStore.games.filter((game: { homeTeamId: any; awayTeamId: any }) => 
     (game.homeTeamId && game.homeTeamId === team.value?.id) || 
     (game.awayTeamId && game.awayTeamId === team.value?.id)
   )
@@ -37,14 +37,14 @@ const onGameCreated = async (newGame: any) => {
   await loadTeamGames()
 }
 
-// ✅ Load both regular season and preseason games
+// ✅ Load both regular season and seasonType games
 const loadTeamGames = async () => {
   if (!team.value?.id) return
   
   const currentSeason = new Date().getFullYear().toString()
   
   try {
-    // Load both regular season and preseason games for complete schedule
+    // Load both regular season and seasonType games for complete schedule
     await Promise.all([
       gameStore.fetchTeamSeason(team.value.id, currentSeason),
     ])
@@ -81,21 +81,21 @@ const formatGameResult = (game: any) => {
 
 // ✅ Get team's complete schedule (replaces individual Schedule records)
 const getTeamRecord = computed(() => {
-  const wins = teamGames.value.filter(game => {
+  const wins = teamGames.value.filter((game) => {
     const isHome = game.homeTeamId === team.value?.id
     const teamScore = isHome ? game.homeScore : game.awayScore
     const oppScore = isHome ? game.awayScore : game.homeScore
     return teamScore ? teamScore : 0 < (oppScore ? oppScore : 0)
   }).length
   
-  const losses = teamGames.value.filter(game => {
+  const losses = teamGames.value.filter((game) => {
     const isHome = game.homeTeamId === team.value?.id
     const teamScore = isHome ? game.homeScore : game.awayScore
     const oppScore = isHome ? game.awayScore : game.homeScore
     return teamScore ? teamScore : 0 < (oppScore ? oppScore : 0)
   }).length
   
-  const ties = teamGames.value.filter(game => {
+  const ties = teamGames.value.filter((game) => {
     const isHome = game.homeTeamId === team.value?.id
     const teamScore = isHome ? game.homeScore : game.awayScore
     const oppScore = isHome ? game.awayScore : game.homeScore
@@ -190,8 +190,8 @@ const getTeamRecord = computed(() => {
             >
               <Column field="gameWeek" header="Week" sortable>
                 <template #body="{ data }">
-                  <span v-if="data.preseason" class="preseason-badge">
-                    Preseason {{ data.preseason }}
+                  <span v-if="data.seasonType === 1" class="preseason-badge">
+                    Preseason {{ data.seasonType }}
                   </span>
                   <span v-else-if="data.gameWeek" class="regular-season-badge">
                     Week {{ data.gameWeek }}

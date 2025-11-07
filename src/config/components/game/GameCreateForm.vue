@@ -27,18 +27,18 @@
               <label class="radio-label">
                 <input 
                   type="radio" 
-                  v-model="formData.preseason" 
+                  v-model="formData.seasonType" 
                   :value="1" 
-                  name="preseason"
+                  name="seasonType"
                 />
                 Preseason
               </label>
               <label class="radio-label">
                 <input 
                   type="radio" 
-                  v-model="formData.preseason" 
+                  v-model="formData.seasonType" 
                   :value="0" 
-                  name="preseason"
+                  name="seasonType"
                 />
                 Regular Season
               </label>
@@ -235,7 +235,7 @@ const toast = useToast()
 const formData = reactive({
   seasonYear: '2025',
   gameWeek: null as number | null,
-  preseason: 0,
+  seasonType: 2,
   gameDate: '',
   homeTeamId: '',
   awayTeamId: '',
@@ -249,7 +249,7 @@ const formData = reactive({
 })
 
 // Computed properties
-const isPreseason = computed(() => formData.preseason === 1)
+const isPreseason = computed(() => formData.seasonType === 1)
 const isUSAGame = computed(() => formData.gameCountry.toUpperCase() === 'USA')
 
 const seasonYears = computed(() => {
@@ -341,8 +341,8 @@ const onCountryChange = () => {
   }
 }
 
-// Watch for preseason changes to clear game week
-watch(() => formData.preseason, (newVal) => {
+// Watch for seasonType changes to clear game week
+watch(() => formData.seasonType, (newVal) => {
   if (newVal === 1) {
     formData.gameWeek = null
   }
@@ -406,7 +406,7 @@ const handleCancel = () => {
   Object.assign(formData, {
     seasonYear: '',
     gameWeek: null,
-    preseason: 0,
+    seasonType: 2,
     gameDate: '',
     homeTeamId: '',
     awayTeamId: '',

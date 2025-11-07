@@ -78,18 +78,18 @@
               <label class="radio-label">
                 <input 
                   type="radio" 
-                  v-model="formData.preseason" 
+                  v-model="formData.seasonType" 
                   :value="1" 
-                  name="preseason"
+                  name="seasonType"
                 />
                 Preseason
               </label>
               <label class="radio-label">
                 <input 
                   type="radio" 
-                  v-model="formData.preseason" 
+                  v-model="formData.seasonType" 
                   :value="0" 
-                  name="preseason"
+                  name="seasonType"
                 />
                 Regular Season
               </label>
@@ -110,7 +110,7 @@
                 Week {{ week }}
               </option>
             </select>
-            <small v-if="isPreseason" class="form-note">Game week is not applicable for preseason games</small>
+            <small v-if="isPreseason" class="form-note">Game week is not applicable for seasonType games</small>
           </div>
 
           <div class="form-row">
@@ -255,7 +255,7 @@ const formData = reactive({
   id: null as number | null,
   seasonYear: '',
   gameWeek: null as number | null,
-  preseason: 0,
+  seasonType: 0,
   gameDate: '',
   homeTeamId: '',
   awayTeamId: '',
@@ -269,7 +269,7 @@ const formData = reactive({
 })
 
 // Computed properties
-const isPreseason = computed(() => formData.preseason === 1)
+const isPreseason = computed(() => formData.seasonType === 1)
 const isUSAGame = computed(() => formData.gameCountry.toUpperCase() === 'USA')
 
 const seasonYears = computed(() => {
@@ -369,8 +369,8 @@ const onCountryChange = () => {
   }
 }
 
-// Watch for preseason changes to clear game week
-watch(() => formData.preseason, (newVal) => {
+// Watch for seasonType changes to clear game week
+watch(() => formData.seasonType, (newVal) => {
   if (newVal === 1) {
     formData.gameWeek = null
   }
@@ -408,7 +408,7 @@ const populateForm = (game: any) => {
   formData.id = game.id
   formData.seasonYear = game.seasonYear
   formData.gameWeek = game.gameWeek
-  formData.preseason = game.preseason || 0
+  formData.seasonType = game.seasonType || 0
   formData.gameDate = game.gameDate ? formatDateForInput(game.gameDate) : ''
   // Convert numeric team IDs back to placeholder format for form display
   formData.homeTeamId = game.homeTeamId
@@ -450,7 +450,7 @@ const handleSubmit = async () => {
     const gamePayload = {
       seasonYear: formData.seasonYear,
       gameWeek: formData.gameWeek,
-      preseason: formData.preseason,
+      seasonType: formData.seasonType,
       gameDate: formData.gameDate,
       homeTeamId: Number(formData.homeTeamId.replace(/#/g, '')),
       awayTeamId: Number(formData.awayTeamId.replace(/#/g, '')),

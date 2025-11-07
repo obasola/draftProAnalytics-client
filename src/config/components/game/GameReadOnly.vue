@@ -82,8 +82,8 @@ const getGameResult = computed(() => {
 const getWeekDisplay = computed(() => {
   if (!game.value) return ''
 
-  if (game.value.preseason) {
-    return `Preseason Week ${game.value.preseason}`
+  if (game.value.seasonType === 1) {
+    return `Preseason Week ${game.value.gameWeek}`
   } else if (game.value.gameWeek) {
     return `Week ${game.value.gameWeek}`
   }

@@ -1,3 +1,4 @@
+// src/stores/jobs.store.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { JobRow } from '@/services/api'

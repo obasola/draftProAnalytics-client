@@ -1,3 +1,4 @@
+// src/views/jobs/JobsView.vue
 <script setup lang="ts">
 import { ref, onMounted, Ref} from 'vue'
 import { useToast } from 'primevue/usetoast'
@@ -79,7 +80,6 @@ async function runImportScoresWeek() {
       <div class="grid align-items-center gap-3">
         <div class="col-12 md:col-3">
           <label for="seasonYear" class="block text-sm font-medium mb-1">Season Year</label>
-
           <InputText
             id="seasonYear"
             v-model="seasonYear"

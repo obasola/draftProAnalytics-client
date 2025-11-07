@@ -1,7 +1,5 @@
 <template>
-    
        <JobsScoreboardPanel class="mt-6" />
-    
 </template>
 
 <script setup lang="ts">
@@ -31,7 +29,13 @@ function progressPct(d: any) {
   const pct = Math.round((p / t) * 100)
   return Math.min(100, Math.max(0, pct))
 }
-async function refreshNow() { await jobs.refresh(50) }
+async function refreshNow() {
+  if (import.meta.env.VITE_JOBS_AUTO_REFRESH === 'true') {
+    await jobs.refresh(50) 
+    const ms = Number(import.meta.env.VITE_JOBS_REFRESH_MS || 5000)
+    timer = setInterval(refreshNow, ms)
+  }
+}
 async function onStartTeams() { await jobs.startTeams() }
 async function onStartRoster() { if (team.value) await jobs.startRoster(team.value) }
 

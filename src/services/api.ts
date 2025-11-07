@@ -195,6 +195,22 @@ class ApiService {
     const { data } = await this.api.post(`/jobs/kickoff/roster`, { team })
     return data
   }
+  public async kickoffScoreboardByDate(date: string) {
+    const res = await apiService.post(`/jobs/kickoff/scoreboard/by-date`, { date })
+    return res.data
+  }
+  // 👇 this function is the one you're missing or not importing
+  public async kickoffScoreboardByWeek(
+    year: number,
+    seasonType: 1 | 2 | 3,
+    week: number
+  ): Promise<{ id: number; message?: string }> {
+    const res = await apiService.post<{ id: number; message?: string }>(
+      `/jobs/kickoff/scoreboard/by-week`,
+      { year, seasonType, week }
+    )
+    return res.data
+  }
 }
 
 /* ==================== exports ==================== */
@@ -209,9 +225,9 @@ export const ScoreboardApi = {
     })
     return res.data
   },
-  async refreshByWeek(season: number, seasonType: 1 | 2 | 3, week: number) {
+  async refreshByWeek(seasonYear: number, seasonType: 1 | 2 | 3, week: number) {
     const res = await apiService.post<ScoreboardSyncResult>(`/jobs/kickoff/scoreboard/by-week`, {
-      season,
+      seasonYear,
       seasonType,
       week,
     })

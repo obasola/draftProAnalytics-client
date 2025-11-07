@@ -142,7 +142,7 @@ onMounted(() => {
       >
         <Column header="Week" sortField="gameWeek">
           <template #body="{ data }">
-            <span v-if="data.preseason">Pre {{ data.preseason }}</span>
+            <span v-if="data.seasonType === 1">Pre {{ data.seasonType }}</span>
             <span v-else-if="data.gameWeek">Week {{ data.gameWeek }}</span>
             <span v-else>-</span>
           </template>

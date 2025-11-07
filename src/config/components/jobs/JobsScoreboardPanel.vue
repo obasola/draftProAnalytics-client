@@ -5,7 +5,6 @@
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useJobsStore } from '@/stores/jobs.store'
-import { fmt } from '../../util/date'
 
 interface JobRow {
     started_at?: string | null
@@ -31,8 +30,9 @@ import MultiSelect from 'primevue/multiselect'
 import Card from 'primevue/card'
 import Divider from 'primevue/divider'
 import InputSwitch from 'primevue/inputswitch'
-import { useScoreboardStore } from '../../stores/scoreboardScoreStore'
-import { ScoreboardSyncResult } from '@/services/api'
+
+import { JobsApi, ScoreboardSyncResult } from '@/services/api'
+import { useScoreboardStore } from '@/stores/scoreboardScoreStore'
 
 const jobs = useJobsStore()
 const { rows, loading, error } = storeToRefs(jobs)
@@ -41,6 +41,8 @@ const team = ref('kc')
 
 const toast = useToast()
 const sb = useScoreboardStore()
+const useJobQueue = ref(false)
+
 
 // Manual refresh controls
 const date = ref<Date | null>(new Date()) // default "today"
@@ -70,6 +72,8 @@ const dayOptions = [
     { label: 'Sat', value: 'SAT' },
 ]
 
+const lastResult = ref<ScoreboardSyncResult | null>(null)
+
 function fmtYmd(d: Date) {
     const y = d.getFullYear()
     const m = (d.getMonth() + 1).toString().padStart(2, '0')
@@ -89,20 +93,41 @@ async function runByDate() {
 }
 
 async function runByWeek() {
-    try {
-        const res: ScoreboardSyncResult =
-            await sb.refreshByWeek(season.value, seasonType.value, week.value)
-        const tag = `${season.value}-t${seasonType.value}-w${week.value}`
-        toast.add({
-            severity: 'success',
-            summary: 'Scoreboard',
-            detail: `Refreshed ${tag} (processed ${res.processed}, failed ${res.failed})`,
-            life: 4000
-        })
-    } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Scoreboard', detail: e?.message ?? 'Failed', life: 5000 })
+  try {
+    if (useJobQueue.value) {
+      // Use Job queue endpoint
+      const res = await JobsApi.kickoffScoreboardByWeek(
+        season.value,
+        seasonType.value,
+        week.value
+      )
+      toast.add({
+        severity: 'info',
+        summary: 'Job queued',
+        detail: `Job #${res.id} started for ${season.value} week ${week.value}`,
+        life: 4000,
+      })
+      await jobs.refresh(50)
+    } else {
+      // Run directly (manual refresh)
+      const res = await sb.refreshByWeek(season.value, seasonType.value, week.value)
+      toast.add({
+        severity: 'success',
+        summary: 'Scoreboard',
+        detail: `Refreshed ${season.value}-W${week.value} (processed ${res.processed}, failed ${res.failed})`,
+        life: 4000,
+      })
     }
+  } catch (e: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Scoreboard',
+      detail: e?.message ?? 'Failed',
+      life: 5000,
+    })
+  }
 }
+
 
 async function saveSchedule() {
     try {
@@ -146,108 +171,128 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
                     <Button label="Refresh" icon="pi pi-refresh" severity="contrast" @click="refreshNow" />
                 </div>
             </div>
+            <div v-if="useJobQueue">
+                <DataTable :value="rows" :loading="loading" dataKey="id" paginator :rows="15" size="small">
+                    <Column field="id" header="#" style="width: 80px" />
+                    <Column field="job_type" header="Type" style="width: 140px" />
+                    <Column header="Status" style="width: 140px">
+                        <template #body="{ data }">
+                            <JobStatusTag :status="data.status" />
+                        </template>
+                    </Column>
+                    <Column header="Progress">
+                        <template #body="{ data }">
+                            <div class="flex items-center gap-2">
+                                <ProgressBar :value="progressPct(data)" style="width: 12rem" />
+                                <span class="text-xs">
+                                    {{ data.processed_records ?? 0 }} / {{ data.total_records ?? '?' }}
+                                    <span v-if="data.failed_records"> (failed: {{ data.failed_records }})</span>
+                                </span>
+                            </div>
+                        </template>
+                    </Column>
+                    <Column field="started_at" header="Started" :body="(d: JobRow) => fmt(d.started_at)"
+                        style="width: 180px" />
+                    <Column field="completed_at" header="Completed" :body="(d: JobRow) => fmt(d.completed_at)"
+                        style="width: 180px" />
+                    <Column header="Error">
+                        <template #body="{ data }">
+                            <span class="text-red-600 text-sm" v-if="data.error_message">{{ data.error_message }}</span>
+                            <span class="text-muted-color" v-else>—</span>
+                        </template>
+                    </Column>
+                </DataTable>
 
-            <DataTable :value="rows" :loading="loading" dataKey="id" paginator :rows="15" size="small">
-                <Column field="id" header="#" style="width: 80px" />
-                <Column field="job_type" header="Type" style="width: 140px" />
-                <Column header="Status" style="width: 140px">
-                    <template #body="{ data }">
-                        <JobStatusTag :status="data.status" />
+                <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+            </div>
+            <div v-else>
+                <Message severity="info" icon="pi pi-bolt">
+                    Manual refresh runs immediately — results appear below.
+                </Message>
+                <Card v-if="lastResult" class="mt-3">
+                    <template #title>Last Sync Summary</template>
+                    <template #content>
+                        <p>Season: {{ lastResult.season }} &nbsp;Type: {{ lastResult.seasonType }} &nbsp;Week: {{
+                            lastResult.week }}</p>
+                        <p>Processed: {{ lastResult.processed }} &nbsp;Failed: {{ lastResult.failed }}</p>
                     </template>
-                </Column>
-                <Column header="Progress">
-                    <template #body="{ data }">
-                        <div class="flex items-center gap-2">
-                            <ProgressBar :value="progressPct(data)" style="width: 12rem" />
-                            <span class="text-xs">
-                                {{ data.processed_records ?? 0 }} / {{ data.total_records ?? '?' }}
-                                <span v-if="data.failed_records"> (failed: {{ data.failed_records }})</span>
-                            </span>
+                </Card>
+            </div>
+
+            <Card class="mt-4">
+                <template #title>Scoreboard Sync</template>
+                <template #subtitle>ESPN league-wide results → MyNFL.Game</template>
+
+                <template #content>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <!-- Manual: by Date -->
+                        <div class="p-4 border rounded-lg">
+                            <h3 class="font-semibold mb-3">Manual refresh by date</h3>
+                            <div class="flex items-center gap-3">
+                                <Calendar v-model="date" dateFormat="yy-mm-dd" showIcon />
+                                <Button :loading="sb.loading" label="Refresh" icon="pi pi-refresh" @click="runByDate" />
+                            </div>
+                            <small class="text-color-secondary">Uses /jobs/kickoff/scoreboard/by-date</small>
                         </div>
-                    </template>
-                </Column>
-                <Column field="started_at" header="Started" :body="(d: JobRow) => fmt(d.started_at)"
-                    style="width: 180px" />
-                <Column field="completed_at" header="Completed" :body="(d: JobRow) => fmt(d.completed_at)"
-                    style="width: 180px" />
-                <Column header="Error">
-                    <template #body="{ data }">
-                        <span class="text-red-600 text-sm" v-if="data.error_message">{{ data.error_message }}</span>
-                        <span class="text-muted-color" v-else>—</span>
-                    </template>
-                </Column>
-            </DataTable>
 
-            <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span>Use Job Queue</span>
+                            <InputSwitch v-model="useJobQueue" />
+                        </div>
+
+                        <!-- Manual: by Week -->
+                        <div class="p-4 border rounded-lg">
+                            <h3 class="font-semibold mb-3">Manual refresh by week</h3>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <Dropdown v-model="season" :options="seasons" optionLabel="" :placeholder="'Season'" />
+                                <Dropdown v-model="seasonType" :options="seasonTypeOptions" optionLabel="label"
+                                    optionValue="value" />
+                                <Dropdown v-model="week" :options="Array.from({ length: 22 }, (_, i) => i + 1)"
+                                    placeholder="Week" />
+                                <Button :loading="sb.loading" label="Refresh" icon="pi pi-refresh" @click="runByWeek" />
+                            </div>
+                            <small class="text-color-secondary">Uses /jobs/kickoff/scoreboard/by-week</small>
+                        </div>
+                    </div>
+
+                    <Divider />
+
+                    <!-- Scheduling -->
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-3">Automatic schedule</h3>
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <span>Enabled</span>
+                                <InputSwitch v-model="sb.schedule.enabled" />
+                            </div>
+
+                            <MultiSelect v-model="sb.schedule.days" :options="dayOptions" optionLabel="label"
+                                optionValue="value" display="chip" class="min-w-64" placeholder="Days" />
+
+                            <Dropdown v-model="sb.schedule.hour" :options="Array.from({ length: 24 }, (_, i) => i)"
+                                placeholder="Hour" />
+                            <Dropdown v-model="sb.schedule.minute" :options="[0, 5, 10, 15, 20, 30, 45]"
+                                placeholder="Minute" />
+
+                            <!-- Simple hour/min controls to avoid complex time-only binding -->
+                            <Dropdown v-model="sb.schedule.hour" :options="Array.from({ length: 24 }, (_, i) => i)"
+                                placeholder="Hour" />
+                            <Dropdown v-model="sb.schedule.minute" :options="[0, 5, 10, 15, 20, 30, 45]"
+                                placeholder="Minute" />
+
+                            <Dropdown v-model="sb.schedule.timezone"
+                                :options="['America/Chicago', 'America/New_York', 'America/Denver', 'America/Los_Angeles', 'UTC']"
+                                placeholder="Timezone" />
+                            <Button :loading="sb.saving" label="Save schedule" icon="pi pi-save"
+                                @click="saveSchedule" />
+                        </div>
+                        <small class="block mt-2 text-color-secondary">
+                            Default: Sun/Mon/Thu/Sat at 00:00 in America/Chicago. Server applies cron.
+                        </small>
+                    </div>
+                </template>
+            </Card>
         </div>
-
-        <Card class="mt-4">
-            <template #title>Scoreboard Sync</template>
-            <template #subtitle>ESPN league-wide results → MyNFL.Game</template>
-
-            <template #content>
-                <div class="grid gap-4 md:grid-cols-2">
-                    <!-- Manual: by Date -->
-                    <div class="p-4 border rounded-lg">
-                        <h3 class="font-semibold mb-3">Manual refresh by date</h3>
-                        <div class="flex items-center gap-3">
-                            <Calendar v-model="date" dateFormat="yy-mm-dd" showIcon />
-                            <Button :loading="sb.loading" label="Refresh" icon="pi pi-refresh" @click="runByDate" />
-                        </div>
-                        <small class="text-color-secondary">Uses /jobs/kickoff/scoreboard/by-date</small>
-                    </div>
-
-                    <!-- Manual: by Week -->
-                    <div class="p-4 border rounded-lg">
-                        <h3 class="font-semibold mb-3">Manual refresh by week</h3>
-                        <div class="flex flex-wrap items-center gap-3">
-                            <Dropdown v-model="season" :options="seasons" optionLabel="" :placeholder="'Season'" />
-                            <Dropdown v-model="seasonType" :options="seasonTypeOptions" optionLabel="label"
-                                optionValue="value" />
-                            <Dropdown v-model="week" :options="Array.from({ length: 22 }, (_, i) => i + 1)"
-                                placeholder="Week" />
-                            <Button :loading="sb.loading" label="Refresh" icon="pi pi-refresh" @click="runByWeek" />
-                        </div>
-                        <small class="text-color-secondary">Uses /jobs/kickoff/scoreboard/by-week</small>
-                    </div>
-                </div>
-
-                <Divider />
-
-                <!-- Scheduling -->
-                <div class="p-4 border rounded-lg">
-                    <h3 class="font-semibold mb-3">Automatic schedule</h3>
-                    <div class="flex flex-wrap items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <span>Enabled</span>
-                            <InputSwitch v-model="sb.schedule.enabled" />
-                        </div>
-
-                        <MultiSelect v-model="sb.schedule.days" :options="dayOptions" optionLabel="label"
-                            optionValue="value" display="chip" class="min-w-64" placeholder="Days" />
-
-                        <Dropdown v-model="sb.schedule.hour" :options="Array.from({ length: 24 }, (_, i) => i)"
-                            placeholder="Hour" />
-                        <Dropdown v-model="sb.schedule.minute" :options="[0, 5, 10, 15, 20, 30, 45]"
-                            placeholder="Minute" />
-
-                        <!-- Simple hour/min controls to avoid complex time-only binding -->
-                        <Dropdown v-model="sb.schedule.hour" :options="Array.from({ length: 24 }, (_, i) => i)"
-                            placeholder="Hour" />
-                        <Dropdown v-model="sb.schedule.minute" :options="[0, 5, 10, 15, 20, 30, 45]"
-                            placeholder="Minute" />
-
-                        <Dropdown v-model="sb.schedule.timezone"
-                            :options="['America/Chicago', 'America/New_York', 'America/Denver', 'America/Los_Angeles', 'UTC']"
-                            placeholder="Timezone" />
-                        <Button :loading="sb.saving" label="Save schedule" icon="pi pi-save" @click="saveSchedule" />
-                    </div>
-                    <small class="block mt-2 text-color-secondary">
-                        Default: Sun/Mon/Thu/Sat at 00:00 in America/Chicago. Server applies cron.
-                    </small>
-                </div>
-            </template>
-        </Card>
     </AppLayout>
 </template>
 

@@ -24,7 +24,7 @@ export interface Game {
   id: number;
   seasonYear: string;
   gameWeek?: number | null;
-  preseason?: number | null;
+  seasonType?: number | null;
   gameDate?: Date | string | null;
   homeTeamId: number;
   awayTeamId: number;

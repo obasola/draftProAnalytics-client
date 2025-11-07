@@ -9,7 +9,7 @@ export interface GameRow {
   id: number
   seasonYear: string
   gameWeek: number | null
-  preseason: number | null
+  seasonType: number | null
   gameDate: string
   homeTeamId: number
   awayTeamId: number
@@ -99,19 +99,19 @@ export const useGameStore = defineStore('games', {
 
 
     async fetchByYear(year: string | number, page = 1, limit = 500) {
-      return this.fetchAll(page, limit, { year, preseason: 0  })
+      return this.fetchAll(page, limit, { year, seasonType: 2 })
     },
 
     async fetchLeagueWeek(year: string | number, week: number, page = 1, limit = 500) {
-      return this.fetchAll(page, limit, { year, week, preseason: 0  })
+      return this.fetchAll(page, limit, { year, week, seasonType: 2   })
     },
 
     async fetchLeaguePreseason(year: string | number, page = 1, limit = 500) {
-      return this.fetchAll(page, limit, { year, preseason: 1 })
+      return this.fetchAll(page, limit, { year, seasonType: 1 })
     },
 
     async fetchTeamSeason(teamId: number, year: string | number, page = 1, limit = 500) {
-      return this.fetchAll(page, limit, { teamId, year, preseason: 0 })
+      return this.fetchAll(page, limit, { teamId, year, seasonType: 2  })
     },
 
     async fetchTeamSeasonWeekGames(
@@ -121,11 +121,10 @@ export const useGameStore = defineStore('games', {
       page = 1,
       limit = 500
     ) {
-      return this.fetchAll(page, limit, { teamId, year, week, preseason: 0  })
     },
 
     async fetchTeamPreseason(teamId: number, year: string | number, page = 1, limit = 500) {
-      return this.fetchAll(page, limit, { teamId, year, preseason: 1 })
+      return this.fetchAll(page, limit, { teamId, year, seasonType: 1 })
     },
 
     async create(data: Omit<Game, 'id' | 'homeTeam' | 'awayTeam' | 'createdAt' | 'updatedAt'>) {
@@ -207,7 +206,7 @@ function normalizeToRow(g: Game): GameRow {
     id: g.id,
     seasonYear: String(g.seasonYear),
     gameWeek: g.gameWeek ?? null,
-    preseason: (g as any).preseason ?? null,
+    seasonType: (g as any).seasonType ?? null,
     gameDate: g.gameDate as unknown as string,
     homeTeamId: g.homeTeamId,
     awayTeamId: g.awayTeamId,
@@ -248,8 +247,8 @@ function mapQueryParams(p: Record<string, unknown>) {
   if (year != null) out.year = year
   if (week != null) out.week = week
 
-  // If the caller explicitly sets preseason, forward it (0 or 1)
-  if ('preseason' in p) out.preseason = (p as any).preseason
+  // If the caller explicitly sets seasonType, forward it (0 or 1)
+  if ('seasonType' in p) out.seasonType = (p as any).seasonType
 
   // carry the rest through unchanged
   for (const [k, v] of Object.entries(p)) if (!(k in out)) out[k] = v
