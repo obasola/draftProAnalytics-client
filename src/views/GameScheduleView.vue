@@ -1,11 +1,11 @@
 <template>
-  <AppLayout>
+  
     <div class="game-detail-view">
 
       <!-- Show read-only view -->
       <Schedule :defaultSeason="'2025'" :defaultTeam="'league'" />
     </div>
-  </AppLayout>
+  
 </template>
 
 <script setup lang="ts">

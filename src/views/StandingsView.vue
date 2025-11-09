@@ -1,6 +1,6 @@
 // src/views/StandingsView.vue
 <template>
-    <AppLayout>
+    
         <div class="page standings p-4">
             <h2 class="text-xl font-bold mb-3">NFL Standings</h2>
 
@@ -24,7 +24,7 @@
             </div>
 
         </div>
-    </AppLayout>
+    
 </template>
 
 <script setup lang="ts">

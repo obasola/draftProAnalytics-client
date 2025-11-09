@@ -50,7 +50,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+  
     <div class="team-detail-view-expanded">
       <!-- Show list when no ID -->
       <TeamList v-if="!teamId" />
@@ -64,7 +64,7 @@ watch(
       <!-- Show read-only view -->
       <TeamReadOnly v-else />
     </div>
-  </AppLayout>
+  
 </template>
 
 <style scoped>

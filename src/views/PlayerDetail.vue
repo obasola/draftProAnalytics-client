@@ -51,7 +51,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+  
     <div class="player-detail-view">
       <!-- Show list when no ID -->
       <PlayerList v-if="!playerId" />
@@ -65,7 +65,7 @@ watch(
       <!-- Show read-only view -->
       <PlayerReadOnly v-else />
     </div>
-  </AppLayout>
+  
 </template>
 
 <style scoped>

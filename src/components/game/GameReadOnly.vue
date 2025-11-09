@@ -1,3 +1,4 @@
+// src/components/game/GameReadOnly.vue
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
@@ -478,4 +479,43 @@ const getWeekDisplay = computed(() => {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Match TeamReadOnly.vue Players accordion style */
+.relationships-accordion {
+  margin-top: 2rem;
+  width: 100%;
+  background-color: var(--team-primary, #054DBD); /* matches the TeamReadOnly Players section */
+  color: #FFFFFF; /* white text like player names */
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.25);
+}
+
+:deep(.p-accordion-tab) {
+  background-color: var(--team-primary, #054DBD);
+  color: #FFFFFF;
+  border: none;
+}
+
+:deep(.p-accordion-header-link) {
+  background-color: var(--team-primary, #054DBD);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+:deep(.p-accordion-header-link:hover) {
+  background-color: #2563eb; /* hover accent like TeamReadOnly’s blue accent */
+}
+
+:deep(.p-accordion-content) {
+  background-color: var(--team-primary, #054DBD);
+  color: #FFFFFF;
+  border-top: 1px solid #2563eb;
+}
+
+.team-details .label,
+.team-details .data-value {
+  color: #FFFFFF; /* ensure all labels and values remain white inside accordions */
+}
+
 </style>

@@ -1,3 +1,4 @@
+// src/stores/draftPickStore.ts
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { DraftPick, DraftPickWithRelations, CreateDraftPickData, UpdateDraftPickData } from '@/domain/entities/draftPick';

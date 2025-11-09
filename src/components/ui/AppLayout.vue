@@ -1,4 +1,5 @@
 <!-- AppLayout.vue — NFL Fan Theme -->
+// src/components/ui/AppLayout.vue
 <script setup lang="ts">
 import AppHeader from './AppHeader.vue'
 import AppNavigation from './AppNavigation.vue'
@@ -11,7 +12,7 @@ import '@/assets/css/theme-nfl-fan.css'
     <div class="main-content">
       <AppNavigation />
       <main class="content-area" role="main">
-        <slot />
+         <RouterView />
       </main>
     </div>
   </div>

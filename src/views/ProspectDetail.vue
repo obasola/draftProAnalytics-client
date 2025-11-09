@@ -51,7 +51,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+  
     <div class="prospect-detail-view">
       <!-- Show list when no ID -->
       <ProspectList v-if="!prospectId" />
@@ -65,7 +65,7 @@ watch(
       <!-- Show read-only view -->
       <ProspectReadOnly v-else />
     </div>
-  </AppLayout>
+  
 </template>
 
 <style scoped>

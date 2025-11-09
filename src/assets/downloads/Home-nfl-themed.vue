@@ -31,7 +31,6 @@ const navigateTo = (route: string) => { router.push(route) }
 </script>
 
 <template>
-  <AppLayout>
     <main class="home-view theme-nfl" role="main" aria-label="Home Dashboard">
       <!-- Welcome / Hero -->
       <section class="welcome-section" aria-labelledby="home-title">
@@ -106,7 +105,7 @@ const navigateTo = (route: string) => { router.push(route) }
         </div>
       </section>
     </main>
-  </AppLayout>
+
 </template>
 
 <style scoped>

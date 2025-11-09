@@ -51,7 +51,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+  
     <div class="combine-score-detail-view">
       <!-- Show list when no ID -->
       <CombineScoreList v-if="!combineScoreId" />
@@ -65,7 +65,7 @@ watch(
       <!-- Show read-only view -->
       <CombineScoreReadOnly v-else />
     </div>
-  </AppLayout>
+ 
 </template>
 
 <style scoped>

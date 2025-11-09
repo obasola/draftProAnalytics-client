@@ -13,9 +13,8 @@ const getNflLogo = (): string => {
 <template>
   <header class="app-header" role="banner">
     <div class="header-content">
-      <h2 class="nfl-logo">
-        <img :src="getNflLogo()" class="inline-logo" />
-      </h2>
+    <div class="nfl-logo"> <img :src="getNflLogo()" class="inline-logo" /></div>
+      <h2>       
       <h1 @click="goHome" class="app-title" tabindex="0">Sports Management System</h1>
       <div class="header-actions"><!-- actions --></div>
     </div>

@@ -85,8 +85,7 @@ const getNflLogo = (): string => {
   <div class="team-list">
     <!-- Updated header with team colors -->
     <div class="list-header bg-team-primary text-team-accent">
-            <h2 class="nfl-logo">
-        <img :src="getNflLogo()" class="inline-logo" />
+      <h2>
         Teams
       </h2>
       <Button

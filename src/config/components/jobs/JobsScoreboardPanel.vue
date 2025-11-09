@@ -160,7 +160,7 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
 </script>
 
 <template>
-    <AppLayout>
+  
         <div class="p-4 space-y-4">
             <div class="flex items-center justify-between gap-2">
                 <div class="text-2xl font-semibold">Jobs</div>
@@ -293,7 +293,7 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
                 </template>
             </Card>
         </div>
-    </AppLayout>
+  
 </template>
 
 

@@ -52,11 +52,11 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+ 
     <div class="game-detail-view">
       <DraftBoard />
     </div>
-  </AppLayout>
+ 
 </template>
 
 <style scoped>

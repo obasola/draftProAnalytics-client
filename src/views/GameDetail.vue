@@ -51,7 +51,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+
     <div class="game-detail-view">
       <!-- Show list when no ID -->
       <GameList v-if="!gameId" />
@@ -65,7 +65,7 @@ watch(
       <!-- Show read-only view -->
       <GameReadOnly v-else />
     </div>
-  </AppLayout>
+  
 </template>
 
 <style scoped>

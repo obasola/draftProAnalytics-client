@@ -1,5 +1,5 @@
 <template>
-  <AppLayout>
+  
     <div class="team-selection-container">
       <div class="content-grid">
         <!-- Team Selection Section -->
@@ -67,7 +67,7 @@
         </div>
       </div>
     </div>
-  </AppLayout>
+  
 </template>
 
 <script setup lang="ts">

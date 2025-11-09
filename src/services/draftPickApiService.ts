@@ -1,3 +1,4 @@
+// src/services/draftPickApiService.ts
 import axios, { AxiosInstance } from 'axios'
 import type {
   DraftPick,
@@ -6,9 +7,11 @@ import type {
   UpdateDraftPickData,
 } from '../domain/entities/draftPick'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+
 export class DraftPickApiService {
   private readonly api: AxiosInstance
-  private readonly baseUrl: string = '/draftpicks'
+  private readonly baseUrl: string = `${API_BASE_URL}/draftpicks`
 
   constructor(apiInstance: AxiosInstance) {
     this.api = apiInstance
@@ -72,7 +75,7 @@ export class DraftPickApiService {
   async fetchByTeamAndYear(teamId: number, year: number): Promise<DraftPickWithRelations[]> {
     try {
       const url = `${this.baseUrl}/relations/team/${teamId}/year/${year}`
-   //   alert(`📡 Calling: ${url}`)
+    //  alert(`📡 (src/services/draftPickApiService.ts) Calling: ${url}`)
       console.log(`📡 Calling: ${url}`)
 
       const response = await this.api.get<DraftPickWithRelations[]>(url)

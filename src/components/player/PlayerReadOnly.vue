@@ -17,7 +17,7 @@ const combineScoreStore = useCombineScoreStore()
 const player = computed(() => playerStore.currentPlayer)
 
 const playerAwards = computed(() =>
-  playerAwardStore.awards.filter(
+  playerAwardStore.playerAwards.filter(
     (award) => award.playerId === player.value?.id
   )
 )

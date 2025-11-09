@@ -6,7 +6,7 @@
         {{ getTeamShortNameAndLogo(selectedTeamObject).fullName }}&nbsp;Season Schedule
       </span>
       <span v-else-if="selectedTeam === 'league'">
-        <img :src="getNflLogo()" class="nfl-logo" />League-wide Season Schedule
+        League-wide Season Schedule
       </span>
       <span v-else>Select Team</span>
     </div>

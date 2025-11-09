@@ -30,7 +30,7 @@ const navigateTo = (route: string) => { router.push(route) }
 
 <template>
   <!-- AppLayout already scopes theme-five in its root -->
-  <AppLayout>
+  
     <main class="home-view" role="main" aria-label="Home Dashboard">
       <!-- Welcome / Hero -->
 
@@ -96,7 +96,7 @@ const navigateTo = (route: string) => { router.push(route) }
         </div>
       </section>
     </main>
-  </AppLayout>
+  
 </template>
 
 <style scoped>

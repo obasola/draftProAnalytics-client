@@ -50,7 +50,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+  
     <div class="schedule-detail-view">
       <!-- Show list when no ID -->
       <ScheduleList v-if="!scheduleId" />
@@ -64,7 +64,7 @@ watch(
       <!-- Show read-only view -->
       <ScheduleReadOnly v-else />
     </div>
-  </AppLayout>
+  
 </template>
 
 <style scoped>

@@ -51,7 +51,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+
     <div class="draftpick-detail-view">
       <!-- Show list when no ID -->
       <DraftPickList v-if="!draftPickId" />
@@ -65,7 +65,7 @@ watch(
       <!-- Show read-only view -->
       <DraftPickReadOnly v-else />
     </div>
-  </AppLayout>
+ 
 </template>
 
 <style scoped>

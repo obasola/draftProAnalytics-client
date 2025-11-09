@@ -62,7 +62,7 @@ watch(
 </script>
 
 <template>
-  <AppLayout>
+  
     <div class="playerteam-detail-view">
       <!-- Show list when no ID -->
       <PlayerTeamList v-if="!playerTeamId" />
@@ -76,7 +76,7 @@ watch(
       <!-- Show read-only view -->
       <PlayerTeamReadOnly v-else />
     </div>
-  </AppLayout>
+  
 </template>
 
 <style scoped>
