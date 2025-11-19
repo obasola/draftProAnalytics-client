@@ -120,7 +120,7 @@ function formatPct(row: TeamStandingDto) {
 }
 
 .textContrast {
-  color: #062d92;
+  color: #f5f7f6;
   font-weight: bolder;
 }
 

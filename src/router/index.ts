@@ -126,6 +126,12 @@ const router = createRouter({
           },
         },
         {
+          path: '/show-upcoming-games',
+          name: 'show-upcoming-games',
+          component: () => import('@/views/ShowUpcomingGamesView.vue'),
+        },
+
+        {
           path: '/player-awards/:id?',
           name: 'PlayerAwardDetail',
           component: PlayerAwardDetail,
@@ -156,6 +162,8 @@ const router = createRouter({
           name: 'jobs',
           component: JobsPage,
         },
+
+
         /*
     {
       path: '/team-needs/:id?',

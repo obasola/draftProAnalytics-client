@@ -17,6 +17,7 @@ const menuItems = ref([
   { label: 'Draft Picks', icon: 'pi pi-list', command: () => router.push('/draftPicks') },
   { label: 'Combine Scores', icon: 'pi pi-chart-bar', command: () => router.push('/combine-scores') },
   { label: 'Schedules', icon: 'pi pi-calendar', command: () => router.push('/schedules') },
+  { label: 'Show Upcoming Games', icon: 'pi pi-clock', command: () => router.push('/show-upcoming-games') },
   { label: 'Player Awards', icon: 'pi pi-trophy', command: () => router.push('/player-awards') },
   { label: 'Player Teams', icon: 'pi pi-users', command: () => router.push('/player-teams') },
   { label: 'Team Needs', icon: 'pi pi-exclamation-triangle', command: () => router.push('/team-needs') },

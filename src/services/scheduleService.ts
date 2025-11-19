@@ -1,9 +1,18 @@
+import { UpcomingApiResponse } from '@/types/upcomingSchedule';
 import { apiService } from './api'
 import type { Schedule, ApiResponse, PaginatedResponse } from '@/types'
 
 export class ScheduleService {
   private readonly endpoint = '/schedules'
 
+  async getUpcomingSchedule(year: number, seasonType: number, week: number): 
+  Promise<UpcomingApiResponse>  {
+    console.log("src/services/secheduleService::getUpcomingSchedule entryPoint");
+    const url = `${this.endpoint}/upcomingSchedule?seasonYear=${year}&seasonType=${seasonType}&week=${week}`;
+    const res = await apiService.get(url);
+    return res.data as UpcomingApiResponse
+  }
+  
   // paginated-queries: Fix for double nesting on server
   async getAll(page = 1, limit = 10): Promise<PaginatedResponse<Schedule>> {
     const pageNum = Number(page)
@@ -65,21 +74,10 @@ export class ScheduleService {
 
   // ✅ Add explicit team+season method to use the existing param route
   async getByTeamSeason(teamId: number, seasonYear: number, page = 1, limit = 10): Promise<PaginatedResponse<Schedule>> {
-    // Option 1: use the param route (no pagination on that path today)
-    // const { data } = await apiService.get<ApiResponse<Schedule[]>>(`${this.endpoint}/team/${teamId}/season/${seasonYear}`)
-    // return { data: data.data, pagination: { page, limit, total: data.data.length } }
-
     // Option 2 (prefer): keep one code path via filtered index route, with pagination
     const url = `${this.endpoint}?teamId=${Number(teamId)}&seasonYear=${Number(seasonYear)}&page=${Number(page)}&limit=${Number(limit)}`
     const { data } = await apiService.get<{ success: boolean; data: Schedule[]; pagination: any }>(url)
     return { data: data.data, pagination: data.pagination }
-  }
-  // '/team/:teamId/season/:seasonYear'
-  async getByTeamSeason(teamId: number, seasonYear: number): Promise<Schedule[]> {
-    const response = await apiService.get<ApiResponse<Schedule[]>>(
-      `${this.endpoint}/teamId/${teamId}/season/${seasonYear}`
-    )
-    return response.data.data
   }
 
   async create(data: Omit<Schedule, 'id'>): Promise<Schedule> {
