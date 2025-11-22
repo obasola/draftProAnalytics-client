@@ -53,12 +53,11 @@ onMounted(() => {
         Submit
       </button>
 
-      <button
-        icon="pi pi-cloud-download" class="refresh-btn"
-        :loading="controller.loading" @click="controller.runImportScoresWeek">
+      <button icon="pi pi-cloud-download" class="refresh-btn" :loading="controller.loading"
+        @click="controller.runImportScoresWeek">
         Refresh
       </button>
-  
+
     </div>
 
     <DataTable :value="controller.store.games" :loading="controller.store.isLoading" tableStyle="min-width: 100%"
@@ -76,30 +75,33 @@ onMounted(() => {
       <!-- MATCHUP COLUMN -->
       <Column header="Matchup">
         <template #body="{ data }">
-          <div class="flex items-center gap-3">
+          <div class="matchup-row">
 
             <!-- AWAY TEAM -->
-            <img :src="data.awayLogo" class="team-logo" />
+            <div class="team-horizontal">
+              <img :src="data.awayLogo" class="team-logo" />
+              <span :class="['team-name', data.awayWinner ? 'winner-text' : 'loser-text']">
+                {{ data.awayTeamName }}
+                <span v-if="data.awayScore !== null">({{ data.awayScore }})</span>
+                <span v-if="data.awayWinner" class="winner-check">✔</span>
+              </span>
+            </div>
 
-            <span :class="['team-name', data.awayWinner ? 'winner-text' : 'loser-text']">
-              {{ data.awayTeamName }}
-              <span v-if="data.awayScore !== null"> ({{ data.awayScore }}) </span>
-              <span v-if="data.awayWinner" class="winner-check">✔</span>
-            </span>
-
-            <span class="px-2">@</span>
+            <span class="vs">@</span>
 
             <!-- HOME TEAM -->
-            <img :src="data.homeLogo" class="team-logo" />
-
-            <span :class="['team-name', data.homeWinner ? 'winner-text' : 'loser-text']">
-              {{ data.homeTeamName }}
-              <span v-if="data.homeScore !== null"> ({{ data.homeScore }}) </span>
-              <span v-if="data.homeWinner" class="winner-check">✔</span>
-            </span>
+            <div class="team-horizontal">
+              <img :src="data.homeLogo" class="team-logo" />
+              <span :class="['team-name', data.homeWinner ? 'winner-text' : 'loser-text']">
+                {{ data.homeTeamName }}
+                <span v-if="data.homeScore !== null">({{ data.homeScore }})</span>
+                <span v-if="data.homeWinner" class="winner-check">✔</span>
+              </span>
+            </div>
 
           </div>
         </template>
+
       </Column>
 
 
@@ -258,6 +260,7 @@ label {
   border: none;
   cursor: pointer;
 }
+
 .refresh-btn {
   background: green;
   color: #fff;
@@ -277,5 +280,46 @@ label {
 .date-time {
   color: #bbb;
   font-size: 0.85rem;
+}
+
+.matchup-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.team-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  /* ensures perfect vertical centering */
+  gap: 0.5rem;
+}
+
+.team-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.team-name {
+  font-weight: 500;
+  font-size: 1rem;
+  white-space: nowrap;
+  /* prevents wrapping (stays single-row) */
+}
+
+.vs {
+  font-weight: 600;
+  color: #ddd;
+  padding: 0 0.5rem;
+}
+
+.winner-check {
+  color: #00e600;
+  margin-left: 4px;
+  font-size: 1rem;
+  font-weight: bold;
 }
 </style>
