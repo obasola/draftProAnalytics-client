@@ -18,7 +18,6 @@ const staticWeekOptions: { label: string; value: number }[] = [
 ]
 
 onMounted(() => {
-  controller.refreshGames(false)
 })
 </script>
 
@@ -30,21 +29,21 @@ onMounted(() => {
     <div class="controls-row">
 
       <!-- YEAR -->
-      <select v-model="controller.selectedYear" class="control-select">
+      <select v-model="controller.selectedYear.value" class="control-select">
         <option v-for="y in [2023, 2024, 2025, 2026, 2027]" :key="y" :value="y">
           {{ y }}
         </option>
       </select>
 
       <!-- SEASON TYPE -->
-      <select v-model="controller.selectedSeasonType" class="control-select">
+      <select v-model="controller.selectedSeasonType.value" class="control-select">
         <option value="1">Preseason</option>
         <option value="2">Regular Season</option>
         <option value="3">Postseason</option>
       </select>
 
       <!-- WEEK -->
-      <select v-model="controller.selectedWeek" class="control-select">
+      <select v-model="controller.selectedWeek.value" class="control-select">
         <option v-for="opt in staticWeekOptions" :key="opt.value" :value="opt.value">
           {{ opt.label }}
         </option>
@@ -55,12 +54,8 @@ onMounted(() => {
       </button>
     </div>
 
-    <DataTable 
-      :value="controller.store.games" 
-      :loading="controller.store.isLoading" 
-      tableStyle="min-width: 100%" 
-      rowHover
-    >
+    <DataTable :value="controller.store.games" :loading="controller.store.isLoading" tableStyle="min-width: 100%"
+      rowHover>
       <!-- DATE/TIME COLUMN -->
       <Column header="Date/Time" style="width: 160px">
         <template #body="{ data }">
@@ -81,9 +76,7 @@ onMounted(() => {
 
             <span :class="['team-name', data.awayWinner ? 'winner-text' : 'loser-text']">
               {{ data.awayTeamName }}
-              <span v-if="data.awayScore !== null">
-                ({{ data.awayScore }})
-              </span>
+              <span v-if="data.awayScore !== null"> ({{ data.awayScore }}) </span>
               <span v-if="data.awayWinner" class="winner-check">✔</span>
             </span>
 
@@ -94,15 +87,14 @@ onMounted(() => {
 
             <span :class="['team-name', data.homeWinner ? 'winner-text' : 'loser-text']">
               {{ data.homeTeamName }}
-              <span v-if="data.homeScore !== null">
-                ({{ data.homeScore }})
-              </span>
+              <span v-if="data.homeScore !== null"> ({{ data.homeScore }}) </span>
               <span v-if="data.homeWinner" class="winner-check">✔</span>
             </span>
 
           </div>
         </template>
       </Column>
+
 
       <!-- STATUS COLUMN -->
       <Column header="Status" style="width: 140px">

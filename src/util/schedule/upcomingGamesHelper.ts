@@ -1,6 +1,7 @@
 // src/util/schedule/upcomingGamesHelper.ts
 import { api } from '@/services/api'
-import type { UpcomingGameDto, GameStatus, PrimetimeType } from '@/types/schedule/upcomingGames'
+import type { GameStatus, PrimetimeType } from '@/types/schedule/upcomingGames'
+import type { UpcomingGameDto } from '@/util/schedule/upcomingGamesHelpers'
 import { TEAM_COLOR_MAP } from '../TEAM_COLOR_MAP'
 import { resolveTeamLogo } from '../resolveTeamLogo'
 
@@ -110,47 +111,83 @@ export function teamNameClass(isWinner: boolean): string {
 // ULTRA-SAFE RAW ESPN MERGE → UpcomingGameDto
 // -----------------------------------------------------
 export function buildUpcomingGameDto(event: any): UpcomingGameDto {
-  const formatted = formatGameDate(event.gameDate)
+  // ESPN structure root
+  const comp = event.competitions?.[0];
+  const competitors = comp?.competitors ?? [];
 
-  const status = normalizeStatus(event.gameStatus || '')
-  const primetimeType = getPrimetimeType({ date: event.gameDate })
+  // Extract home & away competitors
+  const homeRaw = competitors.find((c: any) => c.homeAway === 'home');
+  const awayRaw = competitors.find((c: any) => c.homeAway === 'away');
 
-  const homeScore = safeNum(event.homeScore)
-  const awayScore = safeNum(event.awayScore)
+  // Safe fallbacks
+  const homeTeam = homeRaw?.team ?? {};
+  const awayTeam = awayRaw?.team ?? {};
 
-  const winner = getWinner(homeScore, awayScore)
+  const homeName = homeTeam.displayName || homeTeam.shortDisplayName || homeTeam.name || 'TBD';
+  const awayName = awayTeam.displayName || awayTeam.shortDisplayName || awayTeam.name || 'TBD';
 
-  const homeName = event.homeTeamName || event.homeTeam?.name || 'TBD'
-  const awayName = event.awayTeamName || event.awayTeam?.name || 'TBD'
+  // Scores
+  const homeScore = homeRaw?.score != null ? Number(homeRaw.score) : null;
+  const awayScore = awayRaw?.score != null ? Number(awayRaw.score) : null;
+
+  // Winner flag from ESPN
+  const homeWinner = homeRaw?.winner === true;
+  const awayWinner = awayRaw?.winner === true;
+
+  // Status from ESPN competitions.status
+  const statusText =
+    comp?.status?.type?.shortDetail ||
+    comp?.status?.type?.description ||
+    event.status ||
+    'Scheduled';
+
+  const normalizedStatus = normalizeStatus(statusText);
+
+  // Date formatting
+  const date = event.date || comp?.date;
+  const formatted = formatGameDate(date);
+
+  // Primetime classification
+  const primetimeType = getPrimetimeType({ date });
 
   return {
     id: event.id,
 
-    date: event.gameDate,
+    date,
     dateFormatted: formatted,
 
-    homeTeamId: event.homeTeamId,
-    homeTeamName: homeName,
-    homeLogo: resolveTeamLogo(homeName),
-    homeScore,
-    teamColorHome: resolveTeamColor(homeName),
+    // IDs from ESPN
+    homeTeamId: homeTeam.id ?? null,
+    awayTeamId: awayTeam.id ?? null,
 
-    awayTeamId: event.awayTeamId,
+    // Names
+    homeTeamName: homeName,
     awayTeamName: awayName,
+
+    // Logos mapped by your resolver
+    homeLogo: resolveTeamLogo(homeName),
     awayLogo: resolveTeamLogo(awayName),
+
+    // Scores
+    homeScore,
     awayScore,
+
+    // Winner flags
+    homeWinner,
+    awayWinner,
+
+    // Team colors
+    teamColorHome: resolveTeamColor(homeName),
     teamColorAway: resolveTeamColor(awayName),
 
-    // 🟩 Winner flags needed by DataTable UI
-    homeWinner: winner === 'home',
-    awayWinner: winner === 'away',
+    // Status
+    status: normalizedStatus,
+    statusDetail: statusText,
 
-    status,
-    statusDetail: event.statusDetail || status,
-
+    // Primetime
     isPrimetime: primetimeType !== null,
-    primetimeType
-  }
+    primetimeType,
+  };
 }
 
 
