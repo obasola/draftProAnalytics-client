@@ -3,10 +3,15 @@ import { ref, computed, watch } from 'vue'
 import { useUpcomingScheduleStore } from '@/stores/schedule/upcomingGamesStore'
 import { getLatestScoringPlayText } from '@/services/schedule/scoringPlayService'
 import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers'
+import { useToast } from 'primevue/usetoast'
+import { JobsApi } from '@/services/api'
 
 export function useUpcomingGamesController() {
   const store = useUpcomingScheduleStore()
 
+  const toast = useToast()
+  const initializing = ref(true) // 🧩 ADD THIS LINE
+  const loading = ref(false)
   // ---------------------------------------------
   // CONTROLS (DEFAULTS — NEVER OVERWRITTEN AGAIN)
   // ---------------------------------------------
@@ -17,10 +22,14 @@ export function useUpcomingGamesController() {
   // Week options based on season type
   const weekOptions = computed<number[]>(() => {
     switch (selectedSeasonType.value) {
-      case 1: return Array.from({ length: 3 }, (_, i) => i + 1)
-      case 2: return Array.from({ length: 18 }, (_, i) => i + 1)
-      case 3: return Array.from({ length: 5 }, (_, i) => i + 1)
-      default: return []
+      case 1:
+        return Array.from({ length: 3 }, (_, i) => i + 1)
+      case 2:
+        return Array.from({ length: 18 }, (_, i) => i + 1)
+      case 3:
+        return Array.from({ length: 5 }, (_, i) => i + 1)
+      default:
+        return []
     }
   })
 
@@ -56,9 +65,7 @@ export function useUpcomingGamesController() {
   // ---------------------------------------------
   // LIVE GAME INDICATOR
   // ---------------------------------------------
-  const hasLiveGames = computed(() =>
-    store.games.some(g => g.status === 'In Progress')
-  )
+  const hasLiveGames = computed(() => store.games.some(g => g.status === 'In Progress'))
 
   // ---------------------------------------------
   // MAIN REFRESH OPERATION
@@ -87,7 +94,6 @@ export function useUpcomingGamesController() {
       // Progress bar for live games
       if (hasLiveGames.value) startProgressTimer()
       else refreshProgress.value = 100
-
     } finally {
       if (manual) setTimeout(() => (isManualRefreshing.value = false), 300)
     }
@@ -100,7 +106,44 @@ export function useUpcomingGamesController() {
     stopAutoRefresh()
     refreshGames(true)
   }
+  // ---------------------------------------------
+  // SUBMIT = REFRESH Scores By Week
+  // ---------------------------------------------
+  async function runImportScoresWeek() {
+    loading.value = true
+    const raw = selectedSeasonType.value
 
+    let seasonType123: 1 | 2 | 3
+    if (raw === 1 || raw === 2 || raw === 3) {
+      seasonType123 = raw
+    } else {
+      throw new Error(`Invalid season type: ${raw}`)
+    }
+
+    try {
+      const res = await JobsApi.kickoffScoreboardByWeek(
+        selectedYear.value,
+        seasonType123,
+        selectedWeek.value
+      )
+      toast.add({
+        severity: 'success',
+        summary: 'Job started',
+        detail: `Scoreboard job #${res.id ?? 'N/A'} queued`,
+      })
+      //setTimeout(() => {refreshGames(true) }, 3000)
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      refreshGames(true)
+    } catch (err: any) {
+      toast.add({
+        severity: 'error',
+        summary: 'Failed to start job',
+        detail: err.message ?? 'Unknown error',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
   // ---------------------------------------------
   // AUTO REFRESH LOGIC (clean)
   // ---------------------------------------------
@@ -162,10 +205,11 @@ export function useUpcomingGamesController() {
     lastUpdated,
     refreshProgress,
     isManualRefreshing,
-
+    loading,
     toasts,
 
     submitControls,
     refreshGames,
+    runImportScoresWeek,
   }
 }

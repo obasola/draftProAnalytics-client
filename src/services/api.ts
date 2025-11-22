@@ -279,7 +279,7 @@ export const JobsApi = {
   ): Promise<{ id: number; message?: string }> {
     const res = await apiService.post<{ id: number; message?: string }>(
       `/jobs/kickoff/scoreboard/by-week`,
-      { year, seasonType, week }
+      { seasonYear: year, seasonType, week }
     )
     return res.data
   },

@@ -1,6 +1,6 @@
 <!-- src/views/ShowUpcomingGamesView.vue -->
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted, Ref } from 'vue'
 import { useUpcomingGamesController } from '@/composables/schedule/useUpcomingGamesController'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -52,6 +52,13 @@ onMounted(() => {
       <button class="submit-btn" @click="controller.submitControls()">
         Submit
       </button>
+
+      <button
+        icon="pi pi-cloud-download" class="refresh-btn"
+        :loading="controller.loading" @click="controller.runImportScoresWeek">
+        Refresh
+      </button>
+  
     </div>
 
     <DataTable :value="controller.store.games" :loading="controller.store.isLoading" tableStyle="min-width: 100%"
@@ -251,6 +258,16 @@ label {
   border: none;
   cursor: pointer;
 }
+.refresh-btn {
+  background: green;
+  color: #fff;
+  padding: 0.45rem 0.8rem;
+  font-size: 1.05rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
 
 .date-day {
   color: #fff;
