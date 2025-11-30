@@ -82,7 +82,7 @@ onMounted(() => {
               <img :src="data.awayLogo" class="team-logo" />
               <span :class="['team-name', data.awayWinner ? 'winner-text' : 'loser-text']">
                 {{ data.awayTeamName }}
-                <span v-if="data.awayScore !== null">({{ data.awayScore }})</span>
+                <span class="score" v-if="data.awayScore !== null">({{ data.awayScore }})</span>
                 <span v-if="data.awayWinner" class="winner-check">✔</span>
               </span>
             </div>
@@ -94,7 +94,7 @@ onMounted(() => {
               <img :src="data.homeLogo" class="team-logo" />
               <span :class="['team-name', data.homeWinner ? 'winner-text' : 'loser-text']">
                 {{ data.homeTeamName }}
-                <span v-if="data.homeScore !== null">({{ data.homeScore }})</span>
+                <span class="score" v-if="data.homeScore !== null">({{ data.homeScore }})</span>
                 <span v-if="data.homeWinner" class="winner-check">✔</span>
               </span>
             </div>
@@ -321,5 +321,10 @@ label {
   margin-left: 4px;
   font-size: 1rem;
   font-weight: bold;
+}
+
+.score {
+  font-size: larger;
+  color:yellow
 }
 </style>

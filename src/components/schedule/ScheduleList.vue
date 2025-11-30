@@ -111,7 +111,10 @@
         <template #body="{ data }">
           <div class="action-buttons">
             <ThemedButton @click="viewSchedule(data.id)" icon="pi pi-eye" variant="neutral" size="small" v-tooltip="'View'" />
-            <ThemedButton @click="editSchedule(data.id)" icon="pi pi-pencil" variant="primary" size="small" v-tooltip="'Edit'" />
+            <ThemedButton @click="editSchedule(data.id)" icon="pi pi-pencil" 
+                variant="primary" size="small" v-tooltip="'Edit'" 
+                :disabled="auth.role === 1"
+                severity="secondary"/>
             <ThemedButton @click="deleteSchedule(data.id)" icon="pi pi-trash" variant="danger" size="small" v-tooltip="'Delete'" />
           </div>
         </template>
@@ -141,7 +144,9 @@ import ThemedButton from '@/components/ThemedButton.vue'
 import TeamAwareTag from '@/components/TeamAwareTag.vue'
 import GameResultTag from '@/components/GameResultTag.vue'
 import type { Team } from '@/types/team.types'
+import { useAuthStore } from "@/stores/authStore";
 
+const auth = useAuthStore();
 const scheduleStore = useScheduleStore()
 const themeStore = useThemeStore()
 const router = useRouter()

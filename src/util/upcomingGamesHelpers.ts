@@ -73,15 +73,66 @@ const TEAM_MAP: Record<string, TeamInfo> = {
 }
 
 // ---------------------------------------------
+// Customized Date formatting (America/New_York)
+// ---------------------------------------------
+export function formatDate(raw: string) {
+  if (!raw) return { day: '--', time: '--' };
+
+  // ESPN always gives ISO UTC, e.g. "2025-11-14T01:15Z"
+  const dt = DateTime.fromISO(raw, { zone: 'utc' })
+    .setZone('America/New_York');  // << force U.S. Eastern Time
+
+  return {
+    day: dt.toFormat('LLL dd'),   // e.g. "Nov 13"
+    time: dt.toFormat('h:mm a'),  // e.g. "7:15 PM"
+  };
+}
+// ---------------------------------------------
+// Standard Date formatting (America/New_York)
+// ---------------------------------------------
+export function formatStandardDate(raw: string) {
+  if (!raw) return { day: '--', time: '--' };
+
+  const d = new Date(raw);
+
+  return {
+    day: d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'America/Chicago',   // <<< FIX
+    }),
+    time: d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'America/Chicago',   // <<< FIX
+    })
+  };
+
+// ---------------------------------------------
 // Date formatting (America/New_York)
 // ---------------------------------------------
-export function formatDate(iso: string) {
-  const dt = DateTime.fromISO(iso, { zone: 'utc' }).setZone('America/New_York')
+export function formatStandardDate(raw: string) {
+  if (!raw) return { day: '--', time: '--' };
+
+  const d = new Date(raw);
+
   return {
-    day: dt.toFormat('LLL dd'),
-    time: dt.toFormat('h:mm a')
-  }
+    day: d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'America/New_York',   // <<< FIX
+    }),
+    time: d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'America/New_York',   // <<< FIX
+    })
+  };
 }
+
+
 
 // ---------------------------------------------
 // Primetime logic

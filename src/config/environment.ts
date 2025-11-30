@@ -42,11 +42,11 @@ export class EnvironmentConfig {
   }
   
   public get clientUrl(): string {
-    return process.env.CLIENT_URL || 'http://localhost:5173';
+    return process.env.CLIENT_URL || 'http://localhost:5173' || 'http://localhost:4173';
   }
   
   public get corsOrigin(): string {
-    return process.env.CORS_ORIGIN || 'http://localhost:5173';
+    return process.env.CORS_ORIGIN || 'http://localhost:5173' || 'http://localhost:4173';
   }
   
   public get isDevelopment(): boolean {

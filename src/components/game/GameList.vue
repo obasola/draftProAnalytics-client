@@ -11,6 +11,9 @@ import { FilterMatchMode } from 'primevue/api'
 import GameCreateForm from '@/components/game/GameCreateForm.vue'
 import GameEditForm from '@/components/game/GameEditForm.vue'
 import { useThemeStore } from '@/stores/theme.store'
+import { useAuthStore } from "@/stores/authStore";
+
+const auth = useAuthStore();
 
 const themeStore = useThemeStore()
 const gameStore = useGameStore()
@@ -190,7 +193,7 @@ const getStatusClass = (status: string | undefined) => {
           <div class="action-buttons">
             <Button @click="viewGame(data.id)" icon="pi pi-eye" class="p-button-info p-button-sm" v-tooltip="'View'" />
             <Button @click="editGame(data.id)" icon="pi pi-pencil" class="p-button-warning p-button-sm"
-              v-tooltip="'Edit'" />
+              v-tooltip="'Edit'" :disabled="auth.role === 1" severity="secondary" />
             <Button @click="deleteGame(data.id)" icon="pi pi-trash" class="p-button-danger p-button-sm"
               v-tooltip="'Delete'" />
           </div>
