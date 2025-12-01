@@ -31,10 +31,19 @@ const handleLogoutClick = async (): Promise<void> => {
 <template>
   <header class="app-header" role="banner">
     <div class="header-content">
-      <h1 @click="goHome" class="app-title" tabindex="0">
-        Sports Management System
-      </h1>
+      <!-- LEFT SIDE: Logo + Title -->
+      <div class="header-left" @click="goHome" tabindex="0">
+        <img
+          src="/logos/NFLogo.jpeg"
+          alt="NFL logo"
+          class="app-logo"
+        />
+        <h1 class="app-title">
+          Sports Management System
+        </h1>
+      </div>
 
+      <!-- RIGHT SIDE: Auth actions -->
       <div class="header-actions">
         <!-- AUTH SECTION -->
         <template v-if="isAuthenticated">
@@ -74,7 +83,7 @@ const handleLogoutClick = async (): Promise<void> => {
 
 <style scoped>
 .app-header {
-  background: var(--header-bg);   /* bg5 #062D92 */
+  background: #527ec7;   /* bg5 #062D92 */
   color: var(--text-on-bg5);      /* white */
   padding: 0.875rem 2rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.35);
@@ -92,17 +101,34 @@ const handleLogoutClick = async (): Promise<void> => {
   margin: 0 auto;
 }
 
+/* NEW: logo + title container */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  margin-left: -55px; /* ⬅ nudges logo + title ~20px left */
+}
+/* NEW: logo styling */
+.app-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
 .app-title {
   margin: 0;
-  cursor: pointer;
   line-height: 1.2;
   color: var(--text-on-bg5);
   transition: opacity 0.2s;
 }
-.app-title:hover {
+
+.header-left:hover .app-title {
   opacity: 0.9;
 }
-.app-title:focus-visible {
+
+.header-left:focus-visible {
   outline: 3px solid #ffda77;
   outline-offset: 3px;
   border-radius: 6px;

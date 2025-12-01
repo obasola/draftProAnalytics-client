@@ -45,7 +45,7 @@
     <!-- Info -->
     <div class="info-text">
       <span class="schedule-info">
-        Select season and team to view schedule. Use Edit/Save buttons to update scores and game status.
+        Select season and team to view schedule. For live Games & Scores go to Show Upcoming Games.
       </span>
     </div>
 
@@ -200,6 +200,7 @@
 </template>
 
 <script setup lang="ts">
+// src/components/game/GameSchedule.vue
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useTeamStore } from '@/stores/teamStore'
@@ -207,6 +208,11 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useToast } from 'primevue/usetoast'
 import { Team } from '@/types'
+import {
+  getTeamLogoInfo,
+  getTeamShortName as getShortName,
+  type TeamRef,
+} from '@/util/teamLogo'
 
 // accept defaults from parent (kills "extraneous attrs" warning)
 const props = defineProps<{ defaultSeason?: string | number; defaultTeam?: string }>()
@@ -407,21 +413,24 @@ const formatLocation = (g: any) => {
 }
 
 // matchup helpers
-const getTeamShortName = (team: any) => {
+const getTeamShortName = (team: any): string => {
   if (!team?.name) return 'TBD'
-  const parts = team.name.trim().split(' ')
-  return parts[parts.length - 1]
+  return getShortName(team.name)
 }
-const getTeamLogo = (team: any): string => {
-  if (!team?.name || !team?.conference) return ''
-  const lastWord = team.name.trim().split(' ').pop()!
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
-  try {
-    return new URL(`../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`, import.meta.url).href
-  } catch {
-    return ''
-  }
+type GameTeam = { name: string; conference?: string }
+
+const getTeamLogo = (team: GameTeam | null | undefined): string => {
+  if (!team?.name) return ''
+
+  const info = getTeamLogoInfo({
+    name: team.name,
+    conference: team.conference ?? '', // if missing, helper will return ''
+  } as TeamRef)
+
+  return info.logoUrl
 }
+
+
 const isWinner = (g: any, side: 'home'|'away') => {
   if (g.homeScore == null || g.awayScore == null) return false
   if (g.homeScore === g.awayScore) return false
@@ -429,14 +438,19 @@ const isWinner = (g: any, side: 'home'|'away') => {
 }
 
 // header helpers
-const getTeamShortNameAndLogo = (team: any): { fullName: string; logoPath: string } => {
-  if (!team?.name || !team?.conference) return { fullName: 'Unknown', logoPath: '' }
-  const parts = team.name.trim().split(' ')
-  const short = parts[parts.length - 1]
-  const ext = short === 'Chargers' ? 'webp' : 'avif'
-  const logoPath = new URL(`../../assets/images/${team.conference.toLowerCase()}/${short}.${ext}`, import.meta.url).href
-  return { fullName: team.name, logoPath }
+const getTeamShortNameAndLogo = (
+  team: GameTeam | null | undefined
+): { fullName: string; logoPath: string } => {
+  if (!team?.name) return { fullName: 'Unknown', logoPath: '' }
+
+  const info = getTeamLogoInfo({
+    name: team.name,
+    conference: team.conference ?? '',
+  } as TeamRef)
+
+  return { fullName: team.name, logoPath: info.logoUrl }
 }
+
 function getNflLogo() { return new URL('../../images/NFLogo.jpeg', import.meta.url).href }
 
 const getStatusClass = (status: string) => {

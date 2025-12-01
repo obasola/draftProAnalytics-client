@@ -9,22 +9,10 @@
       <ThemedButton @click="createSchedule" label="Create Schedule" icon="pi pi-plus" variant="secondary" />
     </div>
 
-    <DataTable
-      :value="enrichedSchedules"
-      :loading="scheduleStore.loading"
-      dataKey="id"
-      :lazy="true"
-      :paginator="true"
-      :rows="rows"
-      :first="first"
-      :totalRecords="totalRecords"
-      :rowsPerPageOptions="[5,10,20,50]"
-      @page="onPage"
-      responsiveLayout="scroll"
-      sortMode="multiple"
-      :globalFilterFields="['gameLocation', 'gameCity']"
-      class="themed-datatable"
-    >
+    <DataTable :value="enrichedSchedules" :loading="scheduleStore.loading" dataKey="id" :lazy="true" :paginator="true"
+      :rows="rows" :first="first" :totalRecords="totalRecords" :rowsPerPageOptions="[5, 10, 20, 50]" @page="onPage"
+      responsiveLayout="scroll" sortMode="multiple" :globalFilterFields="['gameLocation', 'gameCity']"
+      class="themed-datatable">
       <Column field="seasonYear" header="Season" sortable>
         <template #body="{ data }">
           <span class="font-semibold text-team-primary">{{ data.seasonYear }}</span>
@@ -46,7 +34,7 @@
       </Column>
 
       <!-- ✅ FIXED: Use enriched team objects -->
-      <Column header="Matchup">
+      <Column header="Matchup">DPA
         <template #body="{ data }">
           <div class="matchup">
             <span class="team">
@@ -55,8 +43,8 @@
             </span>
             <span class="mx-1">@</span>
             <span class="team">
-              <div v-if="data.homeTeam !== null && data.homeTeam !== undefined"> 
-              <img :src="getTeamLogo(data.homeTeam)" :alt="data.homeTeam.name" class="inline-logo" />
+              <div v-if="data.homeTeam">
+                <img :src="getTeamLogo(data.homeTeam)" :alt="data.homeTeam.name" class="inline-logo" />
               </div>
               {{ data.homeTeam?.name || 'TBD' }}
             </span>
@@ -72,24 +60,18 @@
 
       <Column field="awayScore" header="Away Score" sortable>
         <template #body="{ data }">
-          <div
-            v-if="data.awayScore != null"
-            class="score-display opp-score"
-            :class="{ 'winning-score': isWinningScore(data.awayScore, data.homeScore) }"
-          >
+          <div v-if="data.awayScore != null" class="score-display opp-score"
+            :class="{ 'winning-score': isWinningScore(data.awayScore, data.homeScore) }">
             {{ data.awayScore }}
           </div>
           <span v-else class="text-gray-400">-</span>
         </template>
       </Column>
-      
+
       <Column field="homeScore" header="Home Score" sortable>
         <template #body="{ data }">
-          <div
-            v-if="data.homeScore != null"
-            class="score-display team-score"
-            :class="{ 'winning-score': isWinningScore(data.homeScore, data.awayScore) }"
-          >
+          <div v-if="data.homeScore != null" class="score-display team-score"
+            :class="{ 'winning-score': isWinningScore(data.homeScore, data.awayScore) }">
             {{ data.homeScore }}
           </div>
           <span v-else class="text-gray-400">-</span>
@@ -98,10 +80,7 @@
 
       <Column field="gameStatus" header="Status">
         <template #body="{ data }">
-          <span 
-            class="status-badge px-2 py-1 rounded text-xs font-medium"
-            :class="getStatusClass(data.gameStatus)"
-          >
+          <span class="status-badge px-2 py-1 rounded text-xs font-medium" :class="getStatusClass(data.gameStatus)">
             {{ formatStatus(data.gameStatus) }}
           </span>
         </template>
@@ -110,12 +89,12 @@
       <Column header="Actions">
         <template #body="{ data }">
           <div class="action-buttons">
-            <ThemedButton @click="viewSchedule(data.id)" icon="pi pi-eye" variant="neutral" size="small" v-tooltip="'View'" />
-            <ThemedButton @click="editSchedule(data.id)" icon="pi pi-pencil" 
-                variant="primary" size="small" v-tooltip="'Edit'" 
-                :disabled="auth.role === 1"
-                severity="secondary"/>
-            <ThemedButton @click="deleteSchedule(data.id)" icon="pi pi-trash" variant="danger" size="small" v-tooltip="'Delete'" />
+            <ThemedButton @click="viewSchedule(data.id)" icon="pi pi-eye" variant="neutral" size="small"
+              v-tooltip="'View'" />
+            <ThemedButton @click="editSchedule(data.id)" icon="pi pi-pencil" variant="primary" size="small"
+              v-tooltip="'Edit'" :disabled="auth.role === 1" severity="secondary" />
+            <ThemedButton @click="deleteSchedule(data.id)" icon="pi pi-trash" variant="danger" size="small"
+              v-tooltip="'Delete'" />
           </div>
         </template>
       </Column>
@@ -145,6 +124,7 @@ import TeamAwareTag from '@/components/TeamAwareTag.vue'
 import GameResultTag from '@/components/GameResultTag.vue'
 import type { Team } from '@/types/team.types'
 import { useAuthStore } from "@/stores/authStore";
+import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 
 const auth = useAuthStore();
 const scheduleStore = useScheduleStore()
@@ -173,7 +153,7 @@ const enrichedSchedules = computed(() => {
   return scheduleStore.schedules.map(schedule => {
     const homeTeam = findTeamById(schedule.teamId)
     const awayTeam = findTeamById(schedule.oppTeamId)
-    
+
     if (!homeTeam || !awayTeam) {
       console.warn(`⚠️ Missing team for schedule ${schedule.id}:`, {
         homeTeamId: schedule.teamId,
@@ -193,14 +173,14 @@ const enrichedSchedules = computed(() => {
 
 onMounted(async () => {
   console.log('🔄 Component mounting...')
-  
+
   // CRITICAL: Load teams FIRST
   if (teams.value.length === 0) {
     console.log('📥 Loading teams...')
     await themeStore.initializeTheme()
     console.log('✅ Teams loaded:', teams.value.length)
   }
-  
+
   // Then load schedules
   console.log('📥 Loading schedules...')
   await scheduleStore.fetchAll(1, rows.value)
@@ -217,22 +197,18 @@ const onPage = async (event: any) => {
   await scheduleStore.fetchAll(page, limit)
 }
 
-const getTeamLogo = (team: any): string => {
-  
-  if (!team || !team.name || !team.conference) {
-    alert("NULL TEAM object passed");
-    return ''
+function asTeamRef(team: any): TeamRef | null {
+  if (!team || !team.name || !team.conference) return null
+  return {
+    name: team.name,
+    conference: team.conference,
   }
-  const lastWord = team.name.trim().split(' ').pop()
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
+}
 
- // alert('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
-  console.log('teamLogo: '+`../../assets/images/${team.conference.toLowerCase()}` + '/'+lastWord+"."+ext);
-
-  return new URL(
-    `../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`,
-    import.meta.url
-  ).href
+const getTeamLogo = (team: any): string => {
+  const info = getTeamLogoInfo(asTeamRef(team))
+  // alert("Logo: "+ info.logoUrl);
+  return info.logoUrl
 }
 const viewSchedule = (id: number) => router.push(`/schedules/${id}?mode=read`)
 const editSchedule = (id: number) => router.push(`/schedules/${id}?mode=edit`)
@@ -257,7 +233,7 @@ const formatStatus = (status: string | undefined) => {
 }
 
 const getStatusClass = (status: string | undefined) => {
-  switch(status?.toLowerCase()) {
+  switch (status?.toLowerCase()) {
     case 'scheduled': return 'bg-blue-100 text-blue-800'
     case 'completed': return 'bg-green-100 text-green-800'
     case 'cancelled': return 'bg-red-100 text-red-800'
@@ -269,14 +245,14 @@ const getStatusClass = (status: string | undefined) => {
 // ✅ FIXED: Simple, reliable team lookup by numeric ID
 const findTeamById = (teamId: number | string | undefined): Team | undefined => {
   if (teamId == null) return undefined
-  
+
   const numericId = typeof teamId === 'number' ? teamId : parseInt(String(teamId), 10)
-  
+
   if (isNaN(numericId)) {
     console.warn('⚠️ Invalid team ID:', teamId)
     return undefined
   }
-  
+
   return teams.value.find(t => Number(t.id) === numericId)
 }
 
@@ -287,27 +263,62 @@ const isWinningScore = (score1: number | undefined, score2: number | undefined) 
 </script>
 
 <style scoped>
-.schedule-list { @apply w-full; }
-.list-header { @apply flex justify-between items-center; }
-.action-buttons { @apply flex gap-2; }
-.week-badge { @apply inline-block; }
-.opponent-info { @apply flex flex-col; }
-.opponent-colors { @apply flex gap-1; }
-.color-dot { @apply w-3 h-3 rounded-full border border-gray-300; }
-.score-display { 
-  @apply px-2 py-1 rounded text-sm font-bold text-center; 
-  background-color: var(--color-neutral-100); 
-  color: var(--color-neutral-700); 
+.schedule-list {
+  @apply w-full;
 }
-.score-display.winning-score { 
-  background-color: var(--team-secondary); 
-  color: var(--team-accent); 
+
+.list-header {
+  @apply flex justify-between items-center;
 }
-.score-display.team-score.winning-score { 
-  background-color: var(--team-primary); 
+
+.action-buttons {
+  @apply flex gap-2;
 }
-.themed-datatable { @apply shadow-lg rounded-lg overflow-hidden; }
-.matchup { @apply flex items-center gap-1; }
-.team { @apply font-semibold; }
-.status-badge { @apply inline-block; }
+
+.week-badge {
+  @apply inline-block;
+}
+
+.opponent-info {
+  @apply flex flex-col;
+}
+
+.opponent-colors {
+  @apply flex gap-1;
+}
+
+.color-dot {
+  @apply w-3 h-3 rounded-full border border-gray-300;
+}
+
+.score-display {
+  @apply px-2 py-1 rounded text-sm font-bold text-center;
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-700);
+}
+
+.score-display.winning-score {
+  background-color: var(--team-secondary);
+  color: var(--team-accent);
+}
+
+.score-display.team-score.winning-score {
+  background-color: var(--team-primary);
+}
+
+.themed-datatable {
+  @apply shadow-lg rounded-lg overflow-hidden;
+}
+
+.matchup {
+  @apply flex items-center gap-1;
+}
+
+.team {
+  @apply font-semibold;
+}
+
+.status-badge {
+  @apply inline-block;
+}
 </style>

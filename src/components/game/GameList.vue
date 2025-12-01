@@ -12,6 +12,7 @@ import GameCreateForm from '@/components/game/GameCreateForm.vue'
 import GameEditForm from '@/components/game/GameEditForm.vue'
 import { useThemeStore } from '@/stores/theme.store'
 import { useAuthStore } from "@/stores/authStore";
+import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 
 const auth = useAuthStore();
 
@@ -76,13 +77,33 @@ const onGameCreated = async () => {
 }
 
 // Helpers
+// If your API type already matches TeamRef (name + conference), you can just use it directly.
+// If not, adapt here with a mapper:
+function asTeamRef(team: any): TeamRef | null {
+  if (!team || !team.name || !team.conference) return null
+  return {
+    name: team.name,
+    conference: team.conference,
+  }
+}
+
+const getTeamShortNameAndLogo = (team: any) => {
+  const ref = asTeamRef(team)
+  return getTeamLogoInfo(ref)
+}
+/*
 const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: string } => {
   // If team object exists, use it
+  
   if (team && team.name && team.conference) {
     const nameParts = team.name.trim().split(' ')
     const shortName = nameParts[nameParts.length - 1]
+    
     const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
     const logoFile = `${shortName}.${fileExt}`
+   
+    console.log('teamLogo: '+`/images/${team.conference.toLowerCase()}` + '/'+logoFile);
+    alert(`logoPath: /images/${team.conference.toLowerCase()}/${logoFile}`)
     return { shortName, logoPath: `/images/${team.conference.toLowerCase()}/${logoFile}` }
   }
 
@@ -96,7 +117,7 @@ const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: stri
 
   return { shortName: 'Unknown', logoPath: '' }
 }
-
+*/
 const isWinningScore = (score1: number | undefined, score2: number | undefined) => {
   if (score1 == null || score2 == null) return false
   return score1 > score2
@@ -146,7 +167,7 @@ const getStatusClass = (status: string | undefined) => {
           <div class="matchup-cell">
             <!-- Away Team -->
             <div class="team away-team" :class="{ 'winning-team': isWinningScore(data.awayScore, data.homeScore) }">
-              <img v-if="data.awayTeam" :src="getTeamShortNameAndLogo(data.awayTeam).logoPath"
+              <img v-if="data.awayTeam" :src="getTeamShortNameAndLogo(data.awayTeam).logoUrl"
                 :alt="getTeamShortNameAndLogo(data.awayTeam).shortName" class="team-logo" />
               <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
             </div>
@@ -155,7 +176,7 @@ const getStatusClass = (status: string | undefined) => {
 
             <!-- Home Team -->
             <div class="team home-team" :class="{ 'winning-team': isWinningScore(data.homeScore, data.awayScore) }">
-              <img v-if="data.homeTeam" :src="getTeamShortNameAndLogo(data.homeTeam).logoPath"
+              <img v-if="data.homeTeam" :src="getTeamShortNameAndLogo(data.homeTeam).logoUrl"
                 :alt="getTeamShortNameAndLogo(data.homeTeam).shortName" class="team-logo" />
               <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
             </div>

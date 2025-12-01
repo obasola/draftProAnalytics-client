@@ -6,6 +6,7 @@
 
 import { DateTime } from 'luxon';
 import { resolveTeamLogo } from '@/util/resolveTeamLogo';
+import { getTeamLogoInfo } from '@/util/teamLogo'
 import type {
   NormalizedGameDTO,
   ScoringPlayDTO,
@@ -139,3 +140,4 @@ export function mapUpcomingGamesToUI(events: NormalizedGameDTO[]): UpcomingGameU
     return dto;
   });
 }
+
