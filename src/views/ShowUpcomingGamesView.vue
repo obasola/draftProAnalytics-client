@@ -1,12 +1,12 @@
 <!-- src/views/ShowUpcomingGamesView.vue -->
 <script setup lang="ts">
-import { ref, onMounted, Ref } from 'vue'
-import { useUpcomingGamesController } from '@/composables/schedule/useUpcomingGamesController'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
+import { ref, onMounted } from 'vue';
+import { useUpcomingGamesController } from '@/composables/schedule/useUpcomingGamesController';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
 
-// ✅ CREATE THE CONTROLLER (it handles the store internally)
-const controller = useUpcomingGamesController()
+const controller = useUpcomingGamesController();
 
 const staticWeekOptions: { label: string; value: number }[] = [
   { label: 'Preseason', value: 0 },
@@ -15,10 +15,15 @@ const staticWeekOptions: { label: string; value: number }[] = [
     value: i + 1,
   })),
   { label: 'Postseason', value: 99 },
-]
+];
+
+// For row expansion (scoring details)
+const expandedRows = ref<UpcomingGameUI[]>([]);
 
 onMounted(() => {
-})
+  // optional: preload current week here if you want
+  // controller.submitControls();
+});
 </script>
 
 <template>
@@ -27,7 +32,6 @@ onMounted(() => {
 
     <!-- FILTER CONTROLS -->
     <div class="controls-row">
-
       <!-- YEAR -->
       <select v-model="controller.selectedYear.value" class="control-select">
         <option v-for="y in [2023, 2024, 2025, 2026, 2027]" :key="y" :value="y">
@@ -53,15 +57,27 @@ onMounted(() => {
         Submit
       </button>
 
-      <button icon="pi pi-cloud-download" class="refresh-btn" :loading="controller.loading"
-        @click="controller.runImportScoresWeek">
+      <button
+        class="refresh-btn"
+        :disabled="controller.loading"
+        @click="controller.runImportScoresWeek"
+      >
         Refresh
       </button>
-
     </div>
 
-    <DataTable :value="controller.store.games" :loading="controller.store.isLoading" tableStyle="min-width: 100%"
-      rowHover>
+    <!-- TABLE -->
+    <DataTable
+      :value="controller.store.games"
+      :loading="controller.store.isLoading"
+      tableStyle="min-width: 100%"
+      rowHover
+      dataKey="id"
+      v-model:expandedRows="expandedRows"
+    >
+      <!-- EXPANDER -->
+      <Column type="expander" headerStyle="width: 3rem" />
+
       <!-- DATE/TIME COLUMN -->
       <Column header="Date/Time" style="width: 160px">
         <template #body="{ data }">
@@ -76,7 +92,6 @@ onMounted(() => {
       <Column header="Matchup">
         <template #body="{ data }">
           <div class="matchup-row">
-
             <!-- AWAY TEAM -->
             <div class="team-horizontal">
               <img :src="data.awayLogo" class="team-logo" />
@@ -98,201 +113,117 @@ onMounted(() => {
                 <span v-if="data.homeWinner" class="winner-check">✔</span>
               </span>
             </div>
-
           </div>
         </template>
-
       </Column>
-
 
       <!-- STATUS COLUMN -->
       <Column header="Status" style="width: 140px">
         <template #body="{ data }">
-          <span :class="[
-            'status-tag',
-            data.status === 'Final'
-              ? 'final'
-              : data.status === 'In Progress'
-                ? 'in-progress'
-                : 'scheduled'
-          ]">
-            {{ data.statusDetail || data.status }}
-          </span>
+          <div class="status-pill" :data-status="data.status">
+            <span class="status-main">{{ data.status }}</span>
+            <span v-if="data.statusDetail && data.statusDetail !== data.status" class="status-detail">
+              {{ data.statusDetail }}
+            </span>
+          </div>
         </template>
       </Column>
-    </DataTable>
 
+      <!-- NEW: SCORING SUMMARY COLUMN -->
+      <Column header="Scoring">
+        <template #body="{ data }">
+          <div class="scoring-cell">
+            <span v-if="data.scoringSummaryShort">
+              {{ data.scoringSummaryShort }}
+            </span>
+            <span v-else class="no-scoring">—</span>
+          </div>
+        </template>
+      </Column>
+
+      <!-- EXPANSION TEMPLATE: FULL SCORING DETAIL -->
+      <template #expansion="{ data }">
+        <div class="scoring-expansion">
+          <template v-if="data.scoringDetails && data.scoringDetails.length">
+            <h4 class="scoring-header">Scoring Plays</h4>
+            <ul class="scoring-list">
+              <li v-for="(line, idx) in data.scoringDetails" :key="idx">
+                {{ line }}
+              </li>
+            </ul>
+          </template>
+          <template v-else>
+            <em>No scoring plays yet.</em>
+          </template>
+        </div>
+      </template>
+    </DataTable>
   </div>
 </template>
 
 <style scoped>
-img {
-  object-fit: contain;
-}
-
-.toolbar {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-}
-
-.small-input :deep(.p-inputtext),
-.small-input :deep(.p-dropdown),
-.small-input :deep(.p-dropdown-label) {
-  height: 32px !important;
-  padding: 4px 8px !important;
-  font-size: 14px;
-}
-
-.small-input :deep(.p-dropdown-trigger) {
-  width: 24px;
-}
-
-label {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 3px;
-}
-
-.team-logo {
-  width: 110px;
-  height: 70px;
-  object-fit: contain;
-  object-position: center;
-}
-
-/* DATE / TIME */
-.date-day {
-  font-weight: 600;
-  color: #fff;
-}
-
-.date-time {
-  color: #bbb;
-  font-size: 0.85rem;
-}
-
-/* TEAM LOGOS */
-.team-logo {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  object-position: center;
-}
-
-/* TEAM NAME TEXT */
-.team-name {
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-/* WINNER = Red Bold */
-.winner-text {
-  color: #ff4d4d;
-  font-weight: 700;
-}
-
-/* LOSER = White */
-.loser-text {
-  color: #fff;
-  opacity: 0.9;
-}
-
-/* CHECKMARK */
-.winner-check {
-  color: #00e600;
-  margin-left: 4px;
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-/* STATUS TAGS */
-.status-tag {
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-tag.in-progress {
-  background: #e63946;
-  color: #fff;
-}
-
-.status-tag.final {
-  background: #2a9d8f;
-  color: #fff;
-}
-
-.status-tag.scheduled {
-  background: #777;
-  color: #000;
-}
-
 .controls-row {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: 0.75rem;
   align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .control-select {
-  background: #222;
-  color: #fff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
   border: 1px solid #444;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  font-size: 1.05rem;
+  background-color: #111;
+  color: #f5f5f5;
+}
+
+.submit-btn,
+.refresh-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .submit-btn {
-  background: #0a84ff;
+  background-color: #054dbd;
   color: #fff;
-  padding: 0.45rem 0.8rem;
-  font-size: 1.05rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
 }
 
 .refresh-btn {
-  background: green;
-  color: #fff;
-  padding: 0.45rem 0.8rem;
-  font-size: 1.05rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
+  background-color: #333;
+  color: #eee;
 }
 
+.refresh-btn[disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
 
+/* Date/time */
 .date-day {
-  color: #fff;
   font-weight: 600;
+  font-size: 0.9rem;
 }
-
 .date-time {
-  color: #bbb;
   font-size: 0.85rem;
+  color: #ccc;
 }
 
+/* Matchup */
 .matchup-row {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 1.2rem;
+  gap: 1.25rem;
 }
 
 .team-horizontal {
   display: flex;
   flex-direction: row;
   align-items: center;
-  /* ensures perfect vertical centering */
   gap: 0.5rem;
 }
 
@@ -307,7 +238,6 @@ label {
   font-weight: 500;
   font-size: 1rem;
   white-space: nowrap;
-  /* prevents wrapping (stays single-row) */
 }
 
 .vs {
@@ -325,6 +255,69 @@ label {
 
 .score {
   font-size: larger;
-  color:yellow
+  color: yellow;
+}
+
+/* Status pill */
+.status-pill {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background-color: #222;
+  font-size: 0.8rem;
+}
+
+.status-pill[data-status='In Progress'] {
+  background-color: #14532d;
+}
+
+.status-pill[data-status='Final'] {
+  background-color: #1f2937;
+}
+
+.status-pill[data-status='Postponed'] {
+  background-color: #7f1d1d;
+}
+
+.status-main {
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.status-detail {
+  font-size: 0.75rem;
+  color: #e5e7eb;
+}
+
+/* NEW: Scoring cell + expansion */
+.scoring-cell {
+  font-size: 0.85rem;
+  line-height: 1.2;
+  max-height: 3.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-scoring {
+  color: #777;
+  font-style: italic;
+}
+
+.scoring-expansion {
+  padding: 0.75rem 1rem;
+  background-color: rgba(0, 0, 0, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scoring-header {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.scoring-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
 }
 </style>

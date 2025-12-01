@@ -1,148 +1,141 @@
 // src/util/schedule/upcomingGamesHelpers.ts
-//------------------------------------------------------
-// This file consumes BACKEND NormalizedGameDTO
-// and produces FRONTEND UpcomingGameUI
-//------------------------------------------------------
+// -----------------------------------------------------
+// Consumes BACKEND NormalizedGameDTO
+// Produces FRONTEND UpcomingGameUI (with scoring info)
+// -----------------------------------------------------
 
-import type { GameStatus, PrimetimeType } from '@/types/schedule/upcomingGames'
+import { DateTime } from 'luxon';
+import { resolveTeamLogo } from '@/util/resolveTeamLogo';
+import type {
+  NormalizedGameDTO,
+  ScoringPlayDTO,
+} from '@/util/schedule/scheduleTypes';
 
-//------------------------------------------------------
-// TYPES (FROM BACKEND)
-//------------------------------------------------------
-export interface NormalizedGameDTO {
-  id: number
-
-  date: string | null
-  dateFormatted: { day: string; time: string }
-
-  homeTeamId: number | null
-  homeTeamName: string
-  homeLogoLocal: string
-  homeLogoEspn: string | null
-  homeScore: number | null
-  homeWinner: boolean
-  teamColorHome: string
-
-  awayTeamId: number | null
-  awayTeamName: string
-  awayLogoLocal: string
-  awayLogoEspn: string | null
-  awayScore: number | null
-  awayWinner: boolean
-  teamColorAway: string
-
-  status: GameStatus
-  statusDetail: string
-
-  isPrimetime: boolean
-  primetimeType: PrimetimeType
-}
-
-//------------------------------------------------------
-// FRONTEND DTO
-//------------------------------------------------------
+// -----------------------------------------------------
+// FRONTEND DTO / UI MODEL
+// -----------------------------------------------------
 export interface UpcomingGameDto {
-  id: number
+  id: number;
+  dateFormatted: {
+    day: string;
+    time: string;
+  };
 
-  date: string | null
-  dateFormatted: { day: string; time: string }
+  homeTeamName: string;
+  awayTeamName: string;
+  homeLogo: string;
+  awayLogo: string;
+  homeScore: number | null;
+  awayScore: number | null;
 
-  homeTeamId: number | null
-  homeTeamName: string
-  homeLogo: string
-  homeScore: number | null
-  homeWinner: boolean
-  teamColorHome: string
+  status: 'Scheduled' | 'In Progress' | 'Final' | 'Postponed';
+  statusDetail: string;
 
-  awayTeamId: number | null
-  awayTeamName: string
-  awayLogo: string
-  awayScore: number | null
-  awayWinner: boolean
-  teamColorAway: string
+  isPrimetime: boolean;
+  primetimeType: 'TNF' | 'SNF' | 'MNF' | null;
 
-  status: GameStatus
-  statusDetail: string
+  teamColorHome: string;
+  teamColorAway: string;
 
-  isPrimetime: boolean
-  primetimeType: PrimetimeType
+  // NEW: short blurb + full list
+  scoringSummaryShort: string | null;
+  scoringDetails: string[];
 }
 
-//------------------------------------------------------
-// UI MODEL
-//------------------------------------------------------
-export interface UpcomingGameUI extends UpcomingGameDto {
-  homeIsWinner: boolean
-  awayIsWinner: boolean
-  statusClass: string
-}
+export type UpcomingGameUI = UpcomingGameDto;
 
-//------------------------------------------------------
-// UTILS
-//------------------------------------------------------
-export function getWinner(h: number | null, a: number | null): 'home' | 'away' | null {
-  if (h == null || a == null) return null
-  if (h > a) return 'home'
-  if (a > h) return 'away'
-  return null
-}
-
-//------------------------------------------------------
-// MAIN NORMALIZER: server DTO → client DTO
-//------------------------------------------------------
-export function normalizeToUpcomingDto(game: NormalizedGameDTO): UpcomingGameDto {
-  return {
-    id: game.id,
-
-    date: game.date,
-    dateFormatted: game.dateFormatted,
-
-    homeTeamId: game.homeTeamId,
-    homeTeamName: game.homeTeamName,
-    homeLogo: game.homeLogoLocal,       // 👈 LOCAL LOGO
-    homeScore: game.homeScore,
-    homeWinner: game.homeWinner,
-    teamColorHome: game.teamColorHome,
-
-    awayTeamId: game.awayTeamId,
-    awayTeamName: game.awayTeamName,
-    awayLogo: game.awayLogoLocal,       // 👈 LOCAL LOGO
-    awayScore: game.awayScore,
-    awayWinner: game.awayWinner,
-    teamColorAway: game.teamColorAway,
-
-    status: game.status,
-    statusDetail: game.statusDetail,
-
-    isPrimetime: game.isPrimetime,
-    primetimeType: game.primetimeType,
+// -----------------------------------------------------
+// Helpers
+// -----------------------------------------------------
+function toDateFormatted(dateIso: string | null): { day: string; time: string } {
+  if (!dateIso) {
+    return { day: '', time: '' };
   }
-}
 
-//------------------------------------------------------
-// UI MAPPER
-//------------------------------------------------------
-export function toUpcomingGameUI(dto: UpcomingGameDto): UpcomingGameUI {
-  const w = getWinner(dto.homeScore, dto.awayScore)
-
-  const statusClass =
-    dto.status === 'Final'
-      ? 'final'
-      : dto.status === 'In Progress'
-      ? 'in-progress'
-      : 'scheduled'
+  const dt = DateTime.fromISO(dateIso);
+  if (!dt.isValid) {
+    return { day: '', time: '' };
+  }
 
   return {
-    ...dto,
-    homeIsWinner: w === 'home',
-    awayIsWinner: w === 'away',
-    statusClass,
-  }
+    day: dt.toFormat('ccc L/d'), // e.g. "Sun 11/30"
+    time: dt.toFormat('h:mm a'), // e.g. "7:15 PM"
+  };
 }
 
-//------------------------------------------------------
-// MAP MANY GAMES
-//------------------------------------------------------
-export function mapUpcomingGamesToUI(list: NormalizedGameDTO[]): UpcomingGameUI[] {
-  return list.map(ev => toUpcomingGameUI(normalizeToUpcomingDto(ev)))
+function mapScoringPlaysToDetails(plays: ScoringPlayDTO[] | undefined): string[] {
+  if (!plays || !plays.length) {
+    return [];
+  }
+
+  return plays.map((p) => {
+    const parts: string[] = [];
+
+    // "Q3 10:21"
+    if (p.period > 0 || p.clockDisplay) {
+      const qLabel = p.period > 0 ? `Q${p.period}` : '';
+      const timeLabel = p.clockDisplay || '';
+      const when = [qLabel, timeLabel].filter(Boolean).join(' ');
+      if (when) {
+        parts.push(when);
+      }
+    }
+
+    // Play text
+    if (p.text) {
+      parts.push(p.text);
+    }
+
+    // "(Score: 21–17)"
+    if (p.homeScore != null || p.awayScore != null) {
+      parts.push(`(Score: ${p.awayScore ?? '-'}–${p.homeScore ?? '-'})`);
+    }
+
+    return parts.join(' — ');
+  });
+}
+
+// -----------------------------------------------------
+// MAIN MAPPER: server DTO → UI model
+// -----------------------------------------------------
+export function mapUpcomingGamesToUI(events: NormalizedGameDTO[]): UpcomingGameUI[] {
+  return events.map((e) => {
+    const dateFormatted = e.dateFormatted ?? toDateFormatted(e.date);
+
+    const homeLogo =
+      e.homeLogoLocal || e.homeLogoEspn || resolveTeamLogo(e.homeTeamName);
+    const awayLogo =
+      e.awayLogoLocal || e.awayLogoEspn || resolveTeamLogo(e.awayTeamName);
+
+    const scoringDetails = mapScoringPlaysToDetails(e.scoringPlays);
+    const scoringSummaryShort =
+      e.scoringSummaryShort ||
+      (scoringDetails.length ? scoringDetails[scoringDetails.length - 1] : null);
+
+    const dto: UpcomingGameDto = {
+      id: e.id,
+      dateFormatted,
+
+      homeTeamName: e.homeTeamName,
+      awayTeamName: e.awayTeamName,
+      homeLogo,
+      awayLogo,
+      homeScore: e.homeScore,
+      awayScore: e.awayScore,
+
+      status: e.status,
+      statusDetail: e.statusDetail,
+
+      isPrimetime: e.isPrimetime,
+      primetimeType: e.primetimeType,
+
+      teamColorHome: e.teamColorHome,
+      teamColorAway: e.teamColorAway,
+
+      scoringSummaryShort,
+      scoringDetails,
+    };
+
+    return dto;
+  });
 }

@@ -1,4 +1,3 @@
-// src/stores/authStore.ts
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import { authApi } from '@/services/authApi';
@@ -15,22 +14,28 @@ function decodeJwt(token: string): JwtPayload {
 }
 
 export const useAuthStore = defineStore('auth', () => {
+  // ─────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────
   const accessToken = ref<string>('');
   const personId = ref<number | null>(null);
   const userName = ref<string>('');
   const role = ref<number | null>(null);
   const rememberMe = ref<boolean>(false);
-  const tokenExpiry = ref<number>(0); // unix timestamp (seconds)
+  const tokenExpiry = ref<number>(0); // UNIX seconds
   const refreshInterval = ref<number | null>(null);
 
+  // ─────────────────────────────────────
+  // COMPUTED
+  // ─────────────────────────────────────
   const isAuthenticated = computed<boolean>(() => accessToken.value !== '');
   const secondsToExpiry = computed<number>(() =>
     tokenExpiry.value ? tokenExpiry.value - Math.floor(Date.now() / 1000) : 0
   );
 
-  // ─────────────────────
-  // Load from Local Storage
-  // ─────────────────────
+  // ─────────────────────────────────────
+  // PERSISTENCE
+  // ─────────────────────────────────────
   function loadFromStorage(): void {
     const stored = localStorage.getItem('auth_persist');
     if (!stored) return;
@@ -53,9 +58,6 @@ export const useAuthStore = defineStore('auth', () => {
     scheduleAutoRefresh();
   }
 
-  // ─────────────────────
-  // Persist if Remember Me enabled
-  // ─────────────────────
   function persistIfNeeded(): void {
     if (!rememberMe.value) {
       localStorage.removeItem('auth_persist');
@@ -77,14 +79,14 @@ export const useAuthStore = defineStore('auth', () => {
   watch(accessToken, persistIfNeeded);
   watch(rememberMe, persistIfNeeded);
 
-  // allow UI to set rememberMe explicitly
+  // Exposed method for UI interaction
   function setRememberMe(value: boolean): void {
     rememberMe.value = value;
   }
 
-  // ─────────────────────
-  // Auto Refresh Scheduler
-  // ─────────────────────
+  // ─────────────────────────────────────
+  // AUTO REFRESH
+  // ─────────────────────────────────────
   function scheduleAutoRefresh(): void {
     if (refreshInterval.value !== null) {
       window.clearInterval(refreshInterval.value);
@@ -96,15 +98,13 @@ export const useAuthStore = defineStore('auth', () => {
       if (secs <= 60 && secs > 0) {
         await refresh();
       }
+
       if (secs <= 0) {
         await logout();
       }
     }, 5000);
   }
 
-  // ─────────────────────
-  // Refresh JWT
-  // ─────────────────────
   async function refresh(): Promise<void> {
     if (!personId.value) return;
 
@@ -115,9 +115,9 @@ export const useAuthStore = defineStore('auth', () => {
     tokenExpiry.value = payload.exp;
   }
 
-  // ─────────────────────
-  // Login (username/password)
-  // ─────────────────────
+  // ─────────────────────────────────────
+  // LOGIN (username/password)
+  // ─────────────────────────────────────
   async function login(user: string, pass: string): Promise<void> {
     const data = await authApi.login({ userName: user, password: pass });
 
@@ -131,9 +131,9 @@ export const useAuthStore = defineStore('auth', () => {
     scheduleAutoRefresh();
   }
 
-  // ─────────────────────
-  // Social login redirects (Google / Apple)
-  // ─────────────────────
+  // ─────────────────────────────────────
+  // SOCIAL LOGIN (Google / Apple)
+  // ─────────────────────────────────────
   function loginWithGoogle(): void {
     const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
     window.location.href = `${baseUrl}/auth/google`;
@@ -144,9 +144,9 @@ export const useAuthStore = defineStore('auth', () => {
     window.location.href = `${baseUrl}/auth/apple`;
   }
 
-  // ─────────────────────
-  // Logout
-  // ─────────────────────
+  // ─────────────────────────────────────
+  // LOGOUT
+  // ─────────────────────────────────────
   async function logout(): Promise<void> {
     if (personId.value) {
       await authApi.logout(personId.value);
@@ -167,22 +167,28 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Initial load
+  // ─────────────────────────────────────
+  // BOOTSTRAP
+  // ─────────────────────────────────────
   loadFromStorage();
 
   return {
+    // state
     accessToken,
     personId,
     userName,
     role,
     rememberMe,
+
+    // computed
     isAuthenticated,
     secondsToExpiry,
 
+    // actions
     setRememberMe,
     login,
-    logout,
     refresh,
+    logout,
     loginWithGoogle,
     loginWithApple,
   };

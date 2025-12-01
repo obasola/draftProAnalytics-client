@@ -42,6 +42,7 @@ import Panel from 'primevue/panel'
 import Toast from 'primevue/toast'
 import Calendar from 'primevue/calendar'
 import Card from 'primevue/card'
+import Password from 'primevue/password';
 import Menubar from 'primevue/menubar'
 import ProgressSpinner from 'primevue/progressspinner'
 import Tooltip from 'primevue/tooltip'
@@ -50,6 +51,7 @@ import { TeamColorsPlugin } from '../src/plug-ins/team-colors.plugin';
 
 // Import global styles
 import '../src/assets/styles/global-styles.css'
+import Checkbox from 'primevue/checkbox'
 
 
 const app = createApp(App);
@@ -68,7 +70,9 @@ app.directive('tooltip', Tooltip)
 // Register PrimeVue components globally
 app.component('Button', Button)
 app.component('InputText', InputText)
+app.component('Password', Password)
 app.component('InputNumber', InputNumber)
+app.component('Checkbox', Checkbox)
 app.component('Calendar', Calendar)
 app.component('ConfirmDialog', ConfirmDialog);
 app.component('Dropdown', Dropdown)

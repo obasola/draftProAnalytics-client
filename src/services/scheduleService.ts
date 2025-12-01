@@ -1,3 +1,4 @@
+// src/services/scheduleService.ts
 import { UpcomingApiResponse } from '@/types/upcomingSchedule';
 import { apiService } from './api'
 import type { Schedule, ApiResponse, PaginatedResponse } from '@/types'
