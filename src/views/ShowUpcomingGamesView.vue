@@ -84,7 +84,7 @@ onMounted(() => {
       <Column header="Date/Time" style="width: 160px">
         <template #body="{ data }">
           <div class="flex flex-col leading-tight">
-            <span class="date-day">{{ data.dateFormatted.day }}</span>
+            <span class="date-day">{{ data.dateFormatted.day }}&nbsp;&nbsp;</span>
             <span class="date-time">{{ data.dateFormatted.time }}</span>
           </div>
         </template>
