@@ -43,6 +43,40 @@ export class TeamService {
     }
   }
 
+    async getAllTeams(page = 1, limit = 10): Promise<Team[]> {
+ 
+    const pageNum = Number(page)
+    const limitNum = Number(limit)
+    
+    // Build URL manually to avoid axios params encoding issues
+    const url = `${this.endpoint}?page=${pageNum}&limit=${limitNum}`
+  
+    try {
+      const response = await apiService.get<ApiResponse<Team[], any>>(url)
+      
+      // Check if backend respected our parameters
+      const backendPage = response.data.pagination?.page
+      const backendLimit = response.data.pagination?.limit
+      console.log(`🔍 Parameter check: requested page=${pageNum}, got page=${backendPage}`)
+      console.log(`🔍 Parameter check: requested limit=${limitNum}, got limit=${backendLimit}`)
+      
+      if (backendPage !== pageNum) {
+        console.warn(`⚠️ Backend page mismatch! Requested: ${pageNum}, Got: ${backendPage}`)
+      }
+      if (backendLimit !== limitNum) {
+        console.warn(`⚠️ Backend limit mismatch! Requested: ${limitNum}, Got: ${backendLimit}`)
+      }
+      
+      const data = response.data.data
+      
+      return data
+      
+    } catch (error) {
+      console.error('❌ API call failed:', error)
+      throw error
+    }
+  }
+
   async getById(id: number): Promise<Team> {
     const response = await apiService.get<ApiResponse<Team>>(
       `${this.endpoint}/${id}`

@@ -36,6 +36,11 @@ const menuItems = computed<MenuItem[]>(() => {
     { label: "Team Needs", icon: "pi pi-exclamation-triangle", command: () => router.push("/team-needs") },
     { label: "Team Standings", icon: "pi pi-chart-line", command: () => router.push("/standings") },
     {
+      label: "Playoff Bracket",
+      icon: "pi pi-sitemap",
+      command: () => router.push("/playoffs/bracket"),
+    },
+    {
       label: "Post Season Results",
       icon: "pi pi-crown",
       command: () => router.push("/post-season-results"),

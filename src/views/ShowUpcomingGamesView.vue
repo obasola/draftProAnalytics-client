@@ -7,6 +7,8 @@ import Column from 'primevue/column';
 import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
 
 const controller = useUpcomingGamesController();
+// pull these out so the template sees top-level refs
+const { loading, runImportScoresWeek } = controller;
 
 const staticWeekOptions: { label: string; value: number }[] = [
   { label: 'Preseason', value: 0 },
@@ -59,7 +61,7 @@ onMounted(() => {
 
       <button
         class="refresh-btn"
-        :disabled="controller.loading"
+        :disabled="loading"
         @click="controller.runImportScoresWeek"
       >
         Refresh

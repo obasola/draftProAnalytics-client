@@ -41,6 +41,8 @@ import VerifyEmailView from "@/views/auth/VerifyEmailView.vue";
 
 // Admin views
 import UserAdminView from "@/views/admin/UserAdminView.vue";
+import PlayoffBracketView from "@/modules/playoffs/presentation/views/PlayoffBrackView.vue";
+
 
 const routes: RouteRecordRaw[] = [
   {
@@ -162,7 +164,15 @@ const routes: RouteRecordRaw[] = [
           component: () => import('@/views/ShowUpcomingGamesView.vue'),
           beforeEnter: requireAuth,
         },
-
+        {
+          path: "/playoffs/bracket",
+          name: "playoff-bracket",
+          component: PlayoffBracketView,
+          meta: {
+            requiresAuth: true,
+            allowedRoles: [1, 2, 3], // Visitor, Admin, Developer can view
+          },
+        },
         {
           path: '/player-awards/:id?',
           name: 'PlayerAwardDetail',

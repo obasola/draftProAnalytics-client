@@ -23,7 +23,7 @@ export interface TeamStanding {
 }
 
 export default class StandingsService {
-  private readonly endpoint = '/teamStandings'
+  private readonly endpoint = '/standings'
 
   /**
    * Fetch all standings for given year and season type (default: regular season)
