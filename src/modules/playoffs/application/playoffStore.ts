@@ -8,7 +8,9 @@ export const usePlayoffStore = defineStore('playoffs', () => {
   const bracket = ref<PlayoffBracket | null>(null);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
-  const mode = ref<'actual' | 'projected'>('projected');
+
+  // ⬇⬇ DEFAULT = 'actual'
+  const mode = ref<'actual' | 'projected'>('actual');
 
   const hasBracket = computed<boolean>(() => bracket.value != null);
 

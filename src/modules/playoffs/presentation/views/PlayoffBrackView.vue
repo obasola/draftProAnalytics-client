@@ -60,7 +60,7 @@ async function handleRefresh(): Promise<void> {
 }
 
 onMounted(async () => {
-  await loadBracket("projected"); // default mode
+  await loadBracket("actual"); // default mode
 });
 </script>
 
@@ -69,7 +69,15 @@ onMounted(async () => {
     <div class="playoff-bracket-page">
         <header class="playoff-header">
             <div class="header-left">
-                <h2>NFL Playoff Bracket — {{ selectedSeasonYear }}</h2>
+                <h2>
+                    NFL Playoff Bracket — {{ selectedSeasonYear }}
+                    <span
+                        class="mode-pill"
+                        :class="mode === 'projected' ? 'mode-pill--projected' : 'mode-pill--actual'"
+                    >
+                        {{ mode === 'projected' ? 'Simulated (If Started Today)' : 'Actual (Played / Scheduled)' }}
+                    </span>
+                </h2>
             </div>
 
             <div class="header-actions">
@@ -140,6 +148,12 @@ onMounted(async () => {
                     <!-- Actual Divisional games when present -->
                     <PlayoffGameCard v-for="game in getRound(bracket.afcRounds, 'DIVISIONAL')" :key="game.slot"
                         :game="game" />
+                    <div
+                        v-if="!getRound(bracket.afcRounds, 'DIVISIONAL').length"
+                        class="placeholder-card"
+                    >
+                        Divisional matchups TBD
+                    </div>
                 </div>
 
 
@@ -176,6 +190,12 @@ onMounted(async () => {
                         :key="game.slot"
                         :game="game"
                     />
+                    <div
+                        v-if="!getRound(bracket.nfcRounds, 'DIVISIONAL').length"
+                        class="placeholder-card"
+                    >
+                        Divisional matchups TBD
+                    </div>
                 </div>
 
 
@@ -306,6 +326,24 @@ onMounted(async () => {
   margin-left: auto;
   font-size: 0.8rem;
   opacity: 0.9;
+}
+
+.mode-pill {
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mode-pill--projected {
+  background: rgba(76, 175, 80, 0.18);
+  border: 1px solid rgba(76, 175, 80, 0.7);
+}
+
+.mode-pill--actual {
+  background: rgba(33, 150, 243, 0.18);
+  border: 1px solid rgba(33, 150, 243, 0.7);
 }
 
 </style>
