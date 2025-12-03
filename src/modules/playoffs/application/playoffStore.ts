@@ -8,19 +8,24 @@ export const usePlayoffStore = defineStore('playoffs', () => {
   const bracket = ref<PlayoffBracket | null>(null);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
+  const mode = ref<'actual' | 'projected'>('projected');
 
   const hasBracket = computed<boolean>(() => bracket.value != null);
+
+  function setMode(newMode: 'actual' | 'projected'): void {
+    mode.value = newMode;
+  }
 
   async function fetchBracket(seasonYear: number): Promise<void> {
     loading.value = true;
     error.value = null;
 
     try {
-      const data = await PlayoffsApi.getBracket(seasonYear);
+      const data = await PlayoffsApi.getBracket(seasonYear, mode.value);
       bracket.value = data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load playoff bracket';
-      error.value = message;
+      error.value =
+        err instanceof Error ? err.message : 'Failed to load playoff bracket';
     } finally {
       loading.value = false;
     }
@@ -30,7 +35,9 @@ export const usePlayoffStore = defineStore('playoffs', () => {
     bracket,
     loading,
     error,
+    mode,
     hasBracket,
-    fetchBracket
+    setMode,
+    fetchBracket,
   };
 });

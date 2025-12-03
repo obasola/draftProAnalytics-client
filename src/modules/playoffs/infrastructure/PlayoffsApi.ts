@@ -1,11 +1,15 @@
 // src/modules/playoffs/infrastructure/PlayoffsApi.ts
-import {api} from '@/services/api';
+// src/modules/playoffs/infrastructure/PlayoffsApi.ts
+import { api } from '@/services/api';
 import type { PlayoffBracket } from '../domain/PlayoffTypes';
 
 export class PlayoffsApi {
-  static async getBracket(seasonYear: number): Promise<PlayoffBracket> {
+  static async getBracket(
+    seasonYear: number,
+    mode: 'actual' | 'projected'
+  ): Promise<PlayoffBracket> {
     const response = await api.get<PlayoffBracket>('/playoffs/bracket', {
-      params: { seasonYear }
+      params: { seasonYear, mode }
     });
     return response.data;
   }

@@ -11,13 +11,11 @@ import PlayoffGameCard from "../components/PlayoffGameCard.vue";
 import type { PlayoffRoundGroup } from "../../domain/PlayoffTypes";
 import type { TeamStandingDto } from "@/types/TeamStandingDto";
 
-
 const playoffStore = usePlayoffStore();
 const standingsStore = useStandingsStore();
 const auth = useAuthStore();
 
-// ✅ keep reactivity when destructuring
-const { bracket, loading, error } = storeToRefs(playoffStore);
+const { bracket, loading, error, mode } = storeToRefs(playoffStore);
 
 const selectedSeasonYear = ref<number>(2025);
 const SEASON_TYPE_REGULAR = 2;
@@ -25,38 +23,27 @@ const SEASON_TYPE_REGULAR = 2;
 const canRefresh = computed<boolean>(() => (auth.role ?? 1) >= 2);
 const hasBracket = computed<boolean>(() => bracket.value != null);
 
-
 function getRound(
-    groups: PlayoffRoundGroup[] | undefined,
-    round: "WILDCARD" | "DIVISIONAL" | "CONFERENCE"
+  groups: PlayoffRoundGroup[] | undefined,
+  round: "WILDCARD" | "DIVISIONAL" | "CONFERENCE"
 ) {
-    return groups?.find((r) => r.round === round)?.matchups ?? [];
+  return groups?.find((r) => r.round === round)?.matchups ?? [];
 }
 
-// Division winners per conference
+// Division winners
 const afcDivisionWinners = computed<TeamStandingDto[]>(() =>
-    standingsStore.getDivisionWinnersByConference("AFC")
+  standingsStore.getDivisionWinnersByConference("AFC")
 );
-
 const nfcDivisionWinners = computed<TeamStandingDto[]>(() =>
-    standingsStore.getDivisionWinnersByConference("NFC")
+  standingsStore.getDivisionWinnersByConference("NFC")
 );
 
+async function loadBracket(targetMode: "actual" | "projected" = mode.value): Promise<void> {
+  playoffStore.setMode(targetMode);
 
-async function handleRefresh(): Promise<void> {
-    await loadBracket();
-}
-
-const mode = ref<"projected" | "actual">("projected");
-
-async function loadBracket(targetMode: "projected" | "actual" = mode.value): Promise<void> {
-  mode.value = targetMode;
-
-  // Always load standings for display (names/records/logos)
+  // Always refresh standings first (team names, records, logos)
   await standingsStore.fetchStandings(selectedSeasonYear.value, SEASON_TYPE_REGULAR);
 
-  // For now, both modes call same backend. Later:
-  // await playoffStore.fetchBracket(selectedSeasonYear.value, targetMode);
   await playoffStore.fetchBracket(selectedSeasonYear.value);
 }
 
@@ -68,10 +55,15 @@ async function handleShowActual(): Promise<void> {
   await loadBracket("actual");
 }
 
+async function handleRefresh(): Promise<void> {
+  await loadBracket(mode.value);
+}
+
 onMounted(async () => {
-    await loadBracket();
+  await loadBracket("projected"); // default mode
 });
 </script>
+
 
 <template>
     <div class="playoff-bracket-page">
