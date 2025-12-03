@@ -174,9 +174,10 @@ const isAwayWinner = computed<boolean>(
 }
 
 .team-logo {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
+  vertical-align: middle;
 }
 
 .team-name-score {
