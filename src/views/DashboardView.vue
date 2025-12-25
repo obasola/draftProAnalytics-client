@@ -51,9 +51,9 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from "@/modules/auth/application/authStore";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/authStore";
 
 interface DashboardLink {
   label: string;

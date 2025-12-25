@@ -1,7 +1,7 @@
 <!-- src/components/ui/AppHeader.vue -->
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/modules/auth/application/authStore";
 
 const router = useRouter();
 const auth = useAuthStore();

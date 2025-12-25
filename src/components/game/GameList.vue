@@ -11,8 +11,8 @@ import { FilterMatchMode } from 'primevue/api'
 import GameCreateForm from '@/components/game/GameCreateForm.vue'
 import GameEditForm from '@/components/game/GameEditForm.vue'
 import { useThemeStore } from '@/stores/theme.store'
-import { useAuthStore } from "@/stores/authStore";
 import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
+import { useAuthStore } from '@/modules/auth/application/authStore'
 
 const auth = useAuthStore();
 

@@ -123,7 +123,7 @@ import ThemedButton from '@/components/ThemedButton.vue'
 import TeamAwareTag from '@/components/TeamAwareTag.vue'
 import GameResultTag from '@/components/GameResultTag.vue'
 import type { Team } from '@/types/team.types'
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/modules/auth/application/authStore";
 import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 
 const auth = useAuthStore();

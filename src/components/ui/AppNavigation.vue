@@ -1,11 +1,16 @@
 <!-- src/components/ui/AppNavigation.vue -->
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter,
+    isNavigationFailure,
+  NavigationFailureType,
+  type RouteLocationRaw
+ } from "vue-router";
 import Menu from "primevue/menu";
 import type { MenuItem } from "primevue/menuitem";
 import { useNavigation } from "@/composables/useNavigation";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/modules/auth/application/authStore";
+import { nextTick } from 'vue'
 
 const router = useRouter();
 const { goToPage } = useNavigation();
@@ -13,37 +18,48 @@ const auth = useAuthStore();
 
 const handleLogout = async (): Promise<void> => {
   await auth.logout();
-  await router.push("/login");
+  await safePush("/login");
 };
 
 const menuItems = computed<MenuItem[]>(() => {
   const items: MenuItem[] = [
-    { label: "Dashboard", icon: "pi pi-chart-line", command: () => router.push("/") },
-    { label: "Games", icon: "pi pi-calendar", command: () => router.push("/games") },
-    { label: "Players", icon: "pi pi-users", command: () => router.push("/players") },
-    { label: "Teams", icon: "pi pi-flag", command: () => router.push("/teams") },
-    { label: "Prospects", icon: "pi pi-star", command: () => router.push("/prospects") },
-    { label: "Draft Picks", icon: "pi pi-list", command: () => router.push("/draftPicks") },
-    { label: "Combine Scores", icon: "pi pi-chart-bar", command: () => router.push("/combine-scores") },
-    { label: "Schedules", icon: "pi pi-calendar", command: () => router.push("/schedules") },
+    { label: "Dashboard", icon: "pi pi-chart-line", command: () => safePush("/") },
+    { label: "Games", icon: "pi pi-calendar", command: () => safePush("/games") },
+    { label: "Players", icon: "pi pi-users", command: () => safePush("/players") },
+  
+    { 
+      label: "Teams",
+      icon: "pi pi-flag",
+      command: (event) => {
+        // Move focus off the link element directly
+        const target = (event?.originalEvent?.currentTarget ?? event?.originalEvent?.target) as HTMLElement | null;
+        if (target instanceof HTMLElement) target.blur();
+        focusSink();
+        safePush("/teams");
+      }
+    },
+    { label: "Prospects", icon: "pi pi-star", command: () => safePush("/prospects") },
+    { label: "Draft Picks", icon: "pi pi-list", command: () => safePush("/draftPicks") },
+    { label: "Combine Scores", icon: "pi pi-chart-bar", command: () => safePush("/combine-scores") },
+    { label: "Schedules", icon: "pi pi-calendar", command: () => safePush("/schedules") },
     {
       label: "Show Upcoming Games",
       icon: "pi pi-clock",
-      command: () => router.push("/show-upcoming-games"),
+      command: () => safePush("/show-upcoming-games"),
     },
-    { label: "Player Awards", icon: "pi pi-trophy", command: () => router.push("/player-awards") },
-    { label: "Player Teams", icon: "pi pi-users", command: () => router.push("/player-teams") },
-    { label: "Team Needs", icon: "pi pi-exclamation-triangle", command: () => router.push("/team-needs") },
-    { label: "Team Standings", icon: "pi pi-chart-line", command: () => router.push("/standings") },
+    { label: "Player Awards", icon: "pi pi-trophy", command: () => safePush("/player-awards") },
+    { label: "Player Teams", icon: "pi pi-users", command: () => safePush("/player-teams") },
+    { label: "Team Needs", icon: "pi pi-exclamation-triangle", command: () => safePush("/team-needs") },
+    { label: "Team Standings", icon: "pi pi-chart-line", command: () => safePush("/standings") },
     {
       label: "Playoff Bracket",
       icon: "pi pi-sitemap",
-      command: () => router.push("/playoffs/bracket"),
+      command: () => safePush("/playoffs/bracket"),
     },
     {
       label: "Post Season Results",
       icon: "pi pi-crown",
-      command: () => router.push("/post-season-results"),
+      command: () => safePush("/post-season-results"),
     },
     {
       label: "Draft Menu",
@@ -52,17 +68,17 @@ const menuItems = computed<MenuItem[]>(() => {
         {
           label: "Draft Simulator",
           icon: "pi pi-stopwatch",
-          command: () => router.push("/draft-simulator"),
+          command: () => safePush("/draft-simulator"),
         },
         {
           label: "Draft Tracker",
           icon: "pi pi-stopwatch",
-          command: () => router.push("/draft-tracker"),
+          command: () => safePush("/draft-tracker"),
         },
         {
           label: "Draft Pick Scraper",
           icon: "pi pi-cloud-download",
-          command: () => router.push("/admin/draft-pick-scraper"),
+          command: () => safePush("/admin/draft-pick-scraper"),
         },
       ],
     },
@@ -91,7 +107,7 @@ const menuItems = computed<MenuItem[]>(() => {
         {
           label: "User Administration",
           icon: "pi pi-users",
-          command: () => router.push("/admin/users"),
+          command: () => safePush("/admin/users"),
         },
       ],
     });
@@ -107,12 +123,12 @@ const menuItems = computed<MenuItem[]>(() => {
       {
         label: "Login",
         icon: "pi pi-sign-in",
-        command: () => router.push("/login"),
+        command: () => safePush("/login"),
       },
       {
         label: "Register",
         icon: "pi pi-user-plus",
-        command: () => router.push("/register"),
+        command: () => safePush("/register"),
       },
     );
   } else {
@@ -127,6 +143,37 @@ const menuItems = computed<MenuItem[]>(() => {
 
   return items;
 });
+
+
+
+function blurActiveElement(): void {
+  const el = document.activeElement
+  if (el instanceof HTMLElement) el.blur()
+}
+
+function raf(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()))
+}
+
+function focusSink(): void {
+  const el = document.getElementById("focus-sink");
+  if (el instanceof HTMLElement) el.focus();
+}
+
+function safePush(to: RouteLocationRaw): void {
+  // move focus off the menu link immediately
+  focusSink();
+
+  window.setTimeout(() => {
+    void router.push(to).catch((err: unknown) => {
+      if (isNavigationFailure(err, NavigationFailureType.duplicated)) return;
+      console.error("Navigation error:", err);
+    });
+  }, 0);
+}
+
+
+
 </script>
 
 <template>

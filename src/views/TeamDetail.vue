@@ -1,8 +1,12 @@
+<!-- sports_mgmt_app_client/src/views/TeamDetail.vue -->
 <script setup lang="ts">
 import { onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTeamStore } from '@/stores/teamStore'
-import AppLayout from '@/components/ui/AppLayout.vue'
+
+// PrimeVue (add these)
+import Button from 'primevue/button'
+
 import TeamList from '@/components/team/TeamList.vue'
 import TeamReadOnly from '@/components/team/TeamReadOnly.vue'
 import TeamCreateForm from '@/components/team/TeamCreateForm.vue'
@@ -12,14 +16,26 @@ const route = useRoute()
 const router = useRouter()
 const teamStore = useTeamStore()
 
-const teamId = computed(() => {
+const teamId = computed<number | null>(() => {
   const id = route.params.id
-  return id ? parseInt(id as string) : null
+  return id ? parseInt(id as string, 10) : null
 })
 
-const mode = computed(() => {
+const mode = computed<string>(() => {
   return (route.query.mode as string) || 'read'
 })
+
+// ✅ This is where router.push belongs
+async function goToTeamNeeds(): Promise<void> {
+  if (!teamId.value) return
+
+  await router.push({
+    name: 'TeamNeeds',
+    // IMPORTANT: param name must match your TeamNeeds route definition
+    // If TeamNeeds route is /teams/:teamId/needs → use { teamId: teamId.value }
+    params: { teamId: teamId.value },
+  })
+}
 
 onMounted(async () => {
   teamStore.setMode(mode.value as any)
@@ -41,7 +57,7 @@ watch(
   () => route.params.id,
   async (newId) => {
     if (newId) {
-      await teamStore.fetchById(parseInt(newId as string))
+      await teamStore.fetchById(parseInt(newId as string, 10))
     } else {
       teamStore.clearCurrent()
     }
@@ -50,21 +66,29 @@ watch(
 </script>
 
 <template>
-  
-    <div class="team-detail-view-expanded">
-      <!-- Show list when no ID -->
-      <TeamList v-if="!teamId" />
-
-      <!-- Show create form -->
-      <TeamCreateForm v-else-if="mode === 'create'" />
-
-      <!-- Show edit form -->
-      <TeamEditForm v-else-if="mode === 'edit'" />
-
-      <!-- Show read-only view -->
-      <TeamReadOnly v-else />
+  <div class="team-detail-view-expanded">
+    <!-- ✅ Add a small action bar when a team is selected -->
+    <div v-if="teamId" class="team-actions">
+      <Button
+        label="Team Needs"
+        icon="pi pi-list-check"
+        size="small"
+        @click="goToTeamNeeds"
+      />
     </div>
-  
+
+    <!-- Show list when no ID -->
+    <TeamList v-if="!teamId" />
+
+    <!-- Show create form -->
+    <TeamCreateForm v-else-if="mode === 'create'" />
+
+    <!-- Show edit form -->
+    <TeamEditForm v-else-if="mode === 'edit'" />
+
+    <!-- Show read-only view -->
+    <TeamReadOnly v-else />
+  </div>
 </template>
 
 <style scoped>
@@ -74,6 +98,12 @@ watch(
   max-width: none;
   padding: 0.5rem;
   box-sizing: border-box;
+}
+
+.team-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
 }
 
 /* Ensure child components also expand */

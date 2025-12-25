@@ -1,3 +1,4 @@
+/***************** CLIENT SIDE CODE ******************************/
 // src/stores/upcomingScheduleStore.ts
 import { defineStore } from 'pinia'
 import { format } from 'date-fns'
@@ -38,3 +39,5 @@ export const useUpcomingScheduleStore = defineStore('upcomingSchedule', {
     }
   }
 })
+/***************** SERVER SIDE CODE ******************************/
+/***************** SERVER SIDE CODE ******************************/

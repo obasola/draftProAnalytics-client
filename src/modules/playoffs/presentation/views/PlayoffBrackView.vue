@@ -6,10 +6,11 @@ import Button from "primevue/button";
 
 import { usePlayoffStore } from "../../application/playoffStore";
 import { useStandingsStore } from "@/stores/standingsStore";
-import { useAuthStore } from "@/stores/authStore";
+
 import PlayoffGameCard from "../components/PlayoffGameCard.vue";
 import type { PlayoffRoundGroup } from "../../domain/PlayoffTypes";
 import type { TeamStandingDto } from "@/types/TeamStandingDto";
+import { useAuthStore } from "@/modules/auth/application/authStore";
 
 const playoffStore = usePlayoffStore();
 const standingsStore = useStandingsStore();
