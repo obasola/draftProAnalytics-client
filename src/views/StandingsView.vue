@@ -16,8 +16,16 @@
                 <TabView>
                     <TabPanel v-for="conf in conferences" :key="conf.name" :header="conf.name + ' Conference'">
                         <div class="division-grid">
-                            <StandingsTable v-for="div in conf.divisions" :key="div.name" :title="div.name"
-                                :teams="div.teams" />
+                            <StandingsTable
+                                v-for="div in conf.divisions"
+                                :key="div.name"
+                                :title="div.name"
+                                :teams="div.teams"
+                                :seasonYear="selectedYear"
+                                :seasonType="selectedType"
+                                :throughWeek="18"
+                                :enableDraftLink="true"
+                            />
                         </div>
                     </TabPanel>
                 </TabView>

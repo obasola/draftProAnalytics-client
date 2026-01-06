@@ -26,7 +26,17 @@ const menuItems = computed<MenuItem[]>(() => {
     { label: "Dashboard", icon: "pi pi-chart-line", command: () => safePush("/") },
     { label: "Games", icon: "pi pi-calendar", command: () => safePush("/games") },
     { label: "Players", icon: "pi pi-users", command: () => safePush("/players") },
-  
+    { label: "Player Awards", icon: "pi pi-trophy", command: () => safePush("/player-awards") },
+    { label: "Player Teams", icon: "pi pi-users", command: () => safePush("/player-teams") },
+    { label: "Prospects", icon: "pi pi-star", command: () => safePush("/prospects") },
+    
+    { label: "Schedules", icon: "pi pi-calendar", command: () => safePush("/schedules") },
+    {
+      label: "Show Upcoming Games",
+      icon: "pi pi-clock",
+      command: () => safePush("/show-upcoming-games"),
+    },
+    
     { 
       label: "Teams",
       icon: "pi pi-flag",
@@ -38,19 +48,9 @@ const menuItems = computed<MenuItem[]>(() => {
         safePush("/teams");
       }
     },
-    { label: "Prospects", icon: "pi pi-star", command: () => safePush("/prospects") },
-    { label: "Draft Picks", icon: "pi pi-list", command: () => safePush("/draftPicks") },
-    { label: "Combine Scores", icon: "pi pi-chart-bar", command: () => safePush("/combine-scores") },
-    { label: "Schedules", icon: "pi pi-calendar", command: () => safePush("/schedules") },
-    {
-      label: "Show Upcoming Games",
-      icon: "pi pi-clock",
-      command: () => safePush("/show-upcoming-games"),
-    },
-    { label: "Player Awards", icon: "pi pi-trophy", command: () => safePush("/player-awards") },
-    { label: "Player Teams", icon: "pi pi-users", command: () => safePush("/player-teams") },
     { label: "Team Needs", icon: "pi pi-exclamation-triangle", command: () => safePush("/team-needs") },
     { label: "Team Standings", icon: "pi pi-chart-line", command: () => safePush("/standings") },
+    // inside menuItems computed -> items array (suggest placing near Team Standings)
     {
       label: "Playoff Bracket",
       icon: "pi pi-sitemap",
@@ -61,6 +61,11 @@ const menuItems = computed<MenuItem[]>(() => {
       icon: "pi pi-crown",
       command: () => safePush("/post-season-results"),
     },
+    { label: "Draft Order", icon: "pi pi-sort-amount-up-alt", command: () => safePush("/draft-order") },
+    
+    { label: "Draft Picks", icon: "pi pi-list", command: () => safePush("/draftPicks") },
+    { label: "Combine Scores", icon: "pi pi-chart-bar", command: () => safePush("/combine-scores") },
+    
     {
       label: "Draft Menu",
       icon: "pi pi-folder",
@@ -89,7 +94,7 @@ const menuItems = computed<MenuItem[]>(() => {
         {
           label: "Jobs",
           icon: "pi pi-stopwatch",
-          command: () => goToPage("jobs"),
+          command: () => goToPage("Jobs"),
         },
       ],
     },

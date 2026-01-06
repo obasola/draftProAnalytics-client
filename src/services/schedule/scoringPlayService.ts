@@ -1,7 +1,7 @@
 // src/services/schedule/scoringPlayService.ts
 
-import {api} from '../api'
-import type { UpcomingGameDto } from '@/types/schedule/upcomingGames'
+import { api } from '../api'
+import type { UpcomingGameDto } from '@/util/schedule/upcomingGamesHelpers'
 
 /**
  * Fetch scoring plays for a given gameId.
@@ -13,7 +13,8 @@ export async function fetchScoringPlays(gameId: number) {
     const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
 
     const { data } = await api.get(url, {
-      baseURL: '' // <-- Override axios baseURL (otherwise it prepends /api)
+      baseURL: '', // Override axios baseURL
+      withCredentials: false // ✅ ADD THIS - ESPN doesn't allow credentials with CORS
     })
 
     return data?.scoringPlays ?? []
@@ -23,9 +24,6 @@ export async function fetchScoringPlays(gameId: number) {
   }
 }
 
-/**
- * Extract only the *most recent scoring play* text (or null)
- */
 export async function getLatestScoringPlayText(game: UpcomingGameDto): Promise<string | null> {
   const scoringPlays = await fetchScoringPlays(game.id)
   if (!scoringPlays || scoringPlays.length === 0) return null

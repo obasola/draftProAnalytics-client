@@ -7,7 +7,6 @@ import Column from 'primevue/column';
 import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
 
 const controller = useUpcomingGamesController();
-// pull these out so the template sees top-level refs
 const { loading, runImportScoresWeek } = controller;
 
 const staticWeekOptions: { label: string; value: number }[] = [
@@ -19,7 +18,6 @@ const staticWeekOptions: { label: string; value: number }[] = [
   { label: 'Postseason', value: 99 },
 ];
 
-// For row expansion (scoring details)
 const expandedRows = ref<UpcomingGameUI[]>([]);
 
 onMounted(() => {
@@ -55,17 +53,19 @@ onMounted(() => {
         </option>
       </select>
 
-      <button class="submit-btn" @click="controller.submitControls()">
-        Submit
-      </button>
+      <div style="margin-right: -2.0em">
+        <button class="submit-btn" @click="controller.submitControls()">
+          Submit
+        </button>
 
-      <button
-        class="refresh-btn"
-        :disabled="loading"
-        @click="controller.runImportScoresWeek"
-      >
-        Refresh
-      </button>
+        <button
+          class="refresh-btn"
+          :disabled="loading"
+          @click="controller.runImportScoresWeek"
+        >
+          Refresh
+        </button>
+      </div>
     </div>
 
     <!-- TABLE -->
@@ -76,6 +76,7 @@ onMounted(() => {
       rowHover
       dataKey="id"
       v-model:expandedRows="expandedRows"
+      :rowClass="(data) => controller.isRecentlyUpdated(data.id) ? 'score-updated' : ''"
     >
       <!-- EXPANDER -->
       <Column type="expander" headerStyle="width: 3rem" />
@@ -93,7 +94,9 @@ onMounted(() => {
       <!-- MATCHUP COLUMN -->
       <Column header="Matchup">
         <template #body="{ data }">
-          <div class="matchup-row">
+          <div 
+            :class="['matchup-row', { 'score-highlight': controller.isRecentlyUpdated(data.id) }]"
+          >
             <!-- AWAY TEAM -->
             <div class="team-horizontal">
               <img :src="data.awayLogo" class="team-logo" />
@@ -131,7 +134,7 @@ onMounted(() => {
         </template>
       </Column>
 
-      <!-- NEW: SCORING SUMMARY COLUMN -->
+      <!-- SCORING SUMMARY COLUMN -->
       <Column header="Scoring">
         <template #body="{ data }">
           <div class="scoring-cell">
@@ -178,6 +181,7 @@ onMounted(() => {
   border: 1px solid #444;
   background-color: #111;
   color: #f5f5f5;
+  width: 25%
 }
 
 .submit-btn,
@@ -202,6 +206,36 @@ onMounted(() => {
 .refresh-btn[disabled] {
   opacity: 0.6;
   cursor: default;
+}
+
+/* Score highlight on matchup row */
+.score-highlight {
+  animation: scoreFlash 3s ease-in-out;
+  background-color: rgba(255, 215, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+@keyframes scoreFlash {
+  0% {
+    background-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  }
+  50% {
+    background-color: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  }
+  100% {
+    background-color: rgba(255, 215, 0, 0);
+    box-shadow: none;
+  }
+}
+
+/* Also keep row-level highlight in case it works */
+:deep(.score-updated) {
+  animation: scoreFlash 3s ease-in-out;
+  background-color: rgba(255, 215, 0, 0.2) !important;
 }
 
 /* Date/time */
@@ -292,7 +326,7 @@ onMounted(() => {
   color: #e5e7eb;
 }
 
-/* NEW: Scoring cell + expansion */
+/* Scoring cell + expansion */
 .scoring-cell {
   font-size: 0.85rem;
   line-height: 1.2;

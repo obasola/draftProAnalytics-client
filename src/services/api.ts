@@ -196,7 +196,7 @@ class ApiService {
     return data
   }
   public async kickoffScoreboardByDate(date: string) {
-    const res = await apiService.post(`/jobs/kickoff/scoreboard/by-date`, { date })
+    const res = await this.post(`/jobs/kickoff/scoreboard/by-date`, { date })
     return res.data
   }
   // 👇 this function is the one you're missing or not importing
@@ -205,9 +205,9 @@ class ApiService {
     seasonType: 1 | 2 | 3,
     week: number
   ): Promise<{ id: number; message?: string }> {
-    const res = await apiService.post<{ id: number; message?: string }>(
+    const res = await this.post<{ id: number; message?: string }>(
       `/jobs/kickoff/scoreboard/by-week`,
-      { year, seasonType, week }
+      { seasonYear: year, seasonType, week}
     )
     return res.data
   }

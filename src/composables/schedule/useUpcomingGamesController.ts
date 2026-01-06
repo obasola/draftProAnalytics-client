@@ -10,8 +10,9 @@ export function useUpcomingGamesController() {
   const store = useUpcomingScheduleStore()
 
   const toast = useToast()
-  const initializing = ref(true) // 🧩 ADD THIS LINE
+  const initializing = ref(true)
   const loading = ref(false)
+
   // ---------------------------------------------
   // CONTROLS (DEFAULTS — NEVER OVERWRITTEN AGAIN)
   // ---------------------------------------------
@@ -32,6 +33,46 @@ export function useUpcomingGamesController() {
         return []
     }
   })
+
+  // ---------------------------------------------
+  // SCORE CHANGE TRACKING
+  // ---------------------------------------------
+  const previousScores = ref<Map<number, { away: number | null; home: number | null }>>(new Map())
+  const recentlyUpdatedGames = ref<Set<number>>(new Set())
+
+  function trackScoreChanges() {
+    store.games.forEach((game) => {
+      const prevScore = previousScores.value.get(game.id)
+      
+      if (prevScore) {
+        const awayChanged = prevScore.away !== game.awayScore && game.awayScore !== null
+        const homeChanged = prevScore.home !== game.homeScore && game.homeScore !== null
+        
+        if (awayChanged || homeChanged) {
+          console.log(`🎯 Score changed for game ${game.id}:`, {
+            away: `${prevScore.away} → ${game.awayScore}`,
+            home: `${prevScore.home} → ${game.homeScore}`
+          })
+          
+          recentlyUpdatedGames.value.add(game.id)
+          
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            recentlyUpdatedGames.value.delete(game.id)
+          }, 3000)
+        }
+      }
+      
+      // Update stored scores
+      previousScores.value.set(game.id, {
+        away: game.awayScore,
+        home: game.homeScore,
+      })
+    })
+  }
+
+  // Helper to check if game was recently updated
+  const isRecentlyUpdated = (gameId: number) => recentlyUpdatedGames.value.has(gameId)
 
   // ---------------------------------------------
   // REFRESH STATE
@@ -82,11 +123,13 @@ export function useUpcomingGamesController() {
 
       lastUpdated.value = new Date()
 
+      // ✅ Track score changes AFTER fetching new data
+      trackScoreChanges()
+
       // Scoring play checking
       for (const g of store.games) {
         if (g.status === 'In Progress') {
           const lastText = await getLatestScoringPlayText(g)
-
           // scoring play logic omitted for brevity
         }
       }
@@ -106,6 +149,7 @@ export function useUpcomingGamesController() {
     stopAutoRefresh()
     refreshGames(true)
   }
+
   // ---------------------------------------------
   // SUBMIT = REFRESH Scores By Week
   // ---------------------------------------------
@@ -131,7 +175,7 @@ export function useUpcomingGamesController() {
         summary: 'Job started',
         detail: `Scoreboard job #${res.id ?? 'N/A'} queued`,
       })
-      //setTimeout(() => {refreshGames(true) }, 3000)
+      
       await new Promise(resolve => setTimeout(resolve, 3000))
       refreshGames(true)
     } catch (err: any) {
@@ -144,6 +188,7 @@ export function useUpcomingGamesController() {
       loading.value = false
     }
   }
+
   // ---------------------------------------------
   // AUTO REFRESH LOGIC (clean)
   // ---------------------------------------------
@@ -211,5 +256,8 @@ export function useUpcomingGamesController() {
     submitControls,
     refreshGames,
     runImportScoresWeek,
+    
+    // ✅ Expose score tracking
+    isRecentlyUpdated,
   }
 }

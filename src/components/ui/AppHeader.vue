@@ -1,14 +1,14 @@
 <!-- src/components/ui/AppHeader.vue -->
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/modules/auth/application/authStore";
 
 const router = useRouter();
 const auth = useAuthStore();
 
-// These are already refs/computed refs from the store
-const isAuthenticated = auth.isAuthenticated;
-const userName = auth.userName;
+// ✅ keep these reactive
+const { isAuthenticated, userName } = storeToRefs(auth);
 
 const goHome = (): void => {
   void router.push("/");
@@ -28,24 +28,47 @@ const handleLogoutClick = async (): Promise<void> => {
 };
 </script>
 
+
 <template>
   <header class="app-header" role="banner">
     <div class="header-content">
-      <!-- LEFT SIDE: Logo + Title -->
-      <div class="header-left" @click="goHome" tabindex="0">
-        <img
-          src="/logos/NFLogo.jpeg"
-          alt="NFL logo"
-          class="app-logo"
-        />
+      <!-- LEFT SIDE: Brand lockup (Icon + Wordmark) -->
+      <div class="header-left" @click="goHome" tabindex="0" aria-label="Go to home">
+        <!-- Inline SVG icon: Draft Card + Data -->
+        <span class="brand-icon" aria-hidden="true">
+          <svg
+            class="brand-icon__svg"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 64 64"
+            fill="none"
+          >
+            <!-- card -->
+            <rect x="14" y="10" width="36" height="44" rx="7" stroke="currentColor" stroke-width="3" />
+
+            <!-- bars -->
+            <rect x="22" y="40" width="6" height="10" rx="1" fill="currentColor" />
+            <rect x="30" y="34" width="6" height="16" rx="1" fill="currentColor" />
+            <rect x="38" y="26" width="6" height="24" rx="1" fill="currentColor" />
+
+            <!-- trendline + dot -->
+            <path
+              d="M22 41 L33 34 L42 28"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="42" cy="28" r="2.8" fill="currentColor" />
+          </svg>
+        </span>
+
         <h1 class="app-title">
-          Sports Management System
+          <span class="brand-wordmark">DraftProAnalytics<sup class="brand-mark">™</sup></span>
         </h1>
       </div>
 
       <!-- RIGHT SIDE: Auth actions -->
       <div class="header-actions">
-        <!-- AUTH SECTION -->
         <template v-if="isAuthenticated">
           <span class="user-label">
             Signed in as <strong>{{ userName }}</strong>
@@ -60,19 +83,11 @@ const handleLogoutClick = async (): Promise<void> => {
         </template>
 
         <template v-else>
-          <button
-            type="button"
-            class="header-link"
-            @click="handleLoginClick"
-          >
+          <button type="button" class="header-link" @click="handleLoginClick">
             Login
           </button>
 
-          <button
-            type="button"
-            class="header-link"
-            @click="handleRegisterClick"
-          >
+          <button type="button" class="header-link" @click="handleRegisterClick">
             Register
           </button>
         </template>
@@ -83,8 +98,8 @@ const handleLogoutClick = async (): Promise<void> => {
 
 <style scoped>
 .app-header {
-  background: #527ec7;   /* bg5 #062D92 */
-  color: var(--text-on-bg5);      /* white */
+  background: #527ec7; /* bg5 #062D92 */
+  color: var(--text-on-bg5); /* white */
   padding: 0.875rem 2rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.35);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
@@ -101,19 +116,26 @@ const handleLogoutClick = async (): Promise<void> => {
   margin: 0 auto;
 }
 
-/* NEW: logo + title container */
+/* Brand lockup */
 .header-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   cursor: pointer;
-  margin-left: -55px; /* ⬅ nudges logo + title ~20px left */
+  margin-left: -55px; /* keep your existing nudge */
 }
-/* NEW: logo styling */
-.app-logo {
+
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 60px;
-  width: auto;
-  object-fit: contain;
+  width: 60px; /* keeps consistent sizing */
+}
+
+.brand-icon__svg {
+  height: 60px;
+  width: 60px;
   display: block;
 }
 
@@ -122,6 +144,21 @@ const handleLogoutClick = async (): Promise<void> => {
   line-height: 1.2;
   color: var(--text-on-bg5);
   transition: opacity 0.2s;
+}
+
+/* Wordmark + ™ */
+.brand-wordmark {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.1rem;
+  letter-spacing: 0.2px;
+}
+
+.brand-mark {
+  font-size: 0.65em;
+  line-height: 1;
+  vertical-align: super;
+  margin-left: 0.08em;
 }
 
 .header-left:hover .app-title {

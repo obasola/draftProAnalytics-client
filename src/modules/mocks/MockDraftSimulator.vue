@@ -82,22 +82,23 @@ import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 
 // Component Imports
-import ModeSelector from './components/ModeSelector.vue';
-import TeamSelectionPanel from './components/TeamSelectionPanel.vue';
-import DraftSettingsPanel from './components/DraftSettingsPanel.vue';
-import DraftInfo from './components/DraftInfo.vue';
-import DraftControls from './components/DraftControls.vue';
-import PlayerListPanel from './components/PlayerListPanel.vue';
-import SettingsDialog from './components/SettingsDialog.vue';
-import TradeDialog from './components/TradeDialog.vue';
+import ModeSelector from '../../modules/mocks/ModeSelector.vue';
+import TeamSelectionPanel from '../../modules/mocks/components/TeamSelectionPanel.vue';
+import DraftSettingsPanel from '../../modules/mocks/components/DraftSettingsPanel.vue';
+
+import DraftControls from '../mocks/DraftControls.vue';
+import PlayerListPanel from '../mocks/components/PlayerListPanel.vue';
+import SettingsDialog from '../mocks/components/SettingsDialog.vue';
+import TradeDialog from '../mocks/TradeDialog.vue';
 
 // Domain Types
-import type { DraftMode, DraftSettings, Team, Player } from '@/types/draft.types';
 
 // Composables
-import { useDraftState } from '@/composables/useDraftState';
-import { useTeams } from '@/composables/useTeams';
-import { usePlayers } from '@/composables/usePlayers';
+
+import { useTeams } from '../mocks/composables/useTeams';
+import { usePlayers } from '../mocks/composables/usePlayers';
+import { Player } from '@/types';
+import { DraftMode } from './draftTypes';
 
 // State
 const toast = useToast();

@@ -17,6 +17,17 @@
             <Column field="winPct" header="PCT" sortable />
             <Column field="pointsFor" header="PF" />
             <Column field="pointsAgainst" header="PA" />
+            <Column v-if="props.enableDraftLink" header="Draft" style="width: 140px">
+              <template #body="{ data }">
+                <Button
+                  label="Draft Position"
+                  icon="pi pi-sort-amount-up-alt"
+                  size="small"
+                  outlined
+                  @click="goDraftOrder(data as StandingsRow)"
+                />
+              </template>
+            </Column>
           </DataTable>
         </div>
       </div>
@@ -27,8 +38,55 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useStandingsStore } from '@/stores/standingsStore';
+import { useRouter } from "vue-router"
 
+interface StandingsRow {
+  teamId?: number
+  id?: number
+  teamName?: string
+  abbreviation?: string
+  wins?: number
+  losses?: number
+  ties?: number
+  winPct?: number
+  pct?: number
+  pointsFor?: number
+  pointsAgainst?: number
+  conference?: string
+  division?: string
+}
+const props = defineProps<{
+  title: string
+  teams: StandingsRow[]
+  seasonYear?: number
+  seasonType?: 1 | 2 | 3
+  throughWeek?: number
+  enableDraftLink?: boolean
+}>()
+
+const router = useRouter()
 const store = useStandingsStore();
+
+function resolveTeamId(r: StandingsRow): number | null {
+  const v = r.teamId ?? r.id
+  return typeof v === "number" && Number.isFinite(v) ? v : null
+}
+
+function goDraftOrder(r: StandingsRow): void {
+  const teamId = resolveTeamId(r)
+  if (!teamId) return
+
+  void router.push({
+    path: "/draft-order",
+    query: {
+      teamId: String(teamId),
+      seasonYear: props.seasonYear ? String(props.seasonYear) : undefined,
+      seasonType: props.seasonType ? String(props.seasonType) : undefined,
+      throughWeek: props.throughWeek ? String(props.throughWeek) : undefined,
+      mode: "current",
+    },
+  })
+}
 
 onMounted(() => {
   store.fetchStandings(2025, 2);

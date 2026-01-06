@@ -30,6 +30,7 @@ import VerifyEmailView from "@/modules/auth/presentation/views/VerifyEmailView.v
 // other views
 import UserAdminView from "@/views/admin/UserAdminView.vue";
 import PlayoffBracketView from "@/modules/playoffs/presentation/views/PlayoffBrackView.vue";
+import { draftOrderRoutes } from "@/modules/draftOrder/presentation/router/draftOrderRoutes"
 
 // route bundles
 import { draftPickRoutes } from "./draftPickRoutes";
@@ -156,7 +157,21 @@ const routes: RouteRecordRaw[] = [
       },
 
       ...draftPickRoutes,
-
+      ...draftOrderRoutes,
+      {
+        path: "draft-order",
+        name: "DraftOrderSnapshots",
+        component: () => import("@/modules/draftOrder/presentation/views/DraftOrderSnapshotsView.vue"),
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, title: "Draft Order" },
+      },
+      {
+        path: "draft-order/snapshots/:id",
+        name: "DraftOrderSnapshotDetail",
+        component: () => import("@/modules/draftOrder/presentation/views/DraftOrderSnapshotDetailView.vue"),
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, title: "Draft Order Snapshot" },
+      },
       {
         path: "admin/import-draft",
         name: "DraftImport",

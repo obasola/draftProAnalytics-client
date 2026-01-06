@@ -1,10 +1,6 @@
-<!-- sports_mgmt_app_client/src/modules/draftSimulator/presentation/views/DraftLobbyView.vue -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { api } from '@/services/api'
-import { useThemeStore } from '@/stores/theme.store'
-import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 
 import Button from 'primevue/button'
 import Card from 'primevue/card'
@@ -14,12 +10,15 @@ import Dropdown from 'primevue/dropdown'
 import InputNumber from 'primevue/inputnumber'
 import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import Message from 'primevue/message'
-import Tag from 'primevue/tag'
 
-type DraftMode = 'solo' | 'multiplayer'
+import { api } from '@/services/api'
+import { useThemeStore } from '@/stores/theme.store'
+import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
+import ModeSelector, { type DraftMode } from '@/modules/draftSimulator/presentation/components/ModeSelector.vue'
+
 type DraftSpeed = 1 | 2 | 3
 
 interface TeamOption {
@@ -50,8 +49,8 @@ const themeStore = useThemeStore()
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-const settingsVisible = ref(false)
 const draftMode = ref<DraftMode>('solo')
+const settingsVisible = ref(false)
 
 const model = ref<CreateSimulationRequest>({
   draftYear: new Date().getFullYear() + 1,
@@ -69,39 +68,37 @@ const speedOptions: Array<{ label: string; value: DraftSpeed }> = [
   { label: 'Fast', value: 3 },
 ]
 
-const modeOptions: Array<{ label: string; value: DraftMode }> = [
-  { label: 'Solo', value: 'solo' },
-  { label: 'Multiplayer (later)', value: 'multiplayer' },
-]
-
 const boardOptions: Array<{ label: string; value: string }> = [
   { label: 'Default Board', value: 'DEFAULT' },
 ]
 
 const teamSearch = ref('')
-const activeConfIndex = ref(0) // 0 = AFC, 1 = NFC
+const activeConfIndex = ref(0) // 0 AFC, 1 NFC
 
 const teams = computed<TeamOption[]>(() => {
   const raw = (themeStore.teams ?? []) as unknown[]
-  const mapped: TeamOption[] = []
+  const out: TeamOption[] = []
 
   for (const item of raw) {
     const t = item as Record<string, unknown>
     const idRaw = t.id
     const nameRaw = t.name
-    if (typeof nameRaw !== 'string') continue
 
-    const id = typeof idRaw === 'number' ? idRaw : typeof idRaw === 'string' ? Number(idRaw) : NaN
+    if (typeof nameRaw !== 'string') continue
+    const id =
+      typeof idRaw === 'number' ? idRaw :
+      typeof idRaw === 'string' ? Number(idRaw) :
+      NaN
     if (!Number.isFinite(id)) continue
 
     const abbr = typeof t.abbreviation === 'string' ? t.abbreviation : null
-    const confRaw = typeof t.conference === 'string' ? t.conference.toUpperCase() : null
-    const conference = confRaw === 'AFC' || confRaw === 'NFC' ? confRaw : null
+    const conf = typeof t.conference === 'string' ? t.conference.toUpperCase() : ''
+    const conference = conf === 'AFC' || conf === 'NFC' ? conf : null
 
-    mapped.push({ id, name: nameRaw, abbreviation: abbr, conference })
+    out.push({ id, name: nameRaw, abbreviation: abbr, conference })
   }
 
-  return mapped
+  return out
 })
 
 const selectedTeamId = computed<number | null>(() => model.value.userTeamIds[0] ?? null)
@@ -121,6 +118,7 @@ function teamLogoUrl(team: TeamOption | null): string {
 const filteredTeams = computed(() => {
   const q = teamSearch.value.trim().toLowerCase()
   const conf: 'AFC' | 'NFC' = activeConfIndex.value === 0 ? 'AFC' : 'NFC'
+
   return teams.value.filter(t => {
     if (t.conference !== conf) return false
     if (!q) return true
@@ -135,8 +133,9 @@ function selectTeam(teamId: number): void {
 
 async function startDraft(): Promise<void> {
   error.value = null
+
   if (!selectedTeamId.value) {
-    error.value = 'Select a team to control.'
+    error.value = 'Select a team first.'
     return
   }
 
@@ -149,41 +148,35 @@ async function startDraft(): Promise<void> {
 
     await router.push(`/draft-simulator/${simId}`)
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to start draft.'
+    error.value = e instanceof Error ? e.message : 'Failed to start mock draft.'
   } finally {
     loading.value = false
   }
 }
 
 onMounted(async () => {
-  // if your store exposes a loader, call it; otherwise no-op
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const maybe = themeStore as any
-  if (typeof maybe.loadTeams === 'function') await maybe.loadTeams()
+  // If your store has a loader, run it; otherwise this is a safe no-op.
+  const store = themeStore as unknown as { loadTeams?: () => Promise<void> }
+  if (typeof store.loadTeams === 'function') await store.loadTeams()
 })
+
+function handleModeChange(_m: DraftMode): void {
+  // placeholder for future multiplayer wiring
+}
 </script>
 
 <template>
   <div class="mock-draft-container">
-    <!-- Header (matches your MockDraftSimulator.vue structure) -->
+    <!-- Header (matches your MockDraftSimulator.vue layout) -->
     <header class="draft-header">
       <div class="header-content">
         <div class="header-left">
-          <div class="title-row">
-            <h1 class="title">NFL Mock Draft Simulator</h1>
-            <Tag value="Lobby" class="ml-2" />
-          </div>
-          <div class="subtitle">Choose your team, tune your settings, and start drafting.</div>
+          <h1 class="title">NFL Mock Draft Simulator</h1>
+          <div class="subtitle">Set your preferences, pick your team, and start drafting.</div>
         </div>
 
         <div class="header-actions">
-          <Dropdown
-            v-model="draftMode"
-            :options="modeOptions"
-            optionLabel="label"
-            optionValue="value"
-            class="mode-dd"
-          />
+          <ModeSelector v-model:mode="draftMode" @mode-change="handleModeChange" />
           <Button icon="pi pi-cog" class="p-button-text" @click="settingsVisible = true" />
           <Button
             label="Start Draft"
@@ -198,7 +191,8 @@ onMounted(async () => {
 
     <Message v-if="error" severity="error" class="mx-3 mt-3">{{ error }}</Message>
 
-    <div class="draft-body">
+    <!-- Main layout -->
+    <div class="draft-layout">
       <!-- Sidebar -->
       <aside class="draft-sidebar">
         <Card class="sidebar-card">
@@ -256,6 +250,7 @@ onMounted(async () => {
                 <label>Draft Year</label>
                 <InputNumber v-model="model.draftYear" :min="2020" :max="2100" class="w-full" />
               </div>
+
               <div class="field">
                 <label>Rounds</label>
                 <InputNumber v-model="model.rounds" :min="1" :max="7" class="w-full" />
@@ -263,11 +258,24 @@ onMounted(async () => {
 
               <div class="field">
                 <label>Speed</label>
-                <Dropdown v-model="model.draftSpeed" :options="speedOptions" optionLabel="label" optionValue="value" class="w-full" />
+                <Dropdown
+                  v-model="model.draftSpeed"
+                  :options="speedOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  class="w-full"
+                />
               </div>
+
               <div class="field">
-                <label>Board</label>
-                <Dropdown v-model="model.rankingSource" :options="boardOptions" optionLabel="label" optionValue="value" class="w-full" />
+                <label>Big Board</label>
+                <Dropdown
+                  v-model="model.rankingSource"
+                  :options="boardOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  class="w-full"
+                />
               </div>
             </div>
 
@@ -302,43 +310,46 @@ onMounted(async () => {
         </Card>
       </aside>
 
-      <!-- Main -->
+      <!-- Main content -->
       <main class="draft-main">
         <Card>
           <template #title>Ready Room</template>
           <template #content>
             <div class="ready">
-              <div class="selected">
-                <div class="label">Selected team</div>
+              <div class="label">Selected team</div>
 
-                <div v-if="selectedTeam" class="team-pill">
-                  <img v-if="teamLogoUrl(selectedTeam)" class="pill-logo" :src="teamLogoUrl(selectedTeam)" :alt="selectedTeam.name" />
-                  <div>
-                    <div class="pill-name">{{ selectedTeam.name }}</div>
-                    <div class="pill-sub">
-                      {{ selectedTeam.abbreviation ?? '' }} • {{ selectedTeam.conference ?? '' }}
-                    </div>
+              <div v-if="selectedTeam" class="team-pill">
+                <img
+                  v-if="teamLogoUrl(selectedTeam)"
+                  class="pill-logo"
+                  :src="teamLogoUrl(selectedTeam)"
+                  :alt="selectedTeam.name"
+                />
+                <div>
+                  <div class="pill-name">{{ selectedTeam.name }}</div>
+                  <div class="pill-sub">
+                    {{ selectedTeam.abbreviation ?? '' }} • {{ selectedTeam.conference ?? '' }}
                   </div>
                 </div>
-
-                <div v-else class="muted">Pick a team on the left.</div>
               </div>
+
+              <div v-else class="muted">Pick a team on the left.</div>
 
               <Divider />
 
               <div class="hint-grid">
                 <div class="hint">
                   <div class="hint-title">Needs Remaining</div>
-                  <div class="hint-sub">Draft room will adjust needs as you pick positions.</div>
+                  <div class="hint-sub">Draft room adjusts needs as you draft positions.</div>
                 </div>
                 <div class="hint">
                   <div class="hint-title">Run Warnings</div>
-                  <div class="hint-sub">Position runs (CB/OT/etc) will surface in the team console.</div>
+                  <div class="hint-sub">Position runs will surface in the Team Console.</div>
                 </div>
                 <div class="hint">
                   <div class="hint-title">Logos</div>
                   <div class="hint-sub">
-                    Served from <code>/public/logos/afc</code> and <code>/public/logos/nfc</code>.
+                    Loaded from <code>/public/logos/afc</code> and <code>/public/logos/nfc</code>.
                   </div>
                 </div>
               </div>
@@ -348,17 +359,19 @@ onMounted(async () => {
       </main>
     </div>
 
-    <!-- Settings dialog (like your MockDraftSimulator.vue) -->
+    <!-- Settings dialog (same behavior as MockDraftSimulator.vue) -->
     <Dialog v-model:visible="settingsVisible" modal header="Settings" :style="{ width: '560px' }">
       <div class="dialog-body">
         <div class="field">
           <label>Draft Year</label>
           <InputNumber v-model="model.draftYear" :min="2020" :max="2100" class="w-full" />
         </div>
+
         <div class="field mt-2">
           <label>Rounds</label>
           <InputNumber v-model="model.rounds" :min="1" :max="7" class="w-full" />
         </div>
+
         <div class="field mt-2">
           <label>Speed</label>
           <Dropdown v-model="model.draftSpeed" :options="speedOptions" optionLabel="label" optionValue="value" class="w-full" />
@@ -373,6 +386,7 @@ onMounted(async () => {
           </div>
           <InputSwitch v-model="model.allowTrades" />
         </div>
+
         <div class="toggle-row" :class="{ disabled: !model.allowTrades }">
           <div>
             <div class="toggle-title">CPU–CPU Trades</div>
@@ -386,8 +400,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Mirrors the structure of your uploaded MockDraftSimulator.vue (translated to plain CSS) */
+/* This mirrors your uploaded MockDraftSimulator.vue look/spacing */
 .mock-draft-container {
+  min-height: 100vh;
+  background: #f8f9fa;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -396,39 +412,54 @@ onMounted(async () => {
 .draft-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1.25rem;
+  padding: 1.5rem;
   border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
+  align-items: center;
   gap: 1rem;
 }
 
-.title-row { display: flex; align-items: center; gap: 0.5rem; }
-.title { margin: 0; font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
-.subtitle { opacity: 0.9; margin-top: 0.35rem; }
+.header-left { display: flex; flex-direction: column; gap: 0.35rem; }
 
-.header-actions { display: flex; align-items: center; gap: 0.5rem; }
-.mode-dd { width: 220px; }
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
 
-.draft-body {
-  display: grid;
-  grid-template-columns: 360px 1fr;
+.subtitle { opacity: 0.9; }
+
+.header-actions {
+  display: flex;
   gap: 1rem;
-  align-items: start;
+  align-items: center;
+}
+
+.draft-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 1.25rem auto 2rem;
+  padding: 0 1.5rem;
+  flex: 1;
 }
 
 .draft-sidebar {
+  height: fit-content;
   position: sticky;
-  top: 1rem;
-  align-self: start;
+  top: 2rem;
 }
 
-.sidebar-card { border-radius: 14px; }
+.sidebar-card { border-radius: 12px; }
 
 .team-grid {
   display: grid;
@@ -485,10 +516,16 @@ onMounted(async () => {
 .toggle-sub { font-size: 0.85rem; opacity: 0.75; }
 .disabled { opacity: 0.6; }
 
-.draft-main { min-width: 0; }
-.ready { display: flex; flex-direction: column; gap: 0.75rem; }
+.draft-main {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 
+.ready { display: flex; flex-direction: column; gap: 0.75rem; }
 .label { font-size: 0.85rem; opacity: 0.8; }
+
 .team-pill { display: flex; align-items: center; gap: 0.75rem; }
 .pill-logo {
   width: 44px;
@@ -506,15 +543,20 @@ onMounted(async () => {
   grid-template-columns: repeat(3, minmax(0,1fr));
   gap: 0.75rem;
 }
-.hint { border: 1px solid rgba(0,0,0,0.07); border-radius: 12px; padding: 0.75rem; background: rgba(255,255,255,0.7); }
+.hint {
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.7);
+}
 .hint-title { font-weight: 900; }
 .hint-sub { margin-top: 0.25rem; font-size: 0.9rem; opacity: 0.8; }
 
 .muted { opacity: 0.7; }
 
-@media (max-width: 1100px) {
-  .draft-body { grid-template-columns: 1fr; }
-  .draft-sidebar { position: static; }
+@media (max-width: 1024px) {
+  .draft-layout { grid-template-columns: 1fr; }
+  .draft-sidebar { position: relative; top: 0; }
   .settings-grid { grid-template-columns: 1fr; }
   .hint-grid { grid-template-columns: 1fr; }
 }
