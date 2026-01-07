@@ -34,7 +34,7 @@ export function getTeamLogoExt(shortName: string): 'avif' | 'webp' {
 export function getTeamLogoInfo(team: TeamRef | null | undefined): TeamLogoInfo {
    // alert("getTeamLogoInfo - entrypoint");
   if (!team || !team.name || !team.conference) {
-    alert("getTeamLogoInfo - UNKNOWN");
+    //alert("getTeamLogoInfo - UNKNOWN");
     return { shortName: 'Unknown', logoUrl: '' }
   }
 

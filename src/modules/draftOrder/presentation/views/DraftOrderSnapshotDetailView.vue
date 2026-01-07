@@ -12,6 +12,12 @@ import Button from "primevue/button"
 import TimezoneSelector from "@/modules/draftOrder/presentation/components/TimezoneSelector.vue"
 import TeamNeedsPlaceholder from "@/modules/draftOrder/presentation/components/TeamNeedsPlaceholder.vue"
 
+import {
+  getTeamLogoInfo,
+  getTeamShortName as getShortName,
+  type TeamRef,
+} from "@/util/teamLogo"
+
 const store = useDraftOrderStore()
 const route = useRoute()
 
@@ -52,6 +58,51 @@ async function load(): Promise<void> {
     if (el instanceof HTMLElement) el.scrollIntoView({ behavior: "smooth", block: "center" })
   }
 }
+
+type LogoTeam = { name: string; conference?: string }
+
+const AFC = new Set([
+  "BAL","BUF","CIN","CLE","DEN","HOU","IND","JAX","KC","LV","LAC","MIA","NE","NYJ","PIT","TEN",
+])
+
+const NFC = new Set([
+  "ARI","ATL","CAR","CHI","DAL","DET","GB","LAR","MIN","NO","NYG","PHI","SEA","SF","TB","WAS",
+])
+
+function inferConferenceFromAbbr(abbr: string | null | undefined): "AFC" | "NFC" | "" {
+  const a = String(abbr ?? "").trim().toUpperCase()
+  if (AFC.has(a)) return "AFC"
+  if (NFC.has(a)) return "NFC"
+  return ""
+}
+const AFC_SHORT = new Set([
+  "Ravens","Bills","Bengals","Browns","Broncos","Texans","Colts","Jaguars",
+  "Chiefs","Raiders","Chargers","Dolphins","Patriots","Jets","Steelers","Titans",
+])
+
+const NFC_SHORT = new Set([
+  "Cardinals","Falcons","Panthers","Bears","Cowboys","Lions","Packers","Rams",
+  "Vikings","Saints","Giants","Eagles","49ers","Seahawks","Buccaneers","Commanders",
+])
+
+function inferConferenceFromTeamName(teamName: string): "AFC" | "NFC" | "" {
+  const shortName = getShortName(teamName)
+  if (AFC_SHORT.has(shortName)) return "AFC"
+  if (NFC_SHORT.has(shortName)) return "NFC"
+  return ""
+}
+
+function getEntryLogoUrl(entry: DraftOrderEntryDto): string {
+  const conference = inferConferenceFromTeamName(entry.team.name)
+  const info = getTeamLogoInfo({ name: entry.team.name, conference } as TeamRef)
+  return info.logoUrl
+}
+
+
+function getEntryShortName(entry: DraftOrderEntryDto): string {
+  return getShortName(entry.team.name)
+}
+
 
 watch(
   () => route.fullPath,
@@ -111,15 +162,17 @@ onMounted(async () => {
               <Column field="draftSlot" header="Slot" style="width: 90px" />
               <Column header="Team" style="width: 260px">
                 <template #body="{ data }">
-                  <div
-                    class="flex align-items-center gap-2"
-                    :data-team-id="(data as DraftOrderEntryDto).teamId"
-                  >
-                    <b>{{ (data as DraftOrderEntryDto).team.abbreviation }}</b>
-                    <span class="opacity-80">{{ (data as DraftOrderEntryDto).team.name }}</span>
+                  <div class="flex align-items-center gap-2" :data-team-id="(data as DraftOrderEntryDto).teamId">
+                    <img
+                      :src="getEntryLogoUrl(data as DraftOrderEntryDto)"
+                      class="team-icon"
+                      :alt="(data as DraftOrderEntryDto).team.name"
+                    />
+                    <span class="team-name">&nbsp;&nbsp;{{ (data as DraftOrderEntryDto).team.name }}</span>
                   </div>
                 </template>
               </Column>
+
               <Column header="W-L-T" style="width: 140px">
                 <template #body="{ data }">
                   <span>
@@ -157,4 +210,15 @@ onMounted(async () => {
   outline: 2px solid rgba(0, 0, 0, 0.25);
   box-shadow: inset 0 0 0 9999px rgba(255, 193, 7, 0.18);
 }
+.team-icon {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.team-name {
+  font-weight: 700;
+}
+
 </style>

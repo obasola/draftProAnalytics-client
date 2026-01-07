@@ -13,6 +13,7 @@ export type DraftOrderAuditDto = Record<string, unknown>
 export interface DraftOrderEntryDto {
   teamId: number
   team: DraftOrderTeamDto
+  conference: string
   draftSlot: number
   wins: number
   losses: number
