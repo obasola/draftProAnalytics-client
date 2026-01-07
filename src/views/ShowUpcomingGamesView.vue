@@ -11,11 +11,11 @@ const { loading, runImportScoresWeek } = controller;
 
 const staticWeekOptions: { label: string; value: number }[] = [
   { label: 'Preseason', value: 0 },
-  ...Array.from({ length: 18 }, (_, i) => ({
+  ...Array.from({ length: 22 }, (_, i) => ({
     label: `Week ${i + 1}`,
     value: i + 1,
   })),
-  { label: 'Postseason', value: 99 },
+  
 ];
 
 const expandedRows = ref<UpcomingGameUI[]>([]);
