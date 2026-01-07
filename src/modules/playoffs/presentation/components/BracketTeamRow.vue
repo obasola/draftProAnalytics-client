@@ -13,7 +13,13 @@ const props = defineProps<{
   team: BracketTeam | null
   align: BracketSideAlign
   isWinner: boolean
+  score?: number | null
 }>()
+
+const scoreText = (): string => {
+  if (props.score === null || props.score === undefined) return ''
+  return String(props.score)
+}
 </script>
 
 <template>
@@ -25,12 +31,16 @@ const props = defineProps<{
     <template v-if="props.team">
       <img class="logo" :src="props.team.logoUrl" :alt="props.team.abbrev" loading="lazy" />
       <span class="abbr">{{ props.team.abbrev }}</span>
-      <span class="seed" aria-label="Seed">{{ props.team.seed }}</span>
+      <span class="seed">({{ props.team.seed }})</span>
+
+      <!-- Reserved score slot (stays empty until score exists) -->
+      <span class="score" aria-label="Score">{{ scoreText() }}</span>
     </template>
 
     <template v-else>
       <span class="abbr">TBD</span>
-      <span class="seed">—</span>
+      <span class="seed">(—)</span>
+      <span class="score"></span>
     </template>
   </div>
 </template>
@@ -41,7 +51,6 @@ const props = defineProps<{
   align-items: center;
   gap: 10px;
 
-  /* no border/background here: this sits inside match-teams */
   background: transparent;
   border: none;
 
@@ -62,7 +71,8 @@ const props = defineProps<{
 }
 
 .team-row--winner .abbr,
-.team-row--winner .seed {
+.team-row--winner .seed,
+.team-row--winner .score {
   filter: brightness(1.08);
 }
 
@@ -77,22 +87,30 @@ const props = defineProps<{
   font-weight: 900;
   letter-spacing: 0.6px;
   font-size: 14px;
+  line-height: 1;
 }
 
 .seed {
-  margin-left: auto;
   font-weight: 900;
-  min-width: 28px;
-  text-align: center;
-  border-radius: 10px;
-  padding: 3px 8px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.98;
 }
 
-.team-row--right .seed {
+/* Score reserves width so alignment is stable even before games start */
+.score {
+  margin-left: auto;
+  min-width: 34px;
+  text-align: right;
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Mirror: on right-aligned rows, score goes to the "outer" edge */
+.team-row--right .score {
   margin-left: 0;
   margin-right: auto;
+  text-align: left;
 }
 </style>

@@ -32,13 +32,15 @@ const isBottomWinner = (): boolean =>
 
     <!-- Parent container: border 1, bg #0b5fe6 -->
     <div class="match-parent">
-      <!-- Team container inside: no border, bg #054dbc -->
+      <!-- Team container inside parent: no border, bg #054dbc -->
       <div class="match-teams">
-        <BracketTeamRow :team="props.game.topTeam" :align="props.align" :isWinner="isTopWinner()" />
+        <BracketTeamRow :team="props.game.topTeam" :align="props.align" :isWinner="isTopWinner()"
+          :score="props.game.topScore" />
 
         <div class="break" aria-hidden="true"></div>
 
-        <BracketTeamRow :team="props.game.bottomTeam" :align="props.align" :isWinner="isBottomWinner()" />
+        <BracketTeamRow :team="props.game.bottomTeam" :align="props.align" :isWinner="isBottomWinner()"
+          :score="props.game.bottomScore" />
       </div>
     </div>
   </div>
@@ -49,7 +51,6 @@ const isBottomWinner = (): boolean =>
   width: 100%;
 }
 
-/* (1) Title container: transparent, no border */
 .title-container {
   background: transparent;
   border: none;
@@ -64,16 +65,13 @@ const isBottomWinner = (): boolean =>
   color: #ff2b2b;
 }
 
-/* (2) Parent container: border 1, bg #0b5fe6 */
 .match-parent {
   border-radius: 12px;
   background: #0b5fe6;
   border: 1px solid rgba(255, 255, 255, 0.28);
   padding: 6px;
-  /* shows the parent color around the inner team container */
 }
 
-/* (3) Team container inside parent: no border, bg #054dbc */
 .match-teams {
   border-radius: 10px;
   background: #054dbc;

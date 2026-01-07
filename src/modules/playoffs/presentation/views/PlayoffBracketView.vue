@@ -480,4 +480,76 @@ const afcAlign: Align = 'right'
     grid-row: auto;
   }
 }
+
+/* ===== Tabs (restore requested styling) ===== */
+.bracket-tabs :deep(.p-tabview) {
+  background: transparent;
+}
+
+.bracket-tabs :deep(.p-tabview-nav) {
+  background: transparent;
+  border: none;
+  gap: 10px;
+}
+
+.bracket-tabs :deep(.p-tabview-nav li) {
+  margin: 0;
+}
+
+.bracket-tabs :deep(.p-tabview-nav-link) {
+  border: none !important;
+  border-radius: 12px;
+  padding: 10px 14px;
+
+  background: #b66e00;
+  /* inactive bg */
+  color: #054dbc;
+  /* inactive text */
+
+  font-weight: 900;
+  letter-spacing: 0.3px;
+}
+
+.bracket-tabs :deep(.p-highlight .p-tabview-nav-link) {
+  background: #044dbe;
+  /* active bg */
+  color: #ffffff;
+  /* active text */
+}
+
+.bracket-tabs :deep(.p-tabview-panels) {
+  display: none;
+}
+
+/* LATEST */
+/* Inactive AFC tab text = bright red */
+.bracket-tabs :deep(.p-tabview-nav li:nth-child(1):not(.p-highlight) .p-tabview-nav-link) {
+  color: hsl(0, 79%, 27%) !important;
+}
+
+/* Inactive NFC tab text = blue */
+.bracket-tabs :deep(.p-tabview-nav li:nth-child(2):not(.p-highlight) .p-tabview-nav-link) {
+  color: #054dbc !important;
+}
+
+/* Optional: Inactive Full tab text stays blue (or change if you want) */
+.bracket-tabs :deep(.p-tabview-nav li:nth-child(3):not(.p-highlight) .p-tabview-nav-link) {
+  color: #054dbc !important;
+}
+
+.side-inner {
+  --colW: 200px;
+  /* was 260px (~25% narrower) */
+  --rowH: 60px;
+
+  display: grid;
+  grid-template-columns: var(--colW) var(--colW) var(--colW);
+  grid-template-rows: repeat(12, var(--rowH));
+
+  column-gap: 14px;
+  /* was 18px */
+  row-gap: 14px;
+
+  position: relative;
+}
 </style>
