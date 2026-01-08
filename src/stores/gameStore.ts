@@ -31,13 +31,22 @@ export interface GameRow {
     state?: string | null
     stadium?: string | null
   }
+  /*
   gameLocation?: string | null
   gameCity?: string | null
   gameStateProvince?: string | null
   gameCountry?: string | null
+  */
   homeScore?: number | null
   awayScore?: number | null
   gameStatus: string
+
+  /* ✅ add these (match your Prisma model fields) */
+  isPlayoff?: boolean
+  playoffRound?: string | null
+  playoffConference?: string | null
+  homeSeed?: number | null
+  awaySeed?: number | null
 }
 
 export const useGameStore = defineStore('games', {
@@ -97,13 +106,12 @@ export const useGameStore = defineStore('games', {
       }
     },
 
-
     async fetchByYear(year: string | number, page = 1, limit = 500) {
       return this.fetchAll(page, limit, { year, seasonType: 2 })
     },
 
     async fetchLeagueWeek(year: string | number, week: number, page = 1, limit = 500) {
-      return this.fetchAll(page, limit, { year, week, seasonType: 2   })
+      return this.fetchAll(page, limit, { year, week, seasonType: 2 })
     },
 
     async fetchLeaguePreseason(year: string | number, page = 1, limit = 500) {
@@ -111,7 +119,7 @@ export const useGameStore = defineStore('games', {
     },
 
     async fetchTeamSeason(teamId: number, year: string | number, page = 1, limit = 500) {
-      return this.fetchAll(page, limit, { teamId, year, seasonType: 2  })
+      return this.fetchAll(page, limit, { teamId, year, seasonType: 2 })
     },
 
     async fetchTeamSeasonWeekGames(
@@ -120,8 +128,7 @@ export const useGameStore = defineStore('games', {
       week: number,
       page = 1,
       limit = 500
-    ) {
-    },
+    ) {},
 
     async fetchTeamPreseason(teamId: number, year: string | number, page = 1, limit = 500) {
       return this.fetchAll(page, limit, { teamId, year, seasonType: 1 })

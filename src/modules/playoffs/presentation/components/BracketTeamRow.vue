@@ -3,10 +3,10 @@ export type BracketSideAlign = 'left' | 'right'
 
 export interface BracketTeam {
   id: number
-  seed: number
-  abbrev: string
+  seed: number | null
   name: string
   logoUrl: string
+  record: string | null // ✅ replaces abbrev
 }
 
 const props = defineProps<{
@@ -15,32 +15,29 @@ const props = defineProps<{
   isWinner: boolean
   score?: number | null
 }>()
-
-const scoreText = (): string => {
-  if (props.score === null || props.score === undefined) return ''
-  return String(props.score)
-}
 </script>
 
 <template>
-  <div class="team-row" :class="[
-    `team-row--${props.align}`,
-    props.isWinner ? 'team-row--winner' : '',
-    props.team ? '' : 'team-row--empty'
-  ]">
+  <div class="team-row" :class="`team-row--${props.align}`">
     <template v-if="props.team">
-      <img class="logo" :src="props.team.logoUrl" :alt="props.team.abbrev" loading="lazy" />
-      <span class="abbr">{{ props.team.abbrev }}</span>
-      <span class="seed">({{ props.team.seed }})</span>
+      <!-- seed -->
+      <span class="seed" aria-label="Seed">{{ props.team.seed ?? '—' }}</span>
 
-      <!-- Reserved score slot (stays empty until score exists) -->
-      <span class="score" aria-label="Score">{{ scoreText() }}</span>
+      <!-- logo -->
+      <img class="logo" :src="props.team.logoUrl" :alt="props.team.name" loading="lazy" />
+
+      <!-- W/L record -->
+      <span class="record" aria-label="Record">{{ props.team.record ?? '—' }}</span>
+
+      <!-- score + winner checkmark outside score -->
+      <span v-if="props.score !== null && props.score !== undefined" class="score" aria-label="Score">
+        {{ props.score }}<span v-if="props.isWinner" class="win-mark" aria-label="Winner"> ✓</span>
+      </span>
     </template>
 
     <template v-else>
-      <span class="abbr">TBD</span>
-      <span class="seed">(—)</span>
-      <span class="score"></span>
+      <span class="seed">—</span>
+      <span class="record">TBD</span>
     </template>
   </div>
 </template>
@@ -50,12 +47,10 @@ const scoreText = (): string => {
   display: flex;
   align-items: center;
   gap: 10px;
-
-  background: transparent;
-  border: none;
-
   padding: 8px 10px;
+
   color: #ffffff;
+  font-weight: 900;
 }
 
 .team-row--left {
@@ -66,51 +61,44 @@ const scoreText = (): string => {
   justify-content: flex-end;
 }
 
-.team-row--empty {
-  opacity: 0.75;
-}
-
-.team-row--winner .abbr,
-.team-row--winner .seed,
-.team-row--winner .score {
-  filter: brightness(1.08);
+.seed {
+  min-width: 18px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
 }
 
 .logo {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   flex: 0 0 auto;
 }
 
-.abbr {
+.record {
+  font-size: 16px;
   font-weight: 900;
-  letter-spacing: 0.6px;
-  font-size: 14px;
-  line-height: 1;
+  letter-spacing: 0.3px;
+  color: #ffffff;
 }
 
-.seed {
-  font-weight: 900;
-  font-size: 14px;
-  line-height: 1;
-  opacity: 0.98;
-}
-
-/* Score reserves width so alignment is stable even before games start */
+/* push score to edge */
 .score {
   margin-left: auto;
-  min-width: 34px;
-  text-align: right;
+  font-size: 16px;
   font-weight: 900;
-  font-size: 14px;
-  line-height: 1;
+  color: #ffffff;
 }
 
-/* Mirror: on right-aligned rows, score goes to the "outer" edge */
 .team-row--right .score {
   margin-left: 0;
   margin-right: auto;
-  text-align: left;
+}
+
+.win-mark {
+  font-weight: 900;
+  color: #ffffff;
+  padding-left: 2px;
 }
 </style>

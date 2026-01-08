@@ -1,234 +1,80 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import BracketGameCard, { type BracketGameViewModel } from '../components/BracketGameCard.vue'
-import type { BracketTeam } from '../components/BracketTeamRow.vue'
+import Dropdown from 'primevue/dropdown'
+import Button from 'primevue/button'
 
-type Conference = 'NFC' | 'AFC'
+import { usePlayoffBracketStore } from '@/modules/playoffs/application/playoffBracketStore'
+import BracketConnectorOverlay from '../components/BracketConnectorOverlay.vue'
+import BracketGameCard from '../components/BracketGameCard.vue'
+
 type Align = 'left' | 'right'
 type BracketTab = 'AFC' | 'NFC' | 'FULL'
 
-/** Tabs: AFC | NFC | Full */
-const activeIndex = ref<number>(2) // default: Full
+const route = useRoute()
+const store = usePlayoffBracketStore()
+
+/* --- Tabs --- */
+const activeIndex = ref<number>(2) // default Full
 const activeTab = computed<BracketTab>(() => {
   if (activeIndex.value === 0) return 'AFC'
   if (activeIndex.value === 1) return 'NFC'
   return 'FULL'
 })
-
 const showAfc = computed<boolean>(() => activeTab.value === 'AFC' || activeTab.value === 'FULL')
 const showNfc = computed<boolean>(() => activeTab.value === 'NFC' || activeTab.value === 'FULL')
 
-interface WildCardScores {
-  game54: { top: number | null; bottom: number | null } // top=seed5 bottom=seed4
-  game63: { top: number | null; bottom: number | null } // top=seed6 bottom=seed3
-  game72: { top: number | null; bottom: number | null } // top=seed7 bottom=seed2
-}
-
-interface DivisionalScores {
-  game1L: { top: number | null; bottom: number | null } // 1vLowestRemaining
-  gameX: { top: number | null; bottom: number | null } // other winners
-}
-
-interface ConferenceScores {
-  gameCC: { top: number | null; bottom: number | null }
-}
-
-interface BracketInput {
-  teamsBySeed: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, BracketTeam>
-  wildCard: WildCardScores
-  divisional: DivisionalScores
-  conference: ConferenceScores
-}
-
-const winnerIdFromScores = (
-  topTeam: BracketTeam | null,
-  bottomTeam: BracketTeam | null,
-  topScore: number | null,
-  bottomScore: number | null
-): number | null => {
-  if (!topTeam || !bottomTeam) return null
-  if (topScore === null || bottomScore === null) return null
-  if (topScore === bottomScore) return null
-  return topScore > bottomScore ? topTeam.id : bottomTeam.id
-}
-
-const pickTeamById = (teams: BracketTeam[], id: number | null): BracketTeam | null => {
-  if (id === null) return null
-  return teams.find(t => t.id === id) ?? null
-}
-
-const sortBySeedAsc = (a: BracketTeam, b: BracketTeam): number => a.seed - b.seed
-
-const computeConferenceBracket = (conf: Conference, input: BracketInput) => {
-  const seed = input.teamsBySeed
-  const allTeams: BracketTeam[] = Object.values(seed).slice().sort(sortBySeedAsc)
-
-  const wcGames: BracketGameViewModel[] = [
-    {
-      id: `${conf}-WC-54`,
-      topTeam: seed[5],
-      bottomTeam: seed[4],
-      topScore: input.wildCard.game54.top,
-      bottomScore: input.wildCard.game54.bottom,
-      winnerTeamId: null
-    },
-    {
-      id: `${conf}-WC-63`,
-      topTeam: seed[6],
-      bottomTeam: seed[3],
-      topScore: input.wildCard.game63.top,
-      bottomScore: input.wildCard.game63.bottom,
-      winnerTeamId: null
-    },
-    {
-      id: `${conf}-WC-72`,
-      topTeam: seed[7],
-      bottomTeam: seed[2],
-      topScore: input.wildCard.game72.top,
-      bottomScore: input.wildCard.game72.bottom,
-      winnerTeamId: null
-    }
-  ].map(g => ({
-    ...g,
-    winnerTeamId: winnerIdFromScores(g.topTeam, g.bottomTeam, g.topScore, g.bottomScore)
-  }))
-
-  const wcWinners: BracketTeam[] = wcGames
-    .map(g => pickTeamById(allTeams, g.winnerTeamId))
-    .filter((t): t is BracketTeam => t !== null)
-
-  const lowestRemaining =
-    wcWinners.length === 3 ? wcWinners.slice().sort((a, b) => b.seed - a.seed)[0] : null
-
-  const otherTwo =
-    wcWinners.length === 3
-      ? wcWinners.filter(t => t.id !== lowestRemaining?.id).slice().sort(sortBySeedAsc)
-      : []
-
-  const divGame1: BracketGameViewModel = {
-    id: `${conf}-DIV-1L`,
-    topTeam: lowestRemaining,
-    bottomTeam: seed[1],
-    topScore: input.divisional.game1L.top,
-    bottomScore: input.divisional.game1L.bottom,
-    winnerTeamId: null
-  }
-  divGame1.winnerTeamId = winnerIdFromScores(
-    divGame1.topTeam,
-    divGame1.bottomTeam,
-    divGame1.topScore,
-    divGame1.bottomScore
-  )
-
-  const divGame2: BracketGameViewModel = {
-    id: `${conf}-DIV-X`,
-    topTeam: otherTwo[1] ?? null,
-    bottomTeam: otherTwo[0] ?? null,
-    topScore: input.divisional.gameX.top,
-    bottomScore: input.divisional.gameX.bottom,
-    winnerTeamId: null
-  }
-  divGame2.winnerTeamId = winnerIdFromScores(
-    divGame2.topTeam,
-    divGame2.bottomTeam,
-    divGame2.topScore,
-    divGame2.bottomScore
-  )
-
-  const divWinners: BracketTeam[] = [
-    pickTeamById(allTeams, divGame1.winnerTeamId),
-    pickTeamById(allTeams, divGame2.winnerTeamId)
-  ].filter((t): t is BracketTeam => t !== null)
-
-  const confGame: BracketGameViewModel = {
-    id: `${conf}-CONF`,
-    topTeam: divWinners[1] ?? null,
-    bottomTeam: divWinners[0] ?? null,
-    topScore: input.conference.gameCC.top,
-    bottomScore: input.conference.gameCC.bottom,
-    winnerTeamId: null
-  }
-  confGame.winnerTeamId = winnerIdFromScores(
-    confGame.topTeam,
-    confGame.bottomTeam,
-    confGame.topScore,
-    confGame.bottomScore
-  )
-
-  const champion = pickTeamById(allTeams, confGame.winnerTeamId)
-
-  return { wcGames, divGames: [divGame1, divGame2], confGame, champion }
-}
-
-/** DEMO DATA (replace w/ Pinia/store/API) */
-const nfcInput = reactive<BracketInput>({
-  teamsBySeed: {
-    1: { id: 101, seed: 1, abbrev: 'CHI', name: 'Bears', logoUrl: '/logos/nfc/Bears.avif' },
-    2: { id: 102, seed: 2, abbrev: 'LAR', name: 'Rams', logoUrl: '/logos/nfc/Rams.avif' },
-    3: { id: 103, seed: 3, abbrev: 'PHI', name: 'Eagles', logoUrl: '/logos/nfc/Eagles.avif' },
-    4: { id: 104, seed: 4, abbrev: 'TB', name: 'Buccaneers', logoUrl: '/logos/nfc/Buccaneers.avif' },
-    5: { id: 105, seed: 5, abbrev: 'SEA', name: 'Seahawks', logoUrl: '/logos/nfc/Seahawks.avif' },
-    6: { id: 106, seed: 6, abbrev: 'GB', name: 'Packers', logoUrl: '/logos/nfc/Packers.avif' },
-    7: { id: 107, seed: 7, abbrev: 'SF', name: '49ers', logoUrl: '/logos/nfc/49ers.avif' }
-  },
-  wildCard: {
-    game54: { top: 5, bottom: 4 },
-    game63: { top: 6, bottom: 3 },
-    game72: { top: 7, bottom: 2 }
-  },
-  divisional: {
-    game1L: { top: null, bottom: null },
-    gameX: { top: null, bottom: null }
-  },
-  conference: {
-    gameCC: { top: null, bottom: null }
-  }
-})
-
-const afcInput = reactive<BracketInput>({
-  teamsBySeed: {
-    1: { id: 201, seed: 1, abbrev: 'DEN', name: 'Broncos', logoUrl: '/logos/afc/Broncos.avif' },
-    2: { id: 202, seed: 2, abbrev: 'NE', name: 'Patriots', logoUrl: '/logos/afc/Patriots.avif' },
-    3: { id: 203, seed: 3, abbrev: 'JAX', name: 'Jaguars', logoUrl: '/logos/afc/Jaguars.avif' },
-    4: { id: 204, seed: 4, abbrev: 'BAL', name: 'Ravens', logoUrl: '/logos/afc/Ravens.avif' },
-    5: { id: 205, seed: 5, abbrev: 'LAC', name: 'Chargers', logoUrl: '/logos/afc/Chargers.webp' },
-    6: { id: 206, seed: 6, abbrev: 'IND', name: 'Colts', logoUrl: '/logos/afc/Colts.avif' },
-    7: { id: 207, seed: 7, abbrev: 'BUF', name: 'Bills', logoUrl: '/logos/afc/Bills.avif' }
-  },
-  wildCard: {
-    game54: { top: 5, bottom: 4 },
-    game63: { top: 6, bottom: 3 },
-    game72: { top: 7, bottom: 2 }
-  },
-  divisional: {
-    game1L: { top: null, bottom: null },
-    gameX: { top: null, bottom: null }
-  },
-  conference: {
-    gameCC: { top: null, bottom: null }
-  }
-})
-
-const nfc = computed(() => computeConferenceBracket('NFC', nfcInput))
-const afc = computed(() => computeConferenceBracket('AFC', afcInput))
-
-const superBowl = computed<BracketGameViewModel>(() => {
-  const topTeam = nfc.value.champion
-  const bottomTeam = afc.value.champion
-  return {
-    id: 'SB',
-    topTeam,
-    bottomTeam,
-    topScore: null,
-    bottomScore: null,
-    winnerTeamId: winnerIdFromScores(topTeam, bottomTeam, null, null)
-  }
-})
-
 const nfcAlign: Align = 'left'
 const afcAlign: Align = 'right'
+
+/* --- Defaults --- */
+const inferDefaultSeasonYear = (): number => {
+  const now = new Date()
+  const month = now.getMonth() + 1
+  const year = now.getFullYear()
+  // Jan/Feb belong to prior NFL season
+  return month <= 2 ? year - 1 : year
+}
+
+const seasonYear = ref<number>(inferDefaultSeasonYear())
+
+const seasonType = computed<1 | 2 | 3>(() => {
+  const q = route.query.seasonType
+  const n = typeof q === 'string' ? Number(q) : 3
+  return n === 1 || n === 2 || n === 3 ? n : 3
+})
+
+const seasonWeek = ref<number>(1)
+
+/* --- options --- */
+const seasonYearOptions = computed(() => {
+  const base = inferDefaultSeasonYear()
+  const years: number[] = []
+  for (let y = base; y >= base - 5; y--) years.push(y)
+  return years.map((y) => ({ label: String(y), value: y }))
+})
+
+const seasonTypeOptions = [
+  { label: 'Preseason', value: 1 as const },
+  { label: 'Regular', value: 2 as const },
+  { label: 'Postseason', value: 3 as const },
+]
+
+const weekOptions = [1, 2, 3, 4].map((w) => ({ label: `Week ${w}`, value: w }))
+
+const reload = async (): Promise<void> => {
+  await store.load(seasonYear.value, seasonType.value, seasonWeek.value)
+}
+
+onMounted(async () => {
+  await reload()
+})
+
+const nfc = computed(() => store.nfcBracket)
+const afc = computed(() => store.afcBracket)
+const superBowl = computed(() => store.superBowl)
 </script>
 
 <template>
@@ -236,21 +82,34 @@ const afcAlign: Align = 'right'
     <div class="bracket-header">
       <h2 class="bracket-title">Playoff Bracket</h2>
 
-      <div class="bracket-tabs">
-        <TabView v-model:activeIndex="activeIndex">
-          <TabPanel header="AFC" />
-          <TabPanel header="NFC" />
-          <TabPanel header="Full" />
-        </TabView>
+      <div class="bracket-header">
+        <h2 class="bracket-title">Playoff Bracket</h2>
+
+        <div class="bracket-tabs">
+          <!-- keep your Season dropdown here if you already had it in the "good" header -->
+          <div class="season-picker">
+            <span class="season-label">Season</span>
+            <Dropdown v-model="seasonYear" :options="seasonYearOptions" optionLabel="label" optionValue="value"
+              class="season-dd" />
+          </div>
+
+          <TabView v-model:activeIndex="activeIndex">
+            <TabPanel header="AFC" />
+            <TabPanel header="NFC" />
+            <TabPanel header="Full" />
+          </TabView>
+        </div>
       </div>
+
     </div>
 
+    <!-- FULL -->
     <div v-if="activeTab === 'FULL'" class="bracket-grid">
       <!-- NFC -->
       <section class="side side--left">
         <div class="side-title">NFC</div>
-
         <div class="side-inner">
+          <BracketConnectorOverlay side="left" />
           <BracketGameCard class="pos wc-1" :game="nfc.wcGames[0]" :align="nfcAlign" title="Wild Card" />
           <BracketGameCard class="pos wc-2" :game="nfc.wcGames[1]" :align="nfcAlign" />
           <BracketGameCard class="pos wc-3" :game="nfc.wcGames[2]" :align="nfcAlign" />
@@ -262,12 +121,11 @@ const afcAlign: Align = 'right'
         </div>
       </section>
 
-      <!-- SUPER BOWL -->
+      <!-- SB -->
       <section class="center">
         <div class="center-title">
           <div class="sb-label">SUPER BOWL</div>
         </div>
-
         <div class="center-slot">
           <BracketGameCard :game="superBowl" align="left" />
         </div>
@@ -276,8 +134,8 @@ const afcAlign: Align = 'right'
       <!-- AFC -->
       <section class="side side--right">
         <div class="side-title">AFC</div>
-
         <div class="side-inner side-inner--right">
+          <BracketConnectorOverlay side="right" />
           <BracketGameCard class="pos wc-1" :game="afc.wcGames[0]" :align="afcAlign" title="Wild Card" />
           <BracketGameCard class="pos wc-2" :game="afc.wcGames[1]" :align="afcAlign" />
           <BracketGameCard class="pos wc-3" :game="afc.wcGames[2]" :align="afcAlign" />
@@ -290,39 +148,39 @@ const afcAlign: Align = 'right'
       </section>
     </div>
 
+    <!-- SINGLE -->
     <div v-else class="bracket-grid bracket-grid--single">
       <section v-if="showNfc" class="side side--left">
         <div class="side-title">NFC</div>
-
         <div class="side-inner">
           <BracketGameCard class="pos wc-1" :game="nfc.wcGames[0]" :align="nfcAlign" title="Wild Card" />
           <BracketGameCard class="pos wc-2" :game="nfc.wcGames[1]" :align="nfcAlign" />
           <BracketGameCard class="pos wc-3" :game="nfc.wcGames[2]" :align="nfcAlign" />
-
           <BracketGameCard class="pos div-1" :game="nfc.divGames[0]" :align="nfcAlign" title="Divisional" />
           <BracketGameCard class="pos div-2" :game="nfc.divGames[1]" :align="nfcAlign" />
-
           <BracketGameCard class="pos conf-1" :game="nfc.confGame" :align="nfcAlign" title="Conference" />
+          <BracketConnectorOverlay side="left" />
         </div>
       </section>
 
       <section v-if="showAfc" class="side side--right">
         <div class="side-title">AFC</div>
-
         <div class="side-inner side-inner--right">
           <BracketGameCard class="pos wc-1" :game="afc.wcGames[0]" :align="afcAlign" title="Wild Card" />
           <BracketGameCard class="pos wc-2" :game="afc.wcGames[1]" :align="afcAlign" />
           <BracketGameCard class="pos wc-3" :game="afc.wcGames[2]" :align="afcAlign" />
-
           <BracketGameCard class="pos div-1" :game="afc.divGames[0]" :align="afcAlign" title="Divisional" />
           <BracketGameCard class="pos div-2" :game="afc.divGames[1]" :align="afcAlign" />
-
           <BracketGameCard class="pos conf-1" :game="afc.confGame" :align="afcAlign" title="Conference" />
+          <BracketConnectorOverlay side="right" />
         </div>
       </section>
     </div>
   </div>
 </template>
+
+
+
 
 <style scoped>
 .bracket-root {
@@ -539,17 +397,36 @@ const afcAlign: Align = 'right'
 
 .side-inner {
   --colW: 200px;
-  /* was 260px (~25% narrower) */
+  --colGap: 14px;
   --rowH: 60px;
+  --rowGap: 14px;
 
   display: grid;
   grid-template-columns: var(--colW) var(--colW) var(--colW);
   grid-template-rows: repeat(12, var(--rowH));
-
-  column-gap: 14px;
-  /* was 18px */
-  row-gap: 14px;
-
+  column-gap: var(--colGap);
+  row-gap: var(--rowGap);
   position: relative;
+}
+
+/* ensure cards sit above connector overlay */
+.pos {
+  position: relative;
+  z-index: 1;
+}
+
+.season-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.season-label {
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.season-dd {
+  min-width: 120px;
 }
 </style>

@@ -91,33 +91,7 @@ const getTeamShortNameAndLogo = (team: any) => {
   const ref = asTeamRef(team)
   return getTeamLogoInfo(ref)
 }
-/*
-const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: string } => {
-  // If team object exists, use it
-  
-  if (team && team.name && team.conference) {
-    const nameParts = team.name.trim().split(' ')
-    const shortName = nameParts[nameParts.length - 1]
-    
-    const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
-    const logoFile = `${shortName}.${fileExt}`
-   
-    console.log('teamLogo: '+`/images/${team.conference.toLowerCase()}` + '/'+logoFile);
-    alert(`logoPath: /images/${team.conference.toLowerCase()}/${logoFile}`)
-    return { shortName, logoPath: `/images/${team.conference.toLowerCase()}/${logoFile}` }
-  }
 
-  // Fallback: lookup by ID if team object missing
-  if (typeof team === 'number') {
-    const foundTeam = themeStore.teams.find(t => Number(t.id) === team)
-    if (foundTeam) {
-      return getTeamShortNameAndLogo(foundTeam)
-    }
-  }
-
-  return { shortName: 'Unknown', logoPath: '' }
-}
-*/
 const isWinningScore = (score1: number | undefined, score2: number | undefined) => {
   if (score1 == null || score2 == null) return false
   return score1 > score2
@@ -196,7 +170,7 @@ const getStatusClass = (status: string | undefined) => {
         <template #body="{ data }">
           <span v-if="data.gameLocation">{{ data.gameLocation }}</span>
           <span v-else-if="data.gameCity && data.gameStateProvince">{{ data.gameCity }}, {{ data.gameStateProvince
-          }}</span>
+            }}</span>
           <span v-else-if="data.gameCity">{{ data.gameCity }}</span>
           <span v-else-if="data.homeTeam && data.homeTeam.city">{{ data.homeTeam.city }}</span>
           <span v-else class="text-muted">TBD</span>
