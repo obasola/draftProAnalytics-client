@@ -13,6 +13,7 @@
           </p>
         </div>
 
+        <div class="field-group">
         <!-- Pending -->
         <div v-if="status === 'pending'" class="text-center text-sm text-slate-900">
           <p class="mb-3">
@@ -53,6 +54,7 @@
             class="btn-primary-254290 w-full p-button-lg"
             @click="goToLogin"
           />
+        </div>
         </div>
       </div>
     </div>
@@ -121,12 +123,19 @@ onMounted(() => {
 
 <style scoped>
 .verify-page {
-  background: #0f172a;
+  background-color: #b66e00;
+  color: #ffffff;
 }
 
 .verify-card {
-  background-color: #f1e0a3;
-  border-color: rgba(15, 23, 42, 0.12);
+  background-color: #b66e00;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.field-group {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 1rem;
+  padding: 1rem;
 }
 
 .btn-primary-254290 {
@@ -137,5 +146,15 @@ onMounted(() => {
 
 .btn-primary-254290:hover {
   filter: brightness(1.05);
+}
+/* Normalize text colors from utility classes used elsewhere */
+.verify-card :deep(*) {
+  color: #ffffff;
+}
+
+.btn-primary-254290 {
+  background-color: #254290 !important;
+  border-color: #254290 !important;
+  color: #ffffff !important;
 }
 </style>

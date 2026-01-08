@@ -42,7 +42,8 @@
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="onSubmit" class="space-y-4">
+        <div class="field-group">
+          <form @submit.prevent="onSubmit" class="space-y-4">
           <!-- Username -->
           <div class="form-row">
             <label for="userName" class="form-label">
@@ -113,6 +114,7 @@
             </RouterLink>
           </p>
         </form>
+        </div>
       </div>
     </div>
   </div>
@@ -163,12 +165,19 @@ function onAppleSignIn(): void {
 <style scoped>
 /* unchanged styles from your existing LoginView */
 .login-page {
-  background: #0f172a;
+  background-color: #b66e00;
+  color: #ffffff;
 }
 
 .login-card {
-  background-color: #f1e0a3;
-  border-color: rgba(15, 23, 42, 0.12);
+  background-color: #b66e00;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.field-group {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 1rem;
+  padding: 1rem;
 }
 
 .form-row {
@@ -260,5 +269,36 @@ function onAppleSignIn(): void {
 
 .link-strong:hover {
   text-decoration: underline;
+}
+/* Ensure PrimeVue inputs are legible on a dark-ish brand background */
+:deep(.p-inputtext),
+:deep(.p-password-input) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: #ffffff;
+}
+
+:deep(.p-inputtext::placeholder),
+:deep(.p-password-input::placeholder) {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+:deep(.p-checkbox .p-checkbox-box) {
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.divider-label,
+.link-small {
+  color: #ffffff;
+}
+
+.social-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  color: #ffffff;
+}
+
+.social-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 </style>
