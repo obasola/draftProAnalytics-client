@@ -10,11 +10,15 @@ import { usePlayoffBracketStore } from '@/modules/playoffs/application/playoffBr
 import BracketConnectorOverlay from '../components/BracketConnectorOverlay.vue'
 import BracketGameCard from '../components/BracketGameCard.vue'
 
+import ProgressSpinner from 'primevue/progressspinner'
+
 type Align = 'left' | 'right'
 type BracketTab = 'AFC' | 'NFC' | 'FULL'
 
 const route = useRoute()
 const store = usePlayoffBracketStore()
+const isLoading = computed<boolean>(() => store.loading)
+
 
 /* --- Tabs --- */
 const activeIndex = ref<number>(2) // default Full
@@ -79,6 +83,13 @@ const superBowl = computed(() => store.superBowl)
 
 <template>
   <div class="bracket-root">
+  <!-- Loading overlay -->
+    <div v-if="isLoading" class="loading-overlay" aria-live="polite" aria-busy="true">
+      <div class="loading-card">
+        <ProgressSpinner />
+        <div class="loading-text">Loading playoff bracket…</div>
+      </div>
+    </div>
     <div class="bracket-header">
       <h2 class="bracket-title">Playoff Bracket</h2>
 
@@ -178,8 +189,6 @@ const superBowl = computed(() => store.superBowl)
     </div>
   </div>
 </template>
-
-
 
 
 <style scoped>
@@ -428,5 +437,31 @@ const superBowl = computed(() => store.superBowl)
 
 .season-dd {
   min-width: 120px;
+}
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.loading-card {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.loading-text {
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  font-size: 14px;
 }
 </style>

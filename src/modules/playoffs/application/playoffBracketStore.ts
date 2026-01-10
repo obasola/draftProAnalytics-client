@@ -55,42 +55,15 @@ function seedKey(e: PlayoffBracketEventDto): string | null {
 
 function buildSeedMapFromStandings(rows: TeamStandingDto[]): Record<number, number> {
   const map: Record<number, number> = {}
-
-  const buildForConference = (conf: Conference): void => {
-    const confRows = rows.filter(r => r.conference.toUpperCase() === conf)
-    if (confRows.length === 0) return
-
-    const byDivision = new Map<string, TeamStandingDto[]>()
-    for (const r of confRows) {
-      const key = r.division
-      const list = byDivision.get(key) ?? []
-      list.push(r)
-      byDivision.set(key, list)
-    }
-
-    // Division winners -> seeds 1-4
-    const divisionWinners: TeamStandingDto[] = []
-    for (const [, list] of byDivision.entries()) {
-      const sorted = [...list].sort(standingsCompare)
-      divisionWinners.push(sorted[0])
-    }
-    const divSorted = [...divisionWinners].sort(standingsCompare)
-    for (let i = 0; i < Math.min(4, divSorted.length); i++) {
-      map[divSorted[i].teamId] = i + 1
-    }
-
-    // Best remaining -> seeds 5-7
-    const winnerIds = new Set<number>(divisionWinners.map(w => w.teamId))
-    const wildcards = confRows.filter(r => !winnerIds.has(r.teamId)).sort(standingsCompare)
-    for (let i = 0; i < Math.min(3, wildcards.length); i++) {
-      map[wildcards[i].teamId] = 5 + i
+  for (const r of rows) {
+    const seed = r.playoffSeed ?? null
+    if (typeof seed === 'number' && seed >= 1 && seed <= 7) {
+      map[r.teamId] = seed
     }
   }
-
-  buildForConference('AFC')
-  buildForConference('NFC')
   return map
 }
+
 
 /**
  * NOTE: We intentionally keep returning BracketTeam with `abbrev` populated.

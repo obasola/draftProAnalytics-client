@@ -17,5 +17,5 @@ export interface TeamStandingDto {
   divisionLosses: number;
   conferenceWins: number;
   conferenceLosses: number;
-
+  playoffSeed?: number | null;
 }
