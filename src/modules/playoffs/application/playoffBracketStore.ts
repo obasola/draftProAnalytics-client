@@ -37,12 +37,34 @@ function emptyGame(id: string): BracketGameViewModel {
   }
 }
 
+function winPctOf(r: TeamStandingDto): number {
+  const total = r.wins + r.losses + r.ties
+  return total > 0 ? (r.wins + 0.5 * r.ties) / total : 0
+}
+
+function confPctOf(r: TeamStandingDto): number {
+  const total = r.conferenceWins + r.conferenceLosses
+  return total > 0 ? r.conferenceWins / total : 0
+}
+
+function pointDiffOf(r: TeamStandingDto): number {
+  return (r.pointsFor ?? 0) - (r.pointsAgainst ?? 0)
+}
+
 function standingsCompare(a: TeamStandingDto, b: TeamStandingDto): number {
-  if (b.winPct !== a.winPct) return b.winPct - a.winPct
-  if (b.wins !== a.wins) return b.wins - a.wins
-  if (b.pointDiff !== a.pointDiff) return b.pointDiff - a.pointDiff
+  const wp = winPctOf(b) - winPctOf(a)
+  if (wp !== 0) return wp
+
+  // ✅ NFL tie-breakers use conference record early (before point differential)
+  const cp = confPctOf(b) - confPctOf(a)
+  if (cp !== 0) return cp
+
+  const pd = pointDiffOf(b) - pointDiffOf(a)
+  if (pd !== 0) return pd
+
   return a.teamName.localeCompare(b.teamName)
 }
+
 
 function seedKey(e: PlayoffBracketEventDto): string | null {
   const a = e.awaySeed ?? null
@@ -69,6 +91,19 @@ function buildSeedMapFromStandings(rows: TeamStandingDto[]): Record<number, numb
  * NOTE: We intentionally keep returning BracketTeam with `abbrev` populated.
  * To “drop abbrev and show W/L”, you can render this.abbrev as the record.
  */
+function normName(v: string): string {
+  return v.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function resolveDbIdFromStandingsByName(
+  standingsRows: TeamStandingDto[],
+  teamNameRaw: string
+): number | null {
+  const key = normName(teamNameRaw)
+  const hit = standingsRows.find(r => normName(r.teamName) === key) ?? null
+  return hit ? hit.teamId : null
+}
+
 function toTeam(
   e: PlayoffBracketEventDto,
   side: 'HOME' | 'AWAY',
@@ -77,43 +112,44 @@ function toTeam(
 ): BracketTeam | null {
   const standings = useStandingsStore()
 
-  const dbId = side === 'HOME' ? e.homeTeamDbId : e.awayTeamDbId
+  const dbIdFromEvent = side === 'HOME' ? e.homeTeamDbId : e.awayTeamDbId
   const espnTeamId = side === 'HOME' ? e.homeTeamId : e.awayTeamId
   const teamNameRaw = side === 'HOME' ? e.homeTeamName : e.awayTeamName
   const logoLocal = side === 'HOME' ? e.homeLogoLocal : e.awayLogoLocal
 
-  const stableId = dbId ?? espnTeamId ?? null
-  if (stableId === null || stableId <= 0) return null
   if (!teamNameRaw || teamNameRaw.trim().toUpperCase() === 'TBD') return null
 
-  const apiSeed = side === 'HOME' ? (e.homeSeed ?? null) : (e.awaySeed ?? null)
-  const computedSeed = dbId ? (seedByTeamId[dbId] ?? null) : null
-  const seedMaybe = apiSeed ?? computedSeed
+  // ✅ If bracket payload forgot dbId (your CAR case), recover it by teamName from standings
+  const dbIdResolved: number | null =
+    dbIdFromEvent ?? resolveDbIdFromStandingsByName(standings.standings, teamNameRaw)
 
-  // BracketTeam often expects a number; use 0 to mean "unknown" (UI can hide 0).
+  // Stable ID should be DB id when possible (standings + seed maps are keyed by DB id)
+  const stableId: number | null = dbIdResolved ?? espnTeamId ?? null
+  if (stableId === null || stableId <= 0) return null
+
+  const apiSeed = side === 'HOME' ? (e.homeSeed ?? null) : (e.awaySeed ?? null)
+
+  // ✅ computed seed requires DB id
+  const computedSeed = dbIdResolved ? (seedByTeamId[dbIdResolved] ?? null) : null
+  const seedMaybe = apiSeed ?? computedSeed
   const seed: number = typeof seedMaybe === 'number' ? seedMaybe : 0
 
-  // Use standings-derived display values when possible
-  const displayName = dbId ? standings.getDisplayNameByTeamId(dbId) : teamNameRaw
-  const record = stableId ? standings.getRecordByTeamId(stableId) : null
-  // If your BracketTeam.record is required:
-  const recordText: string = record ?? ''
-  const logoInfo = dbId ? standings.getLogoInfoByTeamId(dbId) : null
+  const displayName = dbIdResolved ? standings.getDisplayNameByTeamId(dbIdResolved) : teamNameRaw
+  const record = dbIdResolved ? standings.getRecordByTeamId(dbIdResolved) : null
 
+  const logoInfo = dbIdResolved ? standings.getLogoInfoByTeamId(dbIdResolved) : null
   const logoUrl =
     logoInfo?.logoUrl || (typeof logoLocal === 'string' && logoLocal.length > 0 ? logoLocal : '')
-
-  // ✅ "abbrev" becomes record text (W-L). Keeps type compatibility + matches your desired UI.
-  const abbrev = record ?? ''
 
   return {
     id: stableId,
     seed,
     name: displayName,
     logoUrl,
-    record,
+    record: record ?? '',
   }
 }
+
 
 function toVm(
   id: string,

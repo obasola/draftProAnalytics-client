@@ -83,35 +83,35 @@ const superBowl = computed(() => store.superBowl)
 
 <template>
   <div class="bracket-root">
-  <!-- Loading overlay -->
+    <!-- Loading overlay -->
     <div v-if="isLoading" class="loading-overlay" aria-live="polite" aria-busy="true">
       <div class="loading-card">
         <ProgressSpinner />
         <div class="loading-text">Loading playoff bracket…</div>
       </div>
     </div>
+
     <div class="bracket-header">
       <h2 class="bracket-title">Playoff Bracket</h2>
 
-      <div class="bracket-header">
-        <h2 class="bracket-title">Playoff Bracket</h2>
-
-        <div class="bracket-tabs">
-          <!-- keep your Season dropdown here if you already had it in the "good" header -->
-          <div class="season-picker">
-            <span class="season-label">Season</span>
-            <Dropdown v-model="seasonYear" :options="seasonYearOptions" optionLabel="label" optionValue="value"
-              class="season-dd" />
-          </div>
-
-          <TabView v-model:activeIndex="activeIndex">
-            <TabPanel header="AFC" />
-            <TabPanel header="NFC" />
-            <TabPanel header="Full" />
-          </TabView>
+      <div class="bracket-tabs">
+        <div class="season-picker">
+          <span class="season-label">Season</span>
+          <Dropdown
+            v-model="seasonYear"
+            :options="seasonYearOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="season-dd"
+          />
         </div>
-      </div>
 
+        <TabView v-model:activeIndex="activeIndex">
+          <TabPanel header="AFC" />
+          <TabPanel header="NFC" />
+          <TabPanel header="Full" />
+        </TabView>
+      </div>
     </div>
 
     <!-- FULL -->
@@ -124,10 +124,8 @@ const superBowl = computed(() => store.superBowl)
           <BracketGameCard class="pos wc-1" :game="nfc.wcGames[0]" :align="nfcAlign" title="Wild Card" />
           <BracketGameCard class="pos wc-2" :game="nfc.wcGames[1]" :align="nfcAlign" />
           <BracketGameCard class="pos wc-3" :game="nfc.wcGames[2]" :align="nfcAlign" />
-
           <BracketGameCard class="pos div-1" :game="nfc.divGames[0]" :align="nfcAlign" title="Divisional" />
           <BracketGameCard class="pos div-2" :game="nfc.divGames[1]" :align="nfcAlign" />
-
           <BracketGameCard class="pos conf-1" :game="nfc.confGame" :align="nfcAlign" title="Conference" />
         </div>
       </section>
@@ -150,10 +148,8 @@ const superBowl = computed(() => store.superBowl)
           <BracketGameCard class="pos wc-1" :game="afc.wcGames[0]" :align="afcAlign" title="Wild Card" />
           <BracketGameCard class="pos wc-2" :game="afc.wcGames[1]" :align="afcAlign" />
           <BracketGameCard class="pos wc-3" :game="afc.wcGames[2]" :align="afcAlign" />
-
           <BracketGameCard class="pos div-1" :game="afc.divGames[0]" :align="afcAlign" title="Divisional" />
           <BracketGameCard class="pos div-2" :game="afc.divGames[1]" :align="afcAlign" />
-
           <BracketGameCard class="pos conf-1" :game="afc.confGame" :align="afcAlign" title="Conference" />
         </div>
       </section>
@@ -191,8 +187,10 @@ const superBowl = computed(() => store.superBowl)
 </template>
 
 
+
 <style scoped>
 .bracket-root {
+  position: relative; /* add this */
   min-height: 100vh;
   padding: 18px;
 }
@@ -438,8 +436,9 @@ const superBowl = computed(() => store.superBowl)
 .season-dd {
   min-width: 120px;
 }
+/* make overlay cover viewport reliably */
 .loading-overlay {
-  position: absolute;
+  position: fixed; /* change from absolute -> fixed */
   inset: 0;
   z-index: 50;
   display: grid;
