@@ -28,3 +28,5 @@ dist-ssr
 
 # env (never commit)
 .env.development
+
+src/assets/images/dpaLogo.jpeg

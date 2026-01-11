@@ -1,24 +1,29 @@
 <!-- src/components/ui/AppNavigation.vue -->
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRouter,
     isNavigationFailure,
   NavigationFailureType,
   type RouteLocationRaw
  } from "vue-router";
 import Menu from "primevue/menu";
+import Button from "primevue/button";
 import type { MenuItem } from "primevue/menuitem";
 import { useNavigation } from "@/composables/useNavigation";
 import { useAuthStore } from "@/modules/auth/application/authStore";
-import { nextTick } from 'vue'
 
 const router = useRouter();
 const { goToPage } = useNavigation();
 const auth = useAuthStore();
+const isCollapsed = ref(false);
 
 const handleLogout = async (): Promise<void> => {
   await auth.logout();
   await safePush("/login");
+};
+
+const toggleCollapse = (): void => {
+  isCollapsed.value = !isCollapsed.value;
 };
 
 const menuItems = computed<MenuItem[]>(() => {
@@ -182,7 +187,22 @@ function safePush(to: RouteLocationRaw): void {
 </script>
 
 <template>
-  <nav class="app-navigation" role="navigation" aria-label="Main Navigation">
+  <nav 
+    class="app-navigation" 
+    :class="{ 'collapsed': isCollapsed }"
+    role="navigation" 
+    aria-label="Main Navigation"
+  >
+    <div class="nav-header">
+      <Button
+        :icon="isCollapsed ? 'pi pi-angle-right' : 'pi pi-angle-left'"
+        class="collapse-toggle"
+        text
+        rounded
+        aria-label="Toggle navigation"
+        @click="toggleCollapse"
+      />
+    </div>
     <Menu :model="menuItems" class="nav-menu" />
   </nav>
 </template>
@@ -195,6 +215,34 @@ function safePush(to: RouteLocationRaw): void {
   border-right: 1px solid rgba(0, 0, 0, 0.35);
   padding: 0.75rem 0.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
+  position: relative;
+}
+
+.app-navigation.collapsed {
+  width: 60px;
+  padding: 0.75rem 0.25rem;
+}
+
+.nav-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.collapse-toggle {
+  color: var(--text-on-bg1) !important;
+  transition: transform 0.3s ease;
+}
+
+.collapse-toggle:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.collapsed .collapse-toggle {
+  transform: translateX(-2px);
 }
 
 /* PrimeVue Menu overrides */
@@ -212,8 +260,22 @@ function safePush(to: RouteLocationRaw): void {
   padding: 0.6rem 0.9rem;
   border-radius: 8px;
   color: var(--text-on-bg1);
-  font-weight: 700; /* darker/bolder per your theme */
+  font-weight: 700;
   transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+
+.collapsed :deep(.p-menuitem-link) {
+  justify-content: center;
+  padding: 0.6rem;
+}
+
+.collapsed :deep(.p-menuitem-text) {
+  display: none;
+}
+
+.collapsed :deep(.p-submenu-icon) {
+  display: none;
 }
 
 :deep(.p-menuitem-link:hover) {
@@ -223,31 +285,45 @@ function safePush(to: RouteLocationRaw): void {
 
 :deep(.p-menuitem-icon) {
   color: var(--text-on-bg1);
+  font-size: 1.1rem;
 }
+
 :deep(.p-menuitem-link:hover .p-menuitem-icon) {
   color: #ffffff;
 }
 
 /* Submenus */
 :deep(.p-submenu-list) {
-  background: var(--card-bg); /* bg1 inside */
+  background: var(--card-bg);
   padding-left: 0.4rem;
   border-left: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
   margin-left: 0.35rem;
 }
 
+.collapsed :deep(.p-submenu-list) {
+  display: none;
+}
+
+/* Hide separators when collapsed */
+.collapsed :deep(.p-menuitem-separator) {
+  display: none;
+}
+
 /* Scrollbar styling */
 :deep(::-webkit-scrollbar) {
   width: 10px;
 }
+
 :deep(::-webkit-scrollbar-track) {
   background: var(--content-bg);
 }
+
 :deep(::-webkit-scrollbar-thumb) {
   background: rgba(0, 0, 0, 0.35);
   border-radius: 5px;
 }
+
 :deep(::-webkit-scrollbar-thumb:hover) {
   background: rgba(0, 0, 0, 0.5);
 }
