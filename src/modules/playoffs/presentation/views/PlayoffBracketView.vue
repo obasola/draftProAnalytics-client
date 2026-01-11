@@ -92,25 +92,28 @@ const superBowl = computed(() => store.superBowl)
     </div>
 
     <div class="bracket-header">
-      <h2 class="bracket-title">Playoff Bracket</h2>
-
+     
       <div class="bracket-tabs">
         <div class="season-picker">
-          <span class="season-label">Season</span>
-          <Dropdown
-            v-model="seasonYear"
-            :options="seasonYearOptions"
-            optionLabel="label"
-            optionValue="value"
-            class="season-dd"
-          />
+          <div style="float:left">
+            <span class="season-label">Season</span>
+              <Dropdown
+                v-model="seasonYear"
+                :options="seasonYearOptions"
+                optionLabel="label"
+                optionValue="value"
+                class="season-dd"
+            />
+          </div>
+          <div class="float:right">
+            <TabView v-model:activeIndex="activeIndex">
+              <TabPanel header="AFC" />
+              <TabPanel header="NFC" />
+              <TabPanel header="Full" />
+            </TabView>
+          </div>
         </div>
-
-        <TabView v-model:activeIndex="activeIndex">
-          <TabPanel header="AFC" />
-          <TabPanel header="NFC" />
-          <TabPanel header="Full" />
-        </TabView>
+        
       </div>
     </div>
 
