@@ -27,6 +27,6 @@ dist-ssr
 *.sw?
 
 # env (never commit)
-.env.development
+.env.*
 
 src/assets/images/dpaLogo.jpeg

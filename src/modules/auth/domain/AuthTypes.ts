@@ -8,6 +8,7 @@ export interface LoginResponse {
   accessToken: string;
   personId?: number;
   userName?: string;
+  activeRid?: number;
 }
 
 export interface RegisterRequest {
@@ -47,6 +48,7 @@ export interface LogoutRequest {
 export interface JwtPayload {
   sub: number;
   userName: string;
+  activeRid?: number; // <-- optional now
   exp: number;
   iat: number;
 }
