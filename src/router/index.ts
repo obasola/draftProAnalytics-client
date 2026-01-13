@@ -4,7 +4,6 @@ import { useAuthStore } from '@/modules/auth/application/authStore'
 
 // guards
 import { requireAuth } from '@/modules/auth/authGuard'
-import { requireAdminOrDev } from '@/modules/auth/visitorGuard'
 
 // router shell layout
 import MainLayout from '@/layouts/MainLayout.vue'
@@ -35,6 +34,140 @@ import { draftOrderRoutes } from '@/modules/draftOrder/presentation/router/draft
 import { draftPickRoutes } from './draftPickRoutes'
 import { playoffsRoutes } from '../modules/playoffs/presentation/routes/playoffsRoute'
 import { teamNeedsRoutes } from '@/modules/teams/presentation/router/teamNeedsRoutes'
+import { requireAdminOrDev } from '@/modules/auth/visitorGuard'
+
+type ActionCode = 'VIEW' | 'EDIT' | 'CREATE' | 'DELETE' | 'RUN'
+type DomainCode =
+  | 'DASHBOARD'
+  | 'GAMES'
+  | 'PLAYERS'
+  | 'TEAMS'
+  | 'SCHEDULES'
+  | 'STANDINGS'
+  | 'PLAYOFFS'
+  | 'DRAFT_ORDER'
+  | 'DRAFT_TOOLS'
+  | 'TEAM_NEEDS'
+  | 'JOBS'
+  | 'SCRAPERS'
+  | 'SCOUTING'
+  | 'PLAYER_MAINT'
+  | 'ADMIN_USERS'
+  | 'RBAC'
+
+type RoutePermission = { domain: DomainCode; action: ActionCode }
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    public?: boolean
+    onlyWhenLoggedOut?: boolean
+    requiresAuth?: boolean
+    perm?: RoutePermission
+  }
+}
+
+type PermissionMap = Record<string, readonly string[]>
+
+function isPermissionMap(x: unknown): x is PermissionMap {
+  return typeof x === 'object' && x !== null
+}
+
+type AuthStoreLike = {
+  isAuthenticated: boolean
+  permissions?: unknown
+  activeRoleName?: unknown
+  roleName?: unknown
+  role?: unknown
+}
+
+function resolveRoleName(auth: AuthStoreLike): string | null {
+  const v = auth.activeRoleName ?? auth.roleName
+  if (typeof v === 'string' && v.trim().length > 0) return v.trim().toLowerCase()
+  return null
+}
+
+function resolveRoleId(auth: AuthStoreLike): number | null {
+  const v = auth.role
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string') {
+    const n = Number(v)
+    if (Number.isFinite(n)) return n
+  }
+  return null
+}
+
+function isPowerUser(auth: AuthStoreLike): boolean {
+  const rn = resolveRoleName(auth)
+  if (rn === 'dev' || rn === 'qa' || rn === 'admin') return true
+  const rid = resolveRoleId(auth)
+  return typeof rid === 'number' ? rid >= 2 : false
+}
+
+function can(auth: AuthStoreLike, perm: RoutePermission): boolean {
+  if (isPermissionMap(auth.permissions)) {
+    const actions = auth.permissions[perm.domain]
+    if (Array.isArray(actions)) return actions.includes(perm.action)
+    return false
+  }
+
+  // fallback until auth.permissions is wired:
+  if (!auth.isAuthenticated) return false
+  if (isPowerUser(auth)) return true
+
+  // visitor allow-list (VIEW only)
+  const visitorDomains: readonly DomainCode[] = [
+    'DASHBOARD',
+    'GAMES',
+    'PLAYERS',
+    'TEAMS',
+    'SCHEDULES',
+    'STANDINGS',
+    'PLAYOFFS',
+    'DRAFT_ORDER',
+  ]
+  return perm.action === 'VIEW' && visitorDomains.includes(perm.domain)
+}
+
+/**
+ * Spread route bundles (teamNeedsRoutes, playoffsRoutes, draftPickRoutes) may not have meta.perm.
+ * This ensures visitors can't deep-link to hidden/maintenance pages.
+ */
+function inferPermFromPath(path: string): RoutePermission | null {
+  if (path === '/dashboard') return { domain: 'DASHBOARD', action: 'VIEW' }
+
+  if (path.startsWith('/games')) return { domain: 'GAMES', action: 'VIEW' }
+  if (path.startsWith('/players')) return { domain: 'PLAYERS', action: 'VIEW' }
+  if (path.startsWith('/teams')) return { domain: 'TEAMS', action: 'VIEW' }
+
+  if (path.startsWith('/schedules') || path.startsWith('/show-upcoming-games')) {
+    return { domain: 'SCHEDULES', action: 'VIEW' }
+  }
+
+  if (path.startsWith('/standings')) return { domain: 'STANDINGS', action: 'VIEW' }
+  if (path.startsWith('/playoffs')) return { domain: 'PLAYOFFS', action: 'VIEW' }
+
+  if (path.startsWith('/draft-order')) return { domain: 'DRAFT_ORDER', action: 'VIEW' }
+
+  // Everything else draft-related (draft picks, simulator, board)
+  if (path.startsWith('/draft')) return { domain: 'DRAFT_TOOLS', action: 'VIEW' }
+
+  if (path.startsWith('/team-needs')) return { domain: 'TEAM_NEEDS', action: 'VIEW' }
+  if (path.startsWith('/jobs')) return { domain: 'JOBS', action: 'VIEW' }
+
+  if (path.startsWith('/admin/draft-pick-scraper')) return { domain: 'SCRAPERS', action: 'VIEW' }
+  if (path.startsWith('/admin/users')) return { domain: 'ADMIN_USERS', action: 'VIEW' }
+
+  if (path.startsWith('/prospects') || path.startsWith('/combine-scores')) {
+    return { domain: 'SCOUTING', action: 'VIEW' }
+  }
+
+  if (path.startsWith('/player-awards') || path.startsWith('/player-teams')) {
+    return { domain: 'PLAYER_MAINT', action: 'VIEW' }
+  }
+
+  if (path.startsWith('/admin')) return { domain: 'ADMIN_USERS', action: 'VIEW' } // conservative
+  return null
+}
 
 const routes: RouteRecordRaw[] = [
   // ─────────────────────────
@@ -72,100 +205,161 @@ const routes: RouteRecordRaw[] = [
         path: 'dashboard',
         name: 'Dashboard',
         component: DashboardView,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, perm: { domain: 'DASHBOARD', action: 'VIEW' } },
       },
 
-      // Mock Draft Simulator (single source of truth paths)
+      // Draft Simulator
       {
         path: 'draft-simulator',
         name: 'DraftLobby',
         component: () =>
           import('@/modules/draftSimulator/presentation/views/DraftLobbyViewPrev.vue'),
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, perm: { domain: 'DRAFT_TOOLS', action: 'VIEW' } },
       },
       {
         path: 'draft-simulator/:id',
         name: 'DraftRoom',
         component: () => import('@/modules/draftSimulator/presentation/views/DraftRoomView.vue'),
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, perm: { domain: 'DRAFT_TOOLS', action: 'VIEW' } },
       },
 
-      // keep Home if still used
       {
         path: 'home',
         name: 'Home',
         component: Home,
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, perm: { domain: 'DASHBOARD', action: 'VIEW' } },
       },
 
+      // Visitor-allowed core modules
+
+      // Players
       {
-        path: 'players/:id?',
-        name: 'PlayerDetail',
+        path: 'players',
+        name: 'Players',
         component: PlayerDetail,
-        beforeEnter: requireAdminOrDev,
+        beforeEnter: requireAuth, // visitors can view list
         meta: { requiresAuth: true },
       },
       {
-        path: 'teams/:id?',
-        name: 'TeamDetail',
-        component: TeamDetail,
-        beforeEnter: requireAdminOrDev,
+        path: 'players/:id',
+        name: 'PlayerEdit',
+        component: PlayerDetail,
+        beforeEnter: requireAdminOrDev, // block visitors from edit route
         meta: { requiresAuth: true },
       },
 
-      // ✅ module routes
-      ...teamNeedsRoutes,
+      // Teams
+      {
+        path: 'teams',
+        name: 'Teams',
+        component: TeamDetail,
+        beforeEnter: requireAuth, // visitors can view list
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'teams/:id',
+        name: 'TeamEdit',
+        component: TeamDetail,
+        beforeEnter: requireAdminOrDev, // block visitors from edit route
+        meta: { requiresAuth: true },
+      },
 
       {
         path: 'standings',
         name: 'StandingsView',
         component: () => import('@/views/StandingsView.vue'),
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true, title: 'Standings' },
+        meta: {
+          requiresAuth: true,
+          perm: { domain: 'STANDINGS', action: 'VIEW' },
+          title: 'Standings',
+        },
       },
+      {
+        path: 'schedules',
+        name: 'schedules',
+        component: ScheduleDetail,
+        beforeEnter: requireAuth,
+        meta: {
+          requiresAuth: true,
+          perm: { domain: 'SCHEDULES', action: 'VIEW' },
+          title: 'NFL Schedule',
+        },
+      },
+      {
+        path: 'show-upcoming-games',
+        name: 'show-upcoming-games',
+        component: () => import('@/views/ShowUpcomingGamesView.vue'),
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, perm: { domain: 'SCHEDULES', action: 'VIEW' } },
+      },
+      {
+        path: 'games/:id?',
+        name: 'GameDetail',
+        component: GameDetail,
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, perm: { domain: 'GAMES', action: 'VIEW' }, title: 'Games' },
+      },
+
+      // Dev/QA/Admin modules (power users)
       {
         path: 'player-awards/:id?',
         name: 'PlayerAwardDetail',
         component: PlayerAwardDetail,
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, perm: { domain: 'PLAYER_MAINT', action: 'VIEW' } },
       },
       {
         path: 'player-teams/:id?',
         name: 'PlayerTeamDetail',
         component: PlayerTeamDetail,
-        beforeEnter: requireAdminOrDev,
-        meta: { requiresAuth: true },
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, perm: { domain: 'PLAYER_MAINT', action: 'VIEW' } },
       },
       {
         path: 'combine-scores/:id?',
         name: 'CombineScoreDetail',
         component: CombineScoreDetail,
-        beforeEnter: requireAdminOrDev,
-        meta: { requiresAuth: true },
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, perm: { domain: 'SCOUTING', action: 'VIEW' } },
+      },
+      {
+        path: 'prospects/:id?',
+        name: 'ProspectDetail',
+        component: ProspectDetail,
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, perm: { domain: 'SCOUTING', action: 'VIEW' } },
       },
 
-      // ✅ rename old DraftBoard route so it doesn't collide with /draft-simulator
       {
         path: 'draft-board',
         name: 'DraftBoard',
         component: DraftBoard,
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, perm: { domain: 'DRAFT_TOOLS', action: 'VIEW' } },
       },
 
+      // Bundled routes (guard will infer if meta.perm absent)
+      ...teamNeedsRoutes,
       ...draftPickRoutes,
       ...draftOrderRoutes,
+      ...playoffsRoutes,
+
+      // Draft order explicit routes (kept from your original)
       {
         path: 'draft-order',
         name: 'DraftOrderSnapshots',
         component: () =>
           import('@/modules/draftOrder/presentation/views/DraftOrderSnapshotsView.vue'),
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true, title: 'Draft Order' },
+        meta: {
+          requiresAuth: true,
+          perm: { domain: 'DRAFT_ORDER', action: 'VIEW' },
+          title: 'Draft Order',
+        },
       },
       {
         path: 'draft-order/snapshots/:id',
@@ -173,23 +367,33 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import('@/modules/draftOrder/presentation/views/DraftOrderSnapshotDetailView.vue'),
         beforeEnter: requireAuth,
-        meta: { requiresAuth: true, title: 'Draft Order Snapshot' },
+        meta: {
+          requiresAuth: true,
+          perm: { domain: 'DRAFT_ORDER', action: 'VIEW' },
+          title: 'Draft Order Snapshot',
+        },
       },
+
+      // Maintenance / admin
       {
         path: 'admin/import-draft',
         name: 'DraftImport',
         component: () => import('@/views/DraftImportView.vue'),
-        beforeEnter: requireAdminOrDev,
-        meta: { title: 'Import Draft Picks', requiresAuth: true, minRole: 2 },
+        beforeEnter: requireAuth,
+        meta: {
+          requiresAuth: true,
+          perm: { domain: 'DRAFT_TOOLS', action: 'VIEW' },
+          title: 'Import Draft Picks',
+        },
       },
       {
         path: 'admin/draft-pick-scraper',
         name: 'DraftPickScraper',
         component: () => import('@/views/admin/DraftPickScraperView.vue'),
-        beforeEnter: requireAdminOrDev,
+        beforeEnter: requireAuth,
         meta: {
           requiresAuth: true,
-          minRole: 2,
+          perm: { domain: 'SCRAPERS', action: 'VIEW' },
           title: 'Draft Pick Scraper',
           icon: 'pi-cloud-download',
         },
@@ -200,52 +404,22 @@ const routes: RouteRecordRaw[] = [
         name: 'Jobs',
         component: () => import('@/views/jobs/JobsView.vue'),
         beforeEnter: requireAuth,
-        meta: { title: 'Jobs', requiresAuth: true },
+        meta: { requiresAuth: true, perm: { domain: 'JOBS', action: 'VIEW' }, title: 'Jobs' },
       },
       {
         path: 'jobs/:id',
         name: 'JobDetail',
         component: () => import('@/views/jobs/JobDetailView.vue'),
         beforeEnter: requireAuth,
-        meta: { title: 'Job Detail', requiresAuth: true },
-      },
-
-      {
-        path: 'prospects/:id?',
-        name: 'ProspectDetail',
-        component: ProspectDetail,
-        beforeEnter: requireAdminOrDev,
-        meta: { requiresAuth: true },
-      },
-      {
-        path: 'schedules',
-        name: 'schedules',
-        component: ScheduleDetail,
-        beforeEnter: requireAuth,
-        meta: { requiresAuth: true, title: 'NFL Schedule' },
-      },
-      {
-        path: 'show-upcoming-games',
-        name: 'show-upcoming-games',
-        component: () => import('@/views/ShowUpcomingGamesView.vue'),
-        beforeEnter: requireAuth,
-        meta: { requiresAuth: true },
-      },
-      ...playoffsRoutes,
-      {
-        path: 'games/:id?',
-        name: 'GameDetail',
-        component: GameDetail,
-        beforeEnter: requireAuth,
-        meta: { requiresAuth: true, title: 'Games' },
+        meta: { requiresAuth: true, perm: { domain: 'JOBS', action: 'VIEW' }, title: 'Job Detail' },
       },
 
       {
         path: 'admin/users',
         name: 'UserAdmin',
         component: UserAdminView,
-        beforeEnter: requireAdminOrDev,
-        meta: { requiresAuth: true, minRole: 2 },
+        beforeEnter: requireAuth,
+        meta: { requiresAuth: true, perm: { domain: 'ADMIN_USERS', action: 'VIEW' } },
       },
     ],
   },
@@ -260,10 +434,11 @@ const router = createRouter({
 })
 
 // ─────────────────────────
-// Global Nav Guard
+// Global Nav Guard (RBAC)
 // ─────────────────────────
 router.beforeEach((to, _from, next) => {
-  const auth = useAuthStore()
+  const authRaw = useAuthStore()
+  const auth = authRaw as unknown as AuthStoreLike
 
   const requiresAuth = Boolean(to.meta.requiresAuth)
   const onlyWhenLoggedOut = Boolean(to.meta.onlyWhenLoggedOut)
@@ -280,10 +455,10 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  if (requiresAuth && typeof to.meta.minRole === 'number') {
-    const minRole = to.meta.minRole as number
-    const userRole = auth.role ?? 1
-    if (userRole < minRole) {
+  if (requiresAuth) {
+    const perm = (to.meta.perm ?? inferPermFromPath(to.path)) as RoutePermission | null
+    if (perm && !can(auth, perm)) {
+      // keep it simple for now (you can add /unauthorized view later)
       next('/dashboard')
       return
     }

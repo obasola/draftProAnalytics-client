@@ -1,169 +1,79 @@
 <!-- src/components/ui/AppNavigation.vue -->
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useRouter,
-    isNavigationFailure,
+import {
+  useRouter,
+  isNavigationFailure,
   NavigationFailureType,
-  type RouteLocationRaw
- } from "vue-router";
+  type RouteLocationRaw,
+} from "vue-router";
 import Menu from "primevue/menu";
 import Button from "primevue/button";
 import type { MenuItem } from "primevue/menuitem";
 import { useNavigation } from "@/composables/useNavigation";
 import { useAuthStore } from "@/modules/auth/application/authStore";
 
+type ActionCode = "VIEW" | "EDIT" | "CREATE" | "DELETE" | "RUN";
+type DomainCode =
+  | "DASHBOARD"
+  | "GAMES"
+  | "PLAYERS"
+  | "TEAMS"
+  | "SCHEDULES"
+  | "STANDINGS"
+  | "PLAYOFFS"
+  | "DRAFT_ORDER"
+  | "DRAFT_TOOLS"
+  | "TEAM_NEEDS"
+  | "JOBS"
+  | "SCRAPERS"
+  | "SCOUTING"
+  | "PLAYER_MAINT"
+  | "ADMIN_USERS"
+  | "RBAC";
+
+type RoutePermission = { domain: DomainCode; action: ActionCode };
+
+type MenuItemWithPerm = MenuItem & {
+  requiredPerm?: RoutePermission;
+  adminOnly?: boolean;
+};
+
+type PermissionMap = Record<string, readonly string[]>;
+
 const router = useRouter();
 const { goToPage } = useNavigation();
-const auth = useAuthStore();
+const authRaw = useAuthStore();
 const isCollapsed = ref(false);
+
+/**
+ * Keep the nav tolerant while the auth store is evolving.
+ * IMPORTANT: include activeRid because that is your real role source now.
+ */
+type AuthStoreLike = {
+  isAuthenticated: boolean;
+  logout: () => Promise<void>;
+
+  // NEW (RBAC / role switching)
+  activeRid?: unknown; // numeric rid
+  permissions?: unknown; // { [domainCode]: ["VIEW","EDIT",...] }
+  activeRoleName?: unknown; // optional string
+
+  // legacy / transitional
+  roleName?: unknown;
+  role?: unknown; // numeric rid
+};
+
+const auth = authRaw as unknown as AuthStoreLike;
 
 const handleLogout = async (): Promise<void> => {
   await auth.logout();
-  await safePush("/login");
+  safePush("/login");
 };
 
 const toggleCollapse = (): void => {
   isCollapsed.value = !isCollapsed.value;
 };
-
-const menuItems = computed<MenuItem[]>(() => {
-  const items: MenuItem[] = [
-    { label: "Dashboard", icon: "pi pi-chart-line", command: () => safePush("/") },
-    { label: "Games", icon: "pi pi-calendar", command: () => safePush("/games") },
-    { label: "Players", icon: "pi pi-users", command: () => safePush("/players") },
-    { label: "Player Awards", icon: "pi pi-trophy", command: () => safePush("/player-awards") },
-    { label: "Player Teams", icon: "pi pi-users", command: () => safePush("/player-teams") },
-    { label: "Prospects", icon: "pi pi-star", command: () => safePush("/prospects") },
-    
-    { label: "Schedules", icon: "pi pi-calendar", command: () => safePush("/schedules") },
-    {
-      label: "Show Upcoming Games",
-      icon: "pi pi-clock",
-      command: () => safePush("/show-upcoming-games"),
-    },
-    
-    { 
-      label: "Teams",
-      icon: "pi pi-flag",
-      command: (event) => {
-        // Move focus off the link element directly
-        const target = (event?.originalEvent?.currentTarget ?? event?.originalEvent?.target) as HTMLElement | null;
-        if (target instanceof HTMLElement) target.blur();
-        focusSink();
-        safePush("/teams");
-      }
-    },
-    { label: "Team Needs", icon: "pi pi-exclamation-triangle", command: () => safePush("/team-needs") },
-    { label: "Team Standings", icon: "pi pi-chart-line", command: () => safePush("/standings") },
-    // inside menuItems computed -> items array (suggest placing near Team Standings)
-    {
-      label: "Playoff Bracket",
-      icon: "pi pi-sitemap",
-      command: () => safePush("/playoffs/bracket"),
-    },
-    {
-      label: "Post Season Results",
-      icon: "pi pi-crown",
-      command: () => safePush("/post-season-results"),
-    },
-    { label: "Draft Order", icon: "pi pi-sort-amount-up-alt", command: () => safePush("/draft-order") },
-    
-    { label: "Draft Picks", icon: "pi pi-list", command: () => safePush("/draftPicks") },
-    { label: "Combine Scores", icon: "pi pi-chart-bar", command: () => safePush("/combine-scores") },
-    
-    {
-      label: "Draft Menu",
-      icon: "pi pi-folder",
-      items: [
-        {
-          label: "Draft Simulator",
-          icon: "pi pi-stopwatch",
-          command: () => safePush("/draft-simulator"),
-        },
-        {
-          label: "Draft Tracker",
-          icon: "pi pi-stopwatch",
-          command: () => safePush("/draft-tracker"),
-        },
-        {
-          label: "Draft Pick Scraper",
-          icon: "pi pi-cloud-download",
-          command: () => safePush("/admin/draft-pick-scraper"),
-        },
-      ],
-    },
-    {
-      label: "Batch Jobs Menu",
-      icon: "pi pi-folder",
-      items: [
-        {
-          label: "Jobs",
-          icon: "pi pi-stopwatch",
-          command: () => goToPage("Jobs"),
-        },
-      ],
-    },
-  ];
-
-  // ─────────────────────────────
-  // Optional Admin section by role
-  // (1 = Visitor, 2 = Admin, 3 = Developer)
-  // ─────────────────────────────
-  if (auth.isAuthenticated && (auth.role ?? 1) >= 2) {
-    items.push({
-      label: "Admin",
-      icon: "pi pi-lock",
-      items: [
-        {
-          label: "User Administration",
-          icon: "pi pi-users",
-          command: () => safePush("/admin/users"),
-        },
-      ],
-    });
-  }
-
-  // ─────────────────────────────
-  // Auth items at bottom
-  // ─────────────────────────────
-  items.push({ separator: true } as MenuItem);
-
-  if (!auth.isAuthenticated) {
-    items.push(
-      {
-        label: "Login",
-        icon: "pi pi-sign-in",
-        command: () => safePush("/login"),
-      },
-      {
-        label: "Register",
-        icon: "pi pi-user-plus",
-        command: () => safePush("/register"),
-      },
-    );
-  } else {
-    items.push({
-      label: "Logout",
-      icon: "pi pi-sign-out",
-      command: () => {
-        void handleLogout();
-      },
-    });
-  }
-
-  return items;
-});
-
-
-
-function blurActiveElement(): void {
-  const el = document.activeElement
-  if (el instanceof HTMLElement) el.blur()
-}
-
-function raf(): Promise<void> {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()))
-}
 
 function focusSink(): void {
   const el = document.getElementById("focus-sink");
@@ -171,9 +81,7 @@ function focusSink(): void {
 }
 
 function safePush(to: RouteLocationRaw): void {
-  // move focus off the menu link immediately
   focusSink();
-
   window.setTimeout(() => {
     void router.push(to).catch((err: unknown) => {
       if (isNavigationFailure(err, NavigationFailureType.duplicated)) return;
@@ -182,15 +90,306 @@ function safePush(to: RouteLocationRaw): void {
   }, 0);
 }
 
+/**
+ * PermissionMap is ONLY considered "ready" if it contains at least one domain
+ * with an array of strings. This prevents an empty {} from hiding everything.
+ */
+function isPermissionMapReady(x: unknown): x is PermissionMap {
+  if (typeof x !== "object" || x === null) return false;
 
+  const obj = x as Record<string, unknown>;
+  const values = Object.values(obj);
+  if (values.length === 0) return false;
 
+  return values.some((v) => Array.isArray(v) && v.every((a) => typeof a === "string"));
+}
+
+function resolveRoleName(): string | null {
+  const v = auth.activeRoleName ?? auth.roleName;
+  if (typeof v === "string" && v.trim().length > 0) return v.trim().toLowerCase();
+  return null;
+}
+
+function resolveRoleId(): number | null {
+  // Prefer activeRid (new model), fallback to role (legacy)
+  const v = auth.activeRid ?? auth.role;
+
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+
+  if (typeof v === "string") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+
+  return null;
+}
+
+const isAdmin = computed((): boolean => {
+  const rn = resolveRoleName();
+  if (rn === "admin") return true;
+
+  const rid = resolveRoleId();
+  return rid === 4; // public=1 dev=2 qa=3 admin=4
+});
+
+const isPowerUser = computed((): boolean => {
+  const rn = resolveRoleName();
+  if (rn === "dev" || rn === "qa" || rn === "admin") return true;
+
+  const rid = resolveRoleId();
+  return rid === 2 || rid === 3 || rid === 4;
+});
+
+/**
+ * Permission check:
+ * - Primary: auth.permissions[domain] contains action (when map is READY)
+ * - Fallback: Visitor limited menu, Dev/QA/Admin => everything
+ */
+function can(domain: DomainCode, action: ActionCode): boolean {
+  if (!auth.isAuthenticated) return false;
+
+  const permsUnknown = auth.permissions;
+
+  // Only trust permission map when it looks populated/valid
+  if (isPermissionMapReady(permsUnknown)) {
+    const actionsRaw = permsUnknown[domain];
+    if (Array.isArray(actionsRaw)) {
+      return actionsRaw.includes(action);
+    }
+    return false;
+  }
+
+  // fallback behavior until auth.permissions is wired:
+  if (isPowerUser.value) return true;
+
+  // visitor fallback allow-list
+  const visitorDomains: readonly DomainCode[] = [
+    "DASHBOARD",
+    "GAMES",
+    "PLAYERS",
+    "TEAMS",
+    "SCHEDULES",
+    "STANDINGS",
+    "PLAYOFFS",
+    "DRAFT_ORDER",
+  ];
+
+  return action === "VIEW" && visitorDomains.includes(domain);
+}
+
+function filterMenu(items: readonly MenuItemWithPerm[]): MenuItem[] {
+  const out: MenuItem[] = [];
+
+  for (const item of items) {
+    // keep separators
+    if ((item as MenuItem).separator) {
+      out.push(item);
+      continue;
+    }
+
+    if (item.adminOnly && !isAdmin.value) continue;
+    if (item.requiredPerm && !can(item.requiredPerm.domain, item.requiredPerm.action)) continue;
+
+    // recurse into submenu items
+    if (item.items && item.items.length > 0) {
+      const children = filterMenu(item.items as MenuItemWithPerm[]);
+      if (children.length === 0) continue;
+      out.push({ ...item, items: children });
+      continue;
+    }
+
+    out.push(item);
+  }
+
+  return out;
+}
+
+const menuItems = computed<MenuItem[]>(() => {
+  const visitorSpec: MenuItemWithPerm[] = [
+    {
+      label: "Dashboard",
+      icon: "pi pi-chart-line",
+      command: () => safePush("/dashboard"),
+      requiredPerm: { domain: "DASHBOARD", action: "VIEW" },
+    },
+    {
+      label: "Games",
+      icon: "pi pi-calendar",
+      command: () => safePush("/games"),
+      requiredPerm: { domain: "GAMES", action: "VIEW" },
+    },
+    {
+      label: "Players",
+      icon: "pi pi-users",
+      command: () => safePush("/players"),
+      requiredPerm: { domain: "PLAYERS", action: "VIEW" },
+    },
+    {
+      label: "Teams",
+      icon: "pi pi-flag",
+      command: () => safePush("/teams"),
+      requiredPerm: { domain: "TEAMS", action: "VIEW" },
+    },
+    {
+      label: "Schedules",
+      icon: "pi pi-calendar",
+      command: () => safePush("/schedules"),
+      requiredPerm: { domain: "SCHEDULES", action: "VIEW" },
+    },
+    {
+      label: "Show Upcoming Games",
+      icon: "pi pi-clock",
+      command: () => safePush("/show-upcoming-games"),
+      requiredPerm: { domain: "SCHEDULES", action: "VIEW" },
+    },
+    {
+      label: "Team Standings",
+      icon: "pi pi-chart-line",
+      command: () => safePush("/standings"),
+      requiredPerm: { domain: "STANDINGS", action: "VIEW" },
+    },
+    {
+      label: "Playoff Bracket",
+      icon: "pi pi-sitemap",
+      command: () => safePush("/playoffs/bracket"),
+      requiredPerm: { domain: "PLAYOFFS", action: "VIEW" },
+    },
+    {
+      label: "Draft Order",
+      icon: "pi pi-sort-amount-up-alt",
+      command: () => safePush("/draft-order"),
+      requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
+    },
+  ];
+
+  const powerUserSpec: MenuItemWithPerm[] = [
+    ...visitorSpec,
+
+    {
+      label: "Player Awards",
+      icon: "pi pi-trophy",
+      command: () => safePush("/player-awards"),
+      requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" },
+    },
+    {
+      label: "Player Teams",
+      icon: "pi pi-users",
+      command: () => safePush("/player-teams"),
+      requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" },
+    },
+    {
+      label: "Team Needs",
+      icon: "pi pi-exclamation-triangle",
+      command: () => safePush("/team-needs"),
+      requiredPerm: { domain: "TEAM_NEEDS", action: "VIEW" },
+    },
+    {
+      label: "Post Season Results",
+      icon: "pi pi-crown",
+      command: () => safePush("/post-season-results"),
+      requiredPerm: { domain: "PLAYOFFS", action: "VIEW" },
+    },
+    {
+      label: "Prospects",
+      icon: "pi pi-star",
+      command: () => safePush("/prospects"),
+      requiredPerm: { domain: "SCOUTING", action: "VIEW" },
+    },
+    {
+      label: "Combine Scores",
+      icon: "pi pi-chart-bar",
+      command: () => safePush("/combine-scores"),
+      requiredPerm: { domain: "SCOUTING", action: "VIEW" },
+    },
+    {
+      label: "Draft Menu",
+      icon: "pi pi-folder",
+      requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+      items: [
+        {
+          label: "Draft Simulator",
+          icon: "pi pi-stopwatch",
+          command: () => safePush("/draft-simulator"),
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        },
+        {
+          label: "Draft Board",
+          icon: "pi pi-list",
+          command: () => safePush("/draft-board"),
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        },
+        {
+          label: "Draft Picks",
+          icon: "pi pi-list",
+          command: () => safePush("/draftPicks"),
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        },
+        {
+          label: "Draft Pick Scraper",
+          icon: "pi pi-cloud-download",
+          command: () => safePush("/admin/draft-pick-scraper"),
+          requiredPerm: { domain: "SCRAPERS", action: "VIEW" },
+        },
+      ],
+    },
+    {
+      label: "Batch Jobs Menu",
+      icon: "pi pi-folder",
+      requiredPerm: { domain: "JOBS", action: "VIEW" },
+      items: [
+        {
+          label: "Jobs",
+          icon: "pi pi-stopwatch",
+          command: () => goToPage("Jobs"),
+          requiredPerm: { domain: "JOBS", action: "VIEW" },
+        },
+      ],
+    },
+
+    // Admin is treated as "power-user visible" until RBAC UI exists
+    {
+      label: "Admin",
+      icon: "pi pi-lock",
+      requiredPerm: { domain: "ADMIN_USERS", action: "VIEW" },
+      items: [
+        {
+          label: "User Administration",
+          icon: "pi pi-users",
+          command: () => safePush("/admin/users"),
+          requiredPerm: { domain: "ADMIN_USERS", action: "VIEW" },
+        },
+      ],
+    },
+  ];
+
+  const base = auth.isAuthenticated
+    ? filterMenu(isPowerUser.value ? powerUserSpec : visitorSpec)
+    : [];
+
+  const authItems: MenuItemWithPerm[] = [{ separator: true } as MenuItemWithPerm];
+
+  if (!auth.isAuthenticated) {
+    authItems.push(
+      { label: "Login", icon: "pi pi-sign-in", command: () => safePush("/login") },
+      { label: "Register", icon: "pi pi-user-plus", command: () => safePush("/register") }
+    );
+  } else {
+    authItems.push({
+      label: "Logout",
+      icon: "pi pi-sign-out",
+      command: () => void handleLogout(),
+    });
+  }
+
+  return [...base, ...filterMenu(authItems)];
+});
 </script>
 
 <template>
-  <nav 
-    class="app-navigation" 
-    :class="{ 'collapsed': isCollapsed }"
-    role="navigation" 
+  <nav
+    class="app-navigation"
+    :class="{ collapsed: isCollapsed }"
+    role="navigation"
     aria-label="Main Navigation"
   >
     <div class="nav-header">
@@ -208,10 +407,11 @@ function safePush(to: RouteLocationRaw): void {
 </template>
 
 <style scoped>
+/* unchanged from your version */
 .app-navigation {
   width: 260px;
-  background: var(--nav-bg);          /* bg1 #9E4B03 */
-  color: var(--text-on-bg1);          /* white */
+  background: var(--nav-bg);
+  color: var(--text-on-bg1);
   border-right: 1px solid rgba(0, 0, 0, 0.35);
   padding: 0.75rem 0.5rem;
   overflow-y: auto;
@@ -245,7 +445,6 @@ function safePush(to: RouteLocationRaw): void {
   transform: translateX(-2px);
 }
 
-/* PrimeVue Menu overrides */
 :deep(.nav-menu.p-menu) {
   background: transparent;
   border: none;
@@ -292,7 +491,6 @@ function safePush(to: RouteLocationRaw): void {
   color: #ffffff;
 }
 
-/* Submenus */
 :deep(.p-submenu-list) {
   background: var(--card-bg);
   padding-left: 0.4rem;
@@ -305,12 +503,10 @@ function safePush(to: RouteLocationRaw): void {
   display: none;
 }
 
-/* Hide separators when collapsed */
 .collapsed :deep(.p-menuitem-separator) {
   display: none;
 }
 
-/* Scrollbar styling */
 :deep(::-webkit-scrollbar) {
   width: 10px;
 }

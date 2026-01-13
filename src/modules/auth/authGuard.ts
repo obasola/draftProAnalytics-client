@@ -1,17 +1,18 @@
-//src/router/authGuard.ts
-import { NavigationGuardNext, RouteLocationNormalized } from "vue-router";
-import { useAuthStore } from "./application/authStore";
+// src/router/authGuard.ts
+import type { NavigationGuardNext, RouteLocationNormalized } from "vue-router";
+import { useAuthStore } from "@/modules/auth/application/authStore";
 
 export function requireAuth(
-  to: RouteLocationNormalized,
-  from: RouteLocationNormalized,
+  _to: RouteLocationNormalized,
+  _from: RouteLocationNormalized,
   next: NavigationGuardNext
-) {
+): void {
   const auth = useAuthStore();
 
   if (!auth.isAuthenticated) {
     next("/login");
-  } else {
-    next();
+    return;
   }
+
+  next();
 }

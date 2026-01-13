@@ -67,7 +67,7 @@ const router = useRouter();
 const auth = useAuthStore();
 
 // Treat missing role as Visitor (1)
-const effectiveRole = computed<number>(() => auth.role ?? 1);
+const effectiveRole = computed<number>(() => auth.activeRid ?? auth.role ?? 1);
 const isVisitor = computed<boolean>(() => effectiveRole.value === 1);
 
 const baseLinks = computed<DashboardLink[]>(() => [
@@ -83,28 +83,28 @@ const baseLinks = computed<DashboardLink[]>(() => [
     description: "Track draft picks and analyze capital by team.",
     icon: "pi-list",
     to: "/draftPicks",
-    allowedForVisitor: true,
+    allowedForVisitor: false,
   },
   {
     label: "Upcoming Games",
     description: "See upcoming matchups with logos, times, and TV info.",
     icon: "pi-clock",
     to: "/show-upcoming-games",
-    allowedForVisitor: false,
+    allowedForVisitor: true,
   },
   {
     label: "Team Standings",
     description: "View division standings, win percentage, and tiebreakers.",
     icon: "pi-chart-line",
     to: "/standings",
-    allowedForVisitor: false,
+    allowedForVisitor: true,
   },
   {
     label: "Teams",
     description: "Deep dive into rosters, needs, and draft history.",
     icon: "pi-flag",
     to: "/teams",
-    allowedForVisitor: false,
+    allowedForVisitor: true,
   },
   {
     label: "Jobs Console",
