@@ -5,6 +5,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Node",
+    "experimentalDecorators": true,
     "allowJs": false,
     "strict": true,
     "jsx": "preserve",
@@ -14,11 +15,13 @@
     "skipLibCheck": true,
     "useDefineForClassFields": true,
     "baseUrl": "src",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "paths": {
       "@/*": ["*"]
     },
     "noEmit": true  // ADD THIS LINE - prevents TypeScript from emitting .js files
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "vite-env.d.ts"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["dist", "node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }

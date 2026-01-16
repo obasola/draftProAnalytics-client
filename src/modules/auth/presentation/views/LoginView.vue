@@ -124,10 +124,12 @@
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../../application/authStore';
+//import { useAccessStore } from "@/modules/accessControl/application/accessStore"; // whatever you named it
 
 const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
+//const access = useAccessStore();
 
 const userName = ref<string>('');
 const password = ref<string>('');
@@ -147,12 +149,26 @@ async function onSubmit(): Promise<void> {
   try {
     await auth.login(userName.value, password.value);
     const redirect = (route.query.redirect as string | undefined) ?? '/dashboard';
-    await router.push(redirect);
+    console.log("LOGIN OK. pushing to:", redirect);
+await router.push(redirect);
+console.log("PUSH DONE. now at:", router.currentRoute.value.fullPath);
+
   } finally {
     loading.value = false;
   }
 }
+/*
+const onSubmit = async (): Promise<void> => {
+  const ok = await auth.login({ userName, password }); // your DTO
+  if (!ok) return;
 
+  // critical: hydrate permissions/menu/guards
+  await access.loadMe(); // should call GET /api/access/me and set can()
+
+  // don’t use push here; replace prevents going “Back” to login
+  await router.replace({ name: "Dashboard" }); // or "/dashboard"
+};
+*/
 function onGoogleSignIn(): void {
   auth.loginWithGoogle();
 }

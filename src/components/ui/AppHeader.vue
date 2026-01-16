@@ -4,6 +4,8 @@ import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/modules/auth/application/authStore";
 
+import RoleSwitcher from "@/modules/accessControl/presentation/components/RoleSwitcher.vue";
+
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -27,7 +29,6 @@ const handleLogoutClick = async (): Promise<void> => {
   await router.push("/login");
 };
 </script>
-
 
 <template>
   <header class="app-header" role="banner">
@@ -67,7 +68,7 @@ const handleLogoutClick = async (): Promise<void> => {
         </h1>
       </div>
 
-      <!-- RIGHT SIDE: Auth actions -->
+      <!-- RIGHT SIDE: Auth actions + Role Switcher -->
       <div class="header-actions">
         <template v-if="isAuthenticated">
           <span class="user-label">
@@ -80,6 +81,11 @@ const handleLogoutClick = async (): Promise<void> => {
             icon="pi pi-sign-out"
             @click="handleLogoutClick"
           />
+
+          <!-- Role Switcher (moved from AppNavigation) -->
+          <div class="role-switcher-wrap" aria-label="Role Switcher">
+            <RoleSwitcher />
+          </div>
         </template>
 
         <template v-else>
@@ -130,7 +136,7 @@ const handleLogoutClick = async (): Promise<void> => {
   align-items: center;
   justify-content: center;
   height: 60px;
-  width: 60px; /* keeps consistent sizing */
+  width: 60px;
 }
 
 .brand-icon__svg {
@@ -146,7 +152,6 @@ const handleLogoutClick = async (): Promise<void> => {
   transition: opacity 0.2s;
 }
 
-/* Wordmark + ™ */
 .brand-wordmark {
   display: inline-flex;
   align-items: flex-start;
@@ -171,13 +176,15 @@ const handleLogoutClick = async (): Promise<void> => {
   border-radius: 6px;
 }
 
+/* Right-side layout */
 .header-actions {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
-/* Auth UX bits */
 .user-label {
   font-size: 0.9rem;
   opacity: 0.9;
@@ -202,5 +209,13 @@ const handleLogoutClick = async (): Promise<void> => {
 
 .header-btn {
   font-size: 0.85rem;
+}
+
+/* Role Switcher placement: right of Logout, pinned to right edge */
+.role-switcher-wrap {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-left: 0.25rem; /* small separation from Logout */
 }
 </style>

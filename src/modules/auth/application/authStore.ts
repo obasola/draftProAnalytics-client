@@ -6,6 +6,9 @@ import { loginWithPasswordUseCase } from "./usecases/loginWithPasswordUseCase";
 import { refreshAccessTokenUseCase } from "./usecases/refreshAccessTokenUseCase";
 import { logoutUseCase } from "./usecases/logoutUseCase";
 
+import type { AccessMeResponse, AssignedRole, PermissionMap } from "@/modules/accessControl/domain/access.types";
+import { getMyAccessContext, assumeRole as apiAssumeRole } from "@/modules/accessControl/application/api/accessControlApi";
+
 function base64UrlToBase64(input: string): string {
   const pad = "=".repeat((4 - (input.length % 4)) % 4);
   return (input + pad).replace(/-/g, "+").replace(/_/g, "/");
@@ -30,12 +33,22 @@ export const useAuthStore = defineStore("auth", () => {
   // ─────────────────────────────────────
   const accessToken = ref<string>("");
   const personId = ref<number | null>(null);
+
+  // NEW primary role source
   const activeRid = ref<number | null>(null);
 
   // LEGACY: keep for old guards/nav until everything is moved to activeRid
   const role = ref<number | null>(null);
 
   const userName = ref<string>("");
+
+  // NEW access context fields
+  const activeRoleName = ref<string>("");
+  const assignedRoles = ref<AssignedRole[]>([]);
+  const permissions = ref<PermissionMap>({});
+  const accessLoaded = ref<boolean>(false);
+  const accessLoadInFlight = ref<Promise<void> | null>(null);
+
   const rememberMe = ref<boolean>(false);
   const tokenExpiry = ref<number>(0); // UNIX seconds
   const refreshIntervalId = ref<number | null>(null);
@@ -78,6 +91,9 @@ export const useAuthStore = defineStore("auth", () => {
     rememberMe.value = true;
 
     scheduleAutoRefresh();
+
+    // load /access/me after boot if we have a token
+    void ensureAccessContext();
   }
 
   function persistIfNeeded(): void {
@@ -115,6 +131,58 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   // ─────────────────────────────────────
+  // ACCESS CONTEXT
+  // ─────────────────────────────────────
+  function applyAccessContext(ctx: AccessMeResponse): void {
+    // keep auth core in sync
+    personId.value = ctx.personId;
+    userName.value = ctx.userName;
+
+    activeRid.value = ctx.activeRid;
+    role.value = ctx.activeRid; // legacy sync
+
+    activeRoleName.value = ctx.activeRoleName;
+    assignedRoles.value = ctx.assignedRoles;
+    permissions.value = ctx.permissions;
+    accessLoaded.value = true;
+  }
+
+  async function loadAccessContext(): Promise<void> {
+    if (!accessToken.value) return;
+
+    const ctx = await getMyAccessContext(accessToken.value);
+    applyAccessContext(ctx);
+  }
+
+  async function ensureAccessContext(): Promise<void> {
+    if (!isAuthenticated.value) return;
+    if (accessLoaded.value) return;
+
+    if (accessLoadInFlight.value) {
+      await accessLoadInFlight.value;
+      return;
+    }
+
+    const p = (async () => {
+      try {
+        await loadAccessContext();
+      } finally {
+        accessLoadInFlight.value = null;
+      }
+    })();
+
+    accessLoadInFlight.value = p;
+    await p;
+  }
+
+  async function assumeRole(toRid: number): Promise<void> {
+    if (!accessToken.value) return;
+
+    const ctx = await apiAssumeRole(accessToken.value, toRid);
+    applyAccessContext(ctx);
+  }
+
+  // ─────────────────────────────────────
   // AUTO REFRESH
   // ─────────────────────────────────────
   function scheduleAutoRefresh(): void {
@@ -143,6 +211,10 @@ export const useAuthStore = defineStore("auth", () => {
     if (typeof payload.activeRid === "number") {
       activeRid.value = payload.activeRid;
     }
+
+    // refresh => reload access context (permissions may change)
+    accessLoaded.value = false;
+    await ensureAccessContext();
   }
 
   // ─────────────────────────────────────
@@ -162,7 +234,15 @@ export const useAuthStore = defineStore("auth", () => {
     // legacy role follows activeRid
     role.value = activeRid.value;
 
+    // clear access context; reload from /access/me
+    accessLoaded.value = false;
+    assignedRoles.value = [];
+    permissions.value = {};
+    activeRoleName.value = "";
+
     scheduleAutoRefresh();
+
+    await ensureAccessContext();
   }
 
   // ─────────────────────────────────────
@@ -192,6 +272,13 @@ export const useAuthStore = defineStore("auth", () => {
     tokenExpiry.value = 0;
     rememberMe.value = false;
 
+    // access context
+    activeRoleName.value = "";
+    assignedRoles.value = [];
+    permissions.value = {};
+    accessLoaded.value = false;
+    accessLoadInFlight.value = null;
+
     localStorage.removeItem("auth_persist");
 
     if (refreshIntervalId.value !== null) {
@@ -206,12 +293,17 @@ export const useAuthStore = defineStore("auth", () => {
   loadFromStorage();
 
   return {
+    // core
     accessToken,
     personId,
+    userName,
     activeRid,
     role, // legacy
-    userName,
     rememberMe,
+    // access context
+    activeRoleName,
+    assignedRoles,
+    permissions,
 
     isAuthenticated,
     secondsToExpiry,
@@ -222,5 +314,10 @@ export const useAuthStore = defineStore("auth", () => {
     logout,
     loginWithGoogle,
     loginWithApple,
+
+    // access context actions
+    loadAccessContext,
+    ensureAccessContext,
+    assumeRole,
   };
 });

@@ -1,124 +1,122 @@
-<!-- src/views/admin/UserEditDialog.vue (or src/components/admin/UserEditDialog.vue) -->
 <template>
   <Dialog
-    v-model:visible="visible"
+    v-model:visible="visibleProxy"
     modal
-    header="Edit User"
-    :style="{ width: '450px' }"
+    header="Edit User Roles"
+    :style="{ width: '520px' }"
   >
-    <div v-if="form" class="grid gap-2">
-      <div>
-        <label>Username</label>
-        <InputText v-model="form.userName" class="w-full" />
+    <div v-if="user" class="flex flex-col gap-3">
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold">User</label>
+        <div class="text-sm">
+          <div><span class="font-semibold">Username:</span> {{ user.userName }}</div>
+          <div><span class="font-semibold">Email:</span> {{ user.emailAddress }}</div>
+        </div>
       </div>
 
-      <div>
-        <label>Email</label>
-        <InputText v-model="form.emailAddress" class="w-full" />
-      </div>
-
-      <div>
-        <label>Role</label>
-        <Dropdown
-          v-model="form.rid"
-          :options="roleOptions"
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold">Roles</label>
+        <MultiSelect
+          v-model="selectedRoleIds"
+          :options="roleOptionItems"
           optionLabel="label"
           optionValue="value"
+          placeholder="Select roles"
+          display="chip"
           class="w-full"
         />
       </div>
 
-      <div>
-        <label>Active?</label>
-        <InputSwitch v-model="form.isActive" />
+      <div class="flex items-center justify-end gap-2 mt-2">
+        <Button label="Cancel" severity="secondary" @click="close" />
+        <Button label="Save" icon="pi pi-save" @click="save" :loading="saving" />
       </div>
 
-      <div class="mt-3">
-        <label>Admin Reset Password</label>
-        <Password v-model="newPassword" toggleMask class="w-full" />
-        <Button
-          label="Reset Password"
-          class="mt-2 w-full"
-          @click="resetPassword"
-          :disabled="!newPassword"
-        />
+      <Divider />
+
+      <div class="flex flex-col gap-2">
+        <div class="font-semibold">Admin password reset</div>
+        <div class="flex gap-2 items-center">
+          <Password v-model="newPassword" toggleMask class="w-full" placeholder="New password" />
+          <Button
+            label="Reset"
+            icon="pi pi-key"
+            severity="warning"
+            :disabled="!newPassword"
+            @click="resetPassword"
+          />
+        </div>
       </div>
     </div>
 
-    <template #footer>
-      <Button label="Cancel" @click="close" class="p-button-text" />
-      <Button label="Save" @click="save" :disabled="!form" />
-    </template>
+    <div v-else class="text-sm">No user selected.</div>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { computed, ref, watch } from "vue";
+import { adminAccessApi, type AdminRoleDto, type AdminUserDto } from "@/modules/accessControl/application/api/adminAccessApi";
 import { personApi } from "@/services/personApi";
 
-interface RoleOption {
+interface RoleOptionItem {
   label: string;
   value: number;
 }
 
-interface EditableUser {
-  pid: number;
-  userName: string;
-  emailAddress: string;
-  rid: number | null;
-  isActive: boolean;
-  // add other fields if needed, but keep this shape as the editable subset
-}
-
 const props = defineProps<{
-  modelValue: boolean;
-  user: EditableUser | null;
+  visible: boolean;
+  user: AdminUserDto | null;
+  roleOptions: AdminRoleDto[];
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: boolean): void;
-  (e: "updated"): void;
+  (e: "update:visible", value: boolean): void;
+  (e: "saved"): void;
 }>();
 
-// Writable wrapper for the v-model prop
-const visible = computed<boolean>({
-  get: () => props.modelValue,
-  set: (value: boolean) => emit("update:modelValue", value),
+const visibleProxy = computed<boolean>({
+  get: () => props.visible,
+  set: (v) => emit("update:visible", v),
 });
 
-const form = ref<EditableUser | null>(null);
+const selectedRoleIds = ref<number[]>([]);
+const saving = ref<boolean>(false);
 const newPassword = ref<string>("");
 
-const roleOptions: RoleOption[] = [
-  { label: "Visitor", value: 1 },
-  { label: "Admin", value: 2 },
-  { label: "Developer", value: 3 },
-];
+const roleOptionItems = computed<RoleOptionItem[]>(() =>
+  props.roleOptions.map((r) => ({ label: r.roleName, value: r.rid })),
+);
 
 watch(
   () => props.user,
   (u) => {
-    form.value = u ? { ...u } : null;
+    selectedRoleIds.value = u ? u.roles.map((r) => r.rid) : [];
+    newPassword.value = "";
   },
   { immediate: true },
 );
 
-async function save(): Promise<void> {
-  if (!form.value) return;
+function close(): void {
+  visibleProxy.value = false;
+}
 
-  await personApi.update(form.value.pid, form.value);
-  emit("updated");
-  close();
+async function save(): Promise<void> {
+  if (!props.user) return;
+
+  saving.value = true;
+  try {
+    await adminAccessApi.updateUserRoles(props.user.pid, selectedRoleIds.value);
+    emit("saved");
+    close();
+  } finally {
+    saving.value = false;
+  }
 }
 
 async function resetPassword(): Promise<void> {
-  if (!form.value || !newPassword.value) return;
+  if (!props.user || newPassword.value.trim().length === 0) return;
 
-  await personApi.adminResetPassword(form.value.pid, newPassword.value);
+  await personApi.adminResetPassword(props.user.pid, newPassword.value.trim());
   newPassword.value = "";
-}
-
-function close(): void {
-  emit("update:modelValue", false);
 }
 </script>
