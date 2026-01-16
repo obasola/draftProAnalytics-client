@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { inject, injectable } from "tsyringe";
 
 import { ListAccessUsersUseCase } from "../../application/usecases/ListAccessUsers.usecase";
 import { UpdateUserRolesUseCase } from "../../application/usecases/UpdateUserRoles.usecase";
@@ -17,11 +16,10 @@ const updateRolesBodySchema = z.object({
   roleIds: z.array(z.number().int().positive()).max(50),
 });
 
-@injectable()
 export class AdminAccessController {
   public constructor(
-    @inject(ListAccessUsersUseCase) private readonly listUsersUc: ListAccessUsersUseCase,
-    @inject(UpdateUserRolesUseCase) private readonly updateUserRolesUc: UpdateUserRolesUseCase,
+    private readonly listUsersUc: ListAccessUsersUseCase,
+    private readonly updateUserRolesUc: UpdateUserRolesUseCase,
   ) {}
 
   public listUsers = async (req: Request, res: Response): Promise<void> => {

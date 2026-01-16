@@ -38,6 +38,7 @@ import type { ActionCode, DomainCode } from "@/modules/accessControl/domain/acce
 import { draftPickRoutes } from "./draftPickRoutes";
 import { playoffsRoutes } from "../modules/playoffs/presentation/routes/playoffsRoute";
 import { teamNeedsRoutes } from "@/modules/teams/presentation/router/teamNeedsRoutes";
+import { adminAccessRoutes } from "@/modules/accessControl/presentation/routes/adminAccess.routes";
 
 type RoutePermission = { domain: DomainCode; action: ActionCode };
 
@@ -272,7 +273,8 @@ const routes: RouteRecordRaw[] = [
       ...draftPickRoutes,
       ...draftOrderRoutes,
       ...playoffsRoutes,
-
+      // inside children: [...]
+      ...adminAccessRoutes,
       // Draft order explicit routes
       {
         path: "draft-order",

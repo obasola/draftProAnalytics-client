@@ -1,12 +1,12 @@
 import type { PrismaClient } from "@prisma/client";
-import { inject, injectable } from "tsyringe";
+
 
 import type { IAdminAccessRepository } from "../../../domain/repositories/IAdminAccessRepository";
 import type { AdminRoleDto, AdminUserDto } from "../../../application/dtos/AdminAccess.dto";
 
-@injectable()
+
 export class PrismaAdminAccessRepository implements IAdminAccessRepository {
-  public constructor(@inject("PrismaClient") private readonly prisma: PrismaClient) {}
+  public constructor(private readonly prisma: PrismaClient) {}
 
   public async listRoles(): Promise<AdminRoleDto[]> {
     // Assumes Prisma model name: Roles, fields: rid, roleName

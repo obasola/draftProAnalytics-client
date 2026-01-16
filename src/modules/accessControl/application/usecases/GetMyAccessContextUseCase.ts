@@ -1,4 +1,4 @@
-import { inject, injectable } from "tsyringe";
+
 import type { AccessContext } from "../../domain/access.types";
 import type { IAdminAccessRepository } from "@/modules/accessControl/domain/repositories/IAdminAccessRepository";
 
@@ -7,11 +7,8 @@ export interface GetMyAccessContextInput {
   activeRoleId?: number | null;
 }
 
-@injectable()
 export class GetMyAccessContextUseCase {
-  public constructor(
-    @inject("IAccessControlRepository") private readonly repo: IAdminAccessRepository,
-  ) {}
+  public constructor(private readonly repo: IAdminAccessRepository) {}
 
   public async execute(input: GetMyAccessContextInput): Promise<AccessContext> {
     const roleIds = await this.repo.getRoleIdsForPerson(input.personId);

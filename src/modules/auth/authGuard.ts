@@ -1,4 +1,4 @@
-// src/router/authGuard.ts
+// draftproanalytics-client/src/router/authGuard.ts
 import type { NavigationGuardNext, RouteLocationNormalized } from "vue-router";
 import { useAuthStore } from "@/modules/auth/application/authStore";
 

@@ -1,19 +1,19 @@
-import { Router } from "express";
-import type { RequestHandler } from "express";
-import { container } from "tsyringe";
+// draftproanalytics-client/src/modules/accessControl/presentation/routes/adminAccess.routes.ts
+import type { RouteRecordRaw } from "vue-router";
 
-import { AdminAccessController } from "../controllers/AdminAccess.controller";
-import { requireAuth } from "../../../auth/presentation/middleware/requireAuth";
-import { requireRbacEditOrAdminRole4 } from "../security/requireRbacEditOrAdminRole4";
+import UserAdminView from "@/views/admin/UserAdminView.vue";
+import { requireAuth } from "@/modules/auth/authGuard";
 
-export function buildAdminAccessRouter(): Router {
-  const router = Router();
-  const controller = container.resolve(AdminAccessController);
-
-  const guard: RequestHandler[] = [requireAuth, requireRbacEditOrAdminRole4];
-
-  router.get("/users", ...guard, controller.listUsers);
-  router.put("/users/:pid/roles", ...guard, controller.updateUserRoles);
-
-  return router;
-}
+export const adminAccessRoutes: RouteRecordRaw[] = [
+  {
+    path: "/admin/users",
+    name: "UserAdmin",
+    component: UserAdminView,
+    beforeEnter: requireAuth,
+    meta: {
+      requiresAuth: true,
+      perm: { domain: "ADMIN_USERS", action: "VIEW" },
+      title: "User Administration",
+    },
+  },
+];
