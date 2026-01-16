@@ -107,7 +107,8 @@ const handleLogoutClick = async (): Promise<void> => {
   background: #527ec7;
   color: var(--text-on-bg5);
   /* top | right | bottom | left */
-  padding: 0.875rem 0.5em 0.875rem 2rem; /* ✅ right side 0.5em off edge */
+
+  padding: 0.875rem 0.5em 0.875rem 0.6em; /* left = 0.5em */
   border-bottom: 1px solid rgba(0, 0, 0, 0.35);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   position: sticky;
@@ -130,8 +131,13 @@ const handleLogoutClick = async (): Promise<void> => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  cursor: pointer;
-  margin-left: -55px; /* keep your existing nudge */
+  margin-left: 0;     /* prevent drift */
+  min-width: 0;
+}
+
+.app-logo {
+  display: block;     /* avoids baseline weirdness */
+  margin: 0;          /* kill any default spacing */
 }
 
 .brand-icon {
