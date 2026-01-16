@@ -104,9 +104,10 @@ const handleLogoutClick = async (): Promise<void> => {
 
 <style scoped>
 .app-header {
-  background: #527ec7; /* bg5 #062D92 */
-  color: var(--text-on-bg5); /* white */
-  padding: 0.875rem 2rem;
+  background: #527ec7;
+  color: var(--text-on-bg5);
+  /* top | right | bottom | left */
+  padding: 0.875rem 0.5em 0.875rem 2rem; /* ✅ right side 0.5em off edge */
   border-bottom: 1px solid rgba(0, 0, 0, 0.35);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   position: sticky;
@@ -118,9 +119,11 @@ const handleLogoutClick = async (): Promise<void> => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;        /* ✅ span full header width */
+  max-width: none;    /* ✅ remove 1200px cap */
+  margin: 0;          /* ✅ no centering container */
 }
+
 
 /* Brand lockup */
 .header-left {
