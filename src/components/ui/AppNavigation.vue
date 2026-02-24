@@ -6,9 +6,10 @@ import {
   NavigationFailureType,
   type RouteLocationRaw,
 } from "vue-router";
-import Menu from "primevue/menu";
+import PanelMenu from "primevue/panelmenu";
 import Button from "primevue/button";
 import type { MenuItem } from "primevue/menuitem";
+
 import { useNavigation } from "@/composables/useNavigation";
 import { useAuthStore } from "@/modules/auth/application/authStore";
 
@@ -25,12 +26,8 @@ type MenuItemWithPerm = MenuItem & {
 const router = useRouter();
 const { goToPage } = useNavigation();
 const auth = useAuthStore();
-const isCollapsed = ref(false);
 
-const handleLogout = async (): Promise<void> => {
-  await auth.logout();
-  safePush("/login");
-};
+const isCollapsed = ref(false);
 
 const toggleCollapse = (): void => {
   isCollapsed.value = !isCollapsed.value;
@@ -53,10 +50,11 @@ function safePush(to: RouteLocationRaw): void {
 }
 
 const isAdmin = computed((): boolean => (auth.activeRid ?? auth.role ?? 1) === 4);
-const isPowerUser = computed((): boolean => {
-  const rid = auth.activeRid ?? auth.role ?? 1;
-  return rid === 2 || rid === 3 || rid === 4;
-});
+
+const handleLogout = async (): Promise<void> => {
+  await auth.logout();
+  safePush("/login");
+};
 
 function filterMenu(items: readonly MenuItemWithPerm[]): MenuItem[] {
   const out: MenuItem[] = [];
@@ -83,68 +81,264 @@ function filterMenu(items: readonly MenuItemWithPerm[]): MenuItem[] {
   return out;
 }
 
-const menuItems = computed<MenuItem[]>(() => {
-  const visitorSpec: MenuItemWithPerm[] = [
-    { label: "Dashboard", icon: "pi pi-chart-line", command: () => safePush("/dashboard"), requiredPerm: { domain: "DASHBOARD", action: "VIEW" } },
-    { label: "Games", icon: "pi pi-calendar", command: () => safePush("/games"), requiredPerm: { domain: "GAMES", action: "VIEW" } },
-    { label: "Players", icon: "pi pi-users", command: () => safePush("/players"), requiredPerm: { domain: "PLAYERS", action: "VIEW" } },
-    { label: "Teams", icon: "pi pi-flag", command: () => safePush("/teams"), requiredPerm: { domain: "TEAMS", action: "VIEW" } },
-    { label: "Schedules", icon: "pi pi-calendar", command: () => safePush("/schedules"), requiredPerm: { domain: "SCHEDULES", action: "VIEW" } },
-    { label: "Show Upcoming Games", icon: "pi pi-clock", command: () => safePush("/show-upcoming-games"), requiredPerm: { domain: "SCHEDULES", action: "VIEW" } },
-    { label: "Team Standings", icon: "pi pi-chart-line", command: () => safePush("/standings"), requiredPerm: { domain: "STANDINGS", action: "VIEW" } },
-    { label: "Playoff Bracket", icon: "pi pi-sitemap", command: () => safePush("/playoffs/bracket"), requiredPerm: { domain: "PLAYOFFS", action: "VIEW" } },
-    { label: "Draft Order", icon: "pi pi-sort-amount-up-alt", command: () => safePush("/draft-order"), requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" } },
-  ];
+const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
+  const routeItem = (p: {
+    label: string;
+    icon: string;
+    to?: RouteLocationRaw;
+    requiredPerm?: RoutePermission;
+    onClick?: () => void;
+  }): MenuItemWithPerm => ({
+    label: p.label,
+    icon: p.icon,
+    requiredPerm: p.requiredPerm,
+    command: () => {
+      if (p.onClick) return p.onClick();
+      if (p.to != null) return safePush(p.to);
+    },
+  });
 
-  const powerUserSpec: MenuItemWithPerm[] = [
-    ...visitorSpec,
-    { label: "Player Awards", icon: "pi pi-trophy", command: () => safePush("/player-awards"), requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" } },
-    { label: "Player Teams", icon: "pi pi-users", command: () => safePush("/player-teams"), requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" } },
-    { label: "Team Needs", icon: "pi pi-exclamation-triangle", command: () => safePush("/team-needs"), requiredPerm: { domain: "TEAM_NEEDS", action: "VIEW" } },
-    { label: "Post Season Results", icon: "pi pi-crown", command: () => safePush("/post-season-results"), requiredPerm: { domain: "PLAYOFFS", action: "VIEW" } },
-    { label: "Prospects", icon: "pi pi-star", command: () => safePush("/prospects"), requiredPerm: { domain: "SCOUTING", action: "VIEW" } },
-    { label: "Combine Scores", icon: "pi pi-chart-bar", command: () => safePush("/combine-scores"), requiredPerm: { domain: "SCOUTING", action: "VIEW" } },
+  return [
+    // Dashboard
+    routeItem({
+      label: "Dashboard",
+      icon: "pi pi-chart-line",
+      to: "/dashboard",
+      requiredPerm: { domain: "DASHBOARD", action: "VIEW" },
+    }),
 
+    // Players (Parent menu)
     {
-      label: "Draft Menu",
-      icon: "pi pi-folder",
-      requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+      label: "Players",
+      icon: "pi pi-users",
       items: [
-        { label: "Draft Simulator", icon: "pi pi-stopwatch", command: () => safePush("/draft-simulator"), requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" } },
-        { label: "Draft Board", icon: "pi pi-list", command: () => safePush("/draft-board"), requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" } },
-        { label: "Draft Picks", icon: "pi pi-list", command: () => safePush("/draftPicks"), requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" } },
-        { label: "Draft Pick Scraper", icon: "pi pi-cloud-download", command: () => safePush("/admin/draft-pick-scraper"), requiredPerm: { domain: "SCRAPERS", action: "VIEW" } },
+        routeItem({
+          label: "Player Listings",
+          icon: "pi pi-users",
+          to: "/players",
+          requiredPerm: { domain: "PLAYERS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Player Awards",
+          icon: "pi pi-trophy",
+          to: "/player-awards",
+          requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Player Teams",
+          icon: "pi pi-users",
+          to: "/player-teams",
+          requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" },
+        }),
       ],
     },
 
+    // Teams (Parent menu)
     {
-      label: "Batch Jobs Menu",
-      icon: "pi pi-folder",
-      requiredPerm: { domain: "JOBS", action: "VIEW" },
-      items: [{ label: "Jobs", icon: "pi pi-stopwatch", command: () => goToPage("Jobs"), requiredPerm: { domain: "JOBS", action: "VIEW" } }],
+      label: "Teams",
+      icon: "pi pi-flag",
+      items: [
+        routeItem({
+          label: "Team Listings",
+          icon: "pi pi-flag",
+          to: "/teams",
+          requiredPerm: { domain: "TEAMS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Team Needs",
+          icon: "pi pi-exclamation-triangle",
+          to: "/team-needs",
+          requiredPerm: { domain: "TEAM_NEEDS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Team Standings",
+          icon: "pi pi-chart-line",
+          to: "/standings",
+          requiredPerm: { domain: "STANDINGS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Post Season Results",
+          icon: "pi pi-crown",
+          to: "/post-season-results",
+          requiredPerm: { domain: "PLAYOFFS", action: "VIEW" },
+        }),
+      ],
     },
 
+    // Scheduling (Parent menu)
+    {
+      label: "Scheduling",
+      icon: "pi pi-calendar",
+      items: [
+        routeItem({
+          label: "Games",
+          icon: "pi pi-calendar",
+          to: "/games",
+          requiredPerm: { domain: "GAMES", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Schedules",
+          icon: "pi pi-calendar",
+          to: "/schedules",
+          requiredPerm: { domain: "SCHEDULES", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Show Upcoming Games",
+          icon: "pi pi-clock",
+          to: "/show-upcoming-games",
+          requiredPerm: { domain: "SCHEDULES", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Playoffs Bracket",
+          icon: "pi pi-sitemap",
+          to: "/playoffs/bracket",
+          requiredPerm: { domain: "PLAYOFFS", action: "VIEW" },
+        }),
+      ],
+    },
+
+    // Draft Menu (Parent menu)
+    {
+      label: "Draft Menu",
+      icon: "pi pi-folder",
+      items: [
+        routeItem({
+          label: "Draft Order",
+          icon: "pi pi-sort-amount-up-alt",
+          to: "/draft-order",
+          requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Draft Simulation",
+          icon: "pi pi-stopwatch",
+          to: "/draft-simulator",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "PFF Mock Draft",
+          icon: "pi pi-stopwatch",
+          to: "/draft-mock",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Draft Board",
+          icon: "pi pi-list",
+          to: "/draft-board",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Draft Picks",
+          icon: "pi pi-list",
+          to: "/draftPicks",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Draft Pick Scraper",
+          icon: "pi pi-cloud-download",
+          to: "/admin/draft-pick-scraper",
+          requiredPerm: { domain: "SCRAPERS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Prospects",
+          icon: "pi pi-star",
+          to: "/prospects",
+          requiredPerm: { domain: "SCOUTING", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Combine Scores",
+          icon: "pi pi-chart-bar",
+          to: "/combine-scores",
+          requiredPerm: { domain: "SCOUTING", action: "VIEW" },
+        }),
+      ],
+    },
+
+    // Draft Analytics (Parent menu)
+    {
+      label: "Draft Analytics",
+      icon: "pi pi-chart-bar",
+      items: [
+        routeItem({
+          label: "Draft Analysis",
+          icon: "pi pi-chart-bar",
+          to: "/draft-analysis",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Draft Analytics",
+          icon: "pi pi-chart-line",
+          // keep on the existing route until you add a dedicated /draft-analytics view
+          to: "/draft-analysis",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Live Tracker",
+          icon: "pi pi-stopwatch",
+          // keep on the existing route until you add a dedicated /draft-live view
+          to: "/draft-analysis",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Reports",
+          icon: "pi pi-file",
+          // keep on the existing route until you add a dedicated /draft-reports view
+          to: "/draft-analysis",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+      ],
+    },
+
+    // Jobs Menu (Parent menu)
+    {
+      label: "Jobs Menu",
+      icon: "pi pi-cog",
+      items: [
+        routeItem({
+          label: "Jobs",
+          icon: "pi pi-stopwatch",
+          onClick: () => goToPage("Jobs"),
+          requiredPerm: { domain: "JOBS", action: "VIEW" },
+        }),
+      ],
+    },
+
+    // Admin (Parent menu)
     {
       label: "Admin",
       icon: "pi pi-lock",
-      requiredPerm: { domain: "ADMIN_USERS", action: "VIEW" },
-      items: [{ label: "User Administration", icon: "pi pi-users", command: () => safePush("/admin/users"), requiredPerm: { domain: "ADMIN_USERS", action: "VIEW" } }],
+      items: [
+        routeItem({
+          label: "User Admin",
+          icon: "pi pi-users",
+          to: "/admin/users",
+          requiredPerm: { domain: "ADMIN_USERS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "Logout",
+          icon: "pi pi-sign-out",
+          onClick: () => void handleLogout(),
+        }),
+      ],
     },
   ];
+});
 
-  const base = auth.isAuthenticated ? filterMenu(isPowerUser.value ? powerUserSpec : visitorSpec) : [];
-
-  const authItems: MenuItemWithPerm[] = [{ separator: true } as MenuItemWithPerm];
+const menuItems = computed<MenuItem[]>(() => {
   if (!auth.isAuthenticated) {
-    authItems.push(
-      { label: "Login", icon: "pi pi-sign-in", command: () => safePush("/login") },
-      { label: "Register", icon: "pi pi-user-plus", command: () => safePush("/register") }
-    );
-  } else {
-    authItems.push({ label: "Logout", icon: "pi pi-sign-out", command: () => void handleLogout() });
+    const authSpec: MenuItemWithPerm[] = [
+      {
+        label: "Account",
+        icon: "pi pi-user",
+        items: [
+          { label: "Login", icon: "pi pi-sign-in", command: () => safePush("/login") },
+          { label: "Register", icon: "pi pi-user-plus", command: () => safePush("/register") },
+        ],
+      },
+    ];
+    return filterMenu(authSpec);
   }
 
-  return [...base, ...filterMenu(authItems)];
+  return filterMenu(appMenuSpec.value);
 });
 </script>
 
@@ -161,12 +355,11 @@ const menuItems = computed<MenuItem[]>(() => {
       />
     </div>
 
-    <Menu :model="menuItems" class="nav-menu" />
+    <PanelMenu :model="menuItems" :multiple="true" class="nav-panelmenu" />
   </nav>
 </template>
 
 <style scoped>
-/* unchanged from your version */
 .app-navigation {
   width: 260px;
   background: var(--nav-bg);
@@ -189,6 +382,8 @@ const menuItems = computed<MenuItem[]>(() => {
   justify-content: flex-end;
   margin-bottom: 0.5rem;
   padding: 0 0.25rem;
+  background-color: #073c98;
+  color:#ffffff;
 }
 
 .collapse-toggle {
@@ -204,13 +399,40 @@ const menuItems = computed<MenuItem[]>(() => {
   transform: translateX(-2px);
 }
 
-:deep(.nav-menu.p-menu) {
-  background: transparent;
+/* PanelMenu base */
+:deep(.nav-panelmenu.p-panelmenu) {
+  background-color: #073c98;
+  color:#ffffff;
   border: none;
   width: 100%;
-  color: var(--text-on-bg1);
+  
 }
 
+:deep(.p-panelmenu-panel) {
+  border: none;
+  background: transparent;
+}
+
+/* Collapsible section headers */
+:deep(.p-panelmenu-header-link) {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  color: var(--text-on-bg1);
+  font-weight: 800;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+  background-color: #073c98;
+  color: #ffffff;
+}
+
+:deep(.p-panelmenu-header-link:hover) {
+  background-color: #073c98;
+}
+
+/* Sub-items */
 :deep(.p-menuitem-link) {
   display: flex;
   align-items: center;
@@ -221,37 +443,43 @@ const menuItems = computed<MenuItem[]>(() => {
   font-weight: 700;
   transition: background 0.18s, color 0.18s;
   white-space: nowrap;
-}
-
-.collapsed :deep(.p-menuitem-link) {
-  justify-content: center;
-  padding: 0.6rem;
-}
-
-.collapsed :deep(.p-menuitem-text) {
-  display: none;
-}
-
-.collapsed :deep(.p-submenu-icon) {
-  display: none;
+  background-color: #9e4c03;
+  color: #073c98;
 }
 
 :deep(.p-menuitem-link:hover) {
   background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
 }
 
-:deep(.p-menuitem-icon) {
-  color: var(--text-on-bg1);
-  font-size: 1.1rem;
+/* Collapsed mode: icons-only */
+.collapsed :deep(.p-panelmenu-header-link) {
+  color:#073c98;
+}
+.collapsed :deep(.p-menuitem-link) {
+  justify-content: center;
+  color:#073c98;
+  padding: 0.6rem;
 }
 
-:deep(.p-menuitem-link:hover .p-menuitem-icon) {
-  color: #ffffff;
+.collapsed :deep(.p-menuitem-text),
+.collapsed :deep(.p-panelmenu-header-label) {
+  color:#073c98;
+  display: none;
 }
 
-:deep(.p-submenu-list) {
-  background: var(--card-bg);
-  padding-left: 0.4rem;
+.collapsed :deep(.p-submenu-icon),
+.collapsed :deep(.p-panelmenu-icon) {
+  display: none;
+}
+
+/* Tighten submenu indent (optional, keeps the look consistent) */
+:deep(.p-panelmenu-content) {
+  background: transparent;
+  border: none;
+  padding: 0.15rem 0;
+}
+
+:deep(.p-panelmenu-root-list) {
+  gap: 0.15rem;
 }
 </style>

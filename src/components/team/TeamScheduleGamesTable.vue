@@ -9,7 +9,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 
 interface Props {
-  teamId: number
+  teamId?: number 
   initialSeasonYear?: number
 }
 

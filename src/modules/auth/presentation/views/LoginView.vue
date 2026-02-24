@@ -15,20 +15,12 @@
 
         <!-- Social buttons -->
         <div class="space-y-3 mb-5">
-          <button
-            type="button"
-            class="social-btn w-full"
-            @click="onGoogleSignIn"
-          >
+          <button type="button" class="social-btn w-full" @click="onGoogleSignIn">
             <span class="social-icon pi pi-google" />
             <span>Sign in with Google</span>
           </button>
 
-          <button
-            type="button"
-            class="social-btn w-full"
-            @click="onAppleSignIn"
-          >
+          <button type="button" class="social-btn w-full" @click="onAppleSignIn">
             <span class="social-icon pi pi-apple" />
             <span>Sign in with Apple</span>
           </button>
@@ -44,76 +36,48 @@
         <!-- Form -->
         <div class="field-group">
           <form @submit.prevent="onSubmit" class="space-y-4">
-          <!-- Username -->
-          <div class="form-row">
-            <label for="userName" class="form-label">
-              Username
-            </label>
-            <InputText
-              id="userName"
-              v-model="userName"
-              class="w-full"
-              autocomplete="username"
-            />
-          </div>
-
-          <!-- Password -->
-          <div class="form-row">
-            <label for="password" class="form-label">
-              Password
-            </label>
-            <Password
-              inputId="password"
-              v-model="password"
-              toggleMask
-              class="w-full"
-              :feedback="false"
-              autocomplete="current-password"
-            />
-          </div>
-
-          <!-- Remember + Forgot -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <Checkbox
-                inputId="remember"
-                v-model="rememberMeLocal"
-              />
-              <label
-                for="remember"
-                class="form-label cursor-pointer !mb-0"
-              >
-                Remember me
+            <!-- Username -->
+            <div class="form-row">
+              <label for="userName" class="form-label">
+                Username
               </label>
+              <InputText id="userName" v-model="userName" class="w-full" autocomplete="username" />
             </div>
 
-            <RouterLink
-              to="/forgot-password"
-              class="link-small"
-            >
-              Forgot password?
-            </RouterLink>
-          </div>
+            <!-- Password -->
+            <div class="form-row">
+              <label for="password" class="form-label">
+                Password
+              </label>
+              <Password inputId="password" v-model="password" toggleMask class="w-full" :feedback="false"
+                autocomplete="current-password" />
+            </div>
 
-          <!-- Submit -->
-          <Button
-            label="Login"
-            class="btn-primary-254290 w-full p-button-lg"
-            :loading="loading"
-            type="submit"
-          />
+            <!-- Remember + Forgot -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <Checkbox inputId="remember" v-model="rememberMeLocal" />
+                <label for="remember" class="form-label cursor-pointer !mb-0">
+                  Remember me
+                </label>
+              </div>
 
-          <!-- Register link -->
-          <p class="text-center text-sm text-slate-900 mt-2">
-            Don’t have an account?
-            <RouterLink
-              to="/register"
-              class="link-strong"
-            >
-              Create one
-            </RouterLink>
-          </p>
-        </form>
+              <RouterLink to="/forgot-password" class="link-small">
+                Forgot password?
+              </RouterLink>
+            </div>
+
+            <!-- Submit -->
+            <Button label="Login" class="btn-primary-254290 w-full p-button-lg" :loading="loading" type="submit" />
+
+            <!-- Register link -->
+            <p class="text-center text-sm text-slate-900 mt-2">
+              Don’t have an account?
+              <RouterLink to="/register" class="link-strong">
+                Create one
+              </RouterLink>
+            </p>
+          </form>
         </div>
       </div>
     </div>
@@ -150,8 +114,8 @@ async function onSubmit(): Promise<void> {
     await auth.login(userName.value, password.value);
     const redirect = (route.query.redirect as string | undefined) ?? '/dashboard';
     console.log("LOGIN OK. pushing to:", redirect);
-await router.push(redirect);
-console.log("PUSH DONE. now at:", router.currentRoute.value.fullPath);
+    await router.push(redirect);
+    console.log("PUSH DONE. now at:", router.currentRoute.value.fullPath);
 
   } finally {
     loading.value = false;
@@ -169,13 +133,28 @@ const onSubmit = async (): Promise<void> => {
   await router.replace({ name: "Dashboard" }); // or "/dashboard"
 };
 */
-function onGoogleSignIn(): void {
-  auth.loginWithGoogle();
+// src/modules/auth/presentation/views/LoginView.vue <script setup>
+
+async function onGoogleSignIn(): Promise<void> {
+  // TODO: replace with real Google ID token
+  const fakeCredential = 'dev-google-test-token';
+
+  await auth.loginWithGoogle(fakeCredential);
+
+  const redirect = (route.query.redirect as string | undefined) ?? '/dashboard';
+  await router.replace(redirect);
 }
 
-function onAppleSignIn(): void {
-  auth.loginWithApple();
+async function onAppleSignIn(): Promise<void> {
+  // TODO: replace with real Apple ID token
+  const fakeCredential = 'dev-apple-test-token';
+
+  await auth.loginWithApple(fakeCredential);
+
+  const redirect = (route.query.redirect as string | undefined) ?? '/dashboard';
+  await router.replace(redirect);
 }
+
 </script>
 
 <style scoped>
@@ -251,8 +230,8 @@ function onAppleSignIn(): void {
   gap: 0.5rem;
 }
 
-.divider > span:first-child,
-.divider > span:last-child {
+.divider>span:first-child,
+.divider>span:last-child {
   flex: 1;
   height: 1px;
   background-color: rgba(15, 23, 42, 0.25);
@@ -286,6 +265,7 @@ function onAppleSignIn(): void {
 .link-strong:hover {
   text-decoration: underline;
 }
+
 /* Ensure PrimeVue inputs are legible on a dark-ish brand background */
 :deep(.p-inputtext),
 :deep(.p-password-input) {

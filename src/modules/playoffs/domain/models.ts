@@ -11,7 +11,7 @@ export interface BracketTeamDto {
 
 export interface BracketGameDto {
   id: string
-  round: 'WILD_CARD' | 'DIVISIONAL' | 'CONFERENCE' | 'SUPER_BOWL'
+  round: 'WILDCARD' | 'DIVISIONAL' | 'CONFERENCE' | 'SUPERBOWL'
   conference: Conference | 'NFL' // NFL = super bowl
   slot: 'WC_54' | 'WC_63' | 'WC_72' | 'DIV_1vL' | 'DIV_X' | 'CONF' | 'SB'
 

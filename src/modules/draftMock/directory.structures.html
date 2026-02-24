@@ -1,0 +1,38 @@
+
+// ============================================
+// DIRECTORY STRUCTURE
+// ============================================
+
+/*
+src/
+├── modules/
+│   └── mockDraft/
+│       ├── routes/
+│       │   └── index.ts              (mockDraftRoutes)
+│       ├── stores/
+│       │   └── mockDraftStore.ts     (Pinia store)
+│       ├── types/
+│       │   └── draft.types.ts        (TypeScript types)
+│       ├── services/
+│       │   ├── draft.service.ts
+│       │   ├── team.service.ts
+│       │   └── player.service.ts
+│       ├── composables/
+│       │   ├── useDraftState.ts
+│       │   ├── useTeams.ts
+│       │   └── usePlayers.ts
+│       ├── components/
+│       │   ├── ModeSelector.vue
+│       │   ├── TeamSelectionPanel.vue
+│       │   ├── DraftSettingsPanel.vue
+│       │   ├── DraftInfo.vue
+│       │   ├── DraftControls.vue
+│       │   ├── PlayerListPanel.vue
+│       │   ├── SettingsDialog.vue
+│       │   ├── TradeDialog.vue
+│       │   └── PlayerInfoDialog.vue
+│       └── views/
+│           └── MockDraftSimulator.vue (Main view component)
+└── router/
+    └── index.ts                      (Main router - add mockDraftRoutes)
+*/

@@ -1,5 +1,5 @@
 // src/modules/playoffs/stores/dto/PlayoffBracketEventDto.ts
-export type PlayoffRound = 'WILD_CARD' | 'DIVISIONAL' | 'CONFERENCE' | 'SUPER_BOWL'
+export type PlayoffRound = 'WILDCARD' | 'DIVISIONAL' | 'CONFERENCE' | 'SUPERBOWL'
 export type PlayoffConference = 'AFC' | 'NFC'
 
 export interface PlayoffBracketEventDto {
@@ -15,6 +15,9 @@ export interface PlayoffBracketEventDto {
   awayTeamId: number | null
   homeTeamName: string
   awayTeamName: string
+
+  homeTeamConference: string
+  awayTeamConference: string
 
   homeLogoLocal: string
   awayLogoLocal: string

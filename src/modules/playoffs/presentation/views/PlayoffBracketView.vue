@@ -190,7 +190,6 @@ const superBowl = computed(() => store.superBowl)
 </template>
 
 
-
 <style scoped>
 .bracket-root {
   position: relative; /* add this */

@@ -45,15 +45,15 @@ export const usePlayoffsStore = defineStore('playoffsStore', () => {
   const byConf = (conf: Conference) => games.value.filter(g => g.conference === conf)
   const nfl = computed(() => games.value.filter(g => g.conference === 'NFL'))
 
-  const nfcWildCard = computed(() => byConf('NFC').filter(g => g.round === 'WILD_CARD'))
+  const nfcWildCard = computed(() => byConf('NFC').filter(g => g.round === 'WILDCARD'))
   const nfcDivisional = computed(() => byConf('NFC').filter(g => g.round === 'DIVISIONAL'))
   const nfcConference = computed(() => pick(byConf('NFC'), g => g.round === 'CONFERENCE') ?? null)
 
-  const afcWildCard = computed(() => byConf('AFC').filter(g => g.round === 'WILD_CARD'))
+  const afcWildCard = computed(() => byConf('AFC').filter(g => g.round === 'WILDCARD'))
   const afcDivisional = computed(() => byConf('AFC').filter(g => g.round === 'DIVISIONAL'))
   const afcConference = computed(() => pick(byConf('AFC'), g => g.round === 'CONFERENCE') ?? null)
 
-  const superBowl = computed(() => pick(nfl.value, g => g.round === 'SUPER_BOWL') ?? null)
+  const superBowl = computed(() => pick(nfl.value, g => g.round === 'SUPERBOWL') ?? null)
 
   return {
     seasonYear,

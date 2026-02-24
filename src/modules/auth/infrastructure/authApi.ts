@@ -18,6 +18,16 @@ export const authApi = {
     return res.data;
   },
 
+  async loginWithGoogle(credential: string): Promise<LoginResponse> {
+    const { data } = await api.post<LoginResponse>('/auth/google', { credential });
+    return data;
+  },
+
+  async loginWithApple(credential: string): Promise<LoginResponse> {
+    const { data } = await api.post<LoginResponse>('/auth/apple', { credential });
+    return data;
+  },
+
   async register(payload: RegisterRequest): Promise<RegisterResponse> {
     const res = await api.post<RegisterResponse>('/auth/register', payload);
     return res.data;
