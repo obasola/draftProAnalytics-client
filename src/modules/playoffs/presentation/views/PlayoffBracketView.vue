@@ -112,6 +112,13 @@ const superBowl = computed(() => store.superBowl)
               <TabPanel header="Full" />
             </TabView>
           </div>
+          <Button 
+            label="Reload" 
+            icon="pi pi-refresh" 
+            @click="reload" 
+            :loading="isLoading"
+            class="reload-btn"
+          />
         </div>
         
       </div>
