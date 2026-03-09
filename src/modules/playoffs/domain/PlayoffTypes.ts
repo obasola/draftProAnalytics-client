@@ -15,7 +15,13 @@ export interface PlayoffMatchup {
   homeScore: number | null;
   awayScore: number | null;
   winnerTeamId: number | null;
-  gameDate: string | null;
+  gameDate: Date | null;
+  // ✅ NEW: Team details
+  homeTeamName?: string | null;
+  awayTeamName?: string | null;
+  homeTeamConference?: string | null;
+  awayTeamConference?: string | null;
+  
 }
 
 export interface PlayoffRoundGroup {

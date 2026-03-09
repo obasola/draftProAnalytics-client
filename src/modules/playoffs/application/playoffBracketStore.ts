@@ -9,7 +9,7 @@ import { useStandingsStore } from '@/stores/standingsStore'
 import type { TeamStandingDto } from '@/types/TeamStandingDto'
 
 type Conference = 'AFC' | 'NFC'
-type Round = 'WILD_CARD' | 'DIVISIONAL' | 'CONFERENCE' | 'SUPER_BOWL'
+type Round = 'WILDCARD' | 'DIVISIONAL' | 'CONFERENCE' | 'SUPERBOWL'
 
 function isFinalish(status: string): boolean {
   const s = status.trim().toLowerCase()
@@ -150,7 +150,6 @@ function toTeam(
   }
 }
 
-
 function toVm(
   id: string,
   e: PlayoffBracketEventDto,
@@ -189,7 +188,7 @@ function buildConferenceBracket(
 
   // ---- Wild Card (3) ----
   const wc = list
-    .filter(e => e.playoffRound === 'WILD_CARD')
+    .filter(e => e.playoffRound === 'WILDCARD')
     .slice()
     .sort((a, b) => safeTime(a.date) - safeTime(b.date))
 
@@ -277,7 +276,7 @@ export const usePlayoffBracketStore = defineStore('playoffBracket', {
     },
 
     superBowl(state): BracketGameViewModel {
-      const sb = state.events.find(e => e.playoffRound === 'SUPER_BOWL') ?? null
+      const sb = state.events.find(e => e.playoffRound === 'SUPERBOWL') ?? null
       if (sb) return toVm('SB', sb, 'AFC', state.seedByTeamId)
 
       const afc = buildConferenceBracket('AFC', state.events, state.seedByTeamId)

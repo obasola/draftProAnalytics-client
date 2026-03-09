@@ -1,0 +1,125 @@
+# Quick Integration Guide
+
+## 1. Copy Module
+
+```bash
+cp -r teamNeedsAnalysis src/modules/
+```
+
+Your structure:
+```
+src/
+└── modules/
+    └── teamNeedsAnalysis/
+        ├── store/
+        ├── types/
+        ├── composables/
+        ├── views/
+        ├── router/
+        ├── index.ts
+        └── README.md
+```
+
+## 2. Register Routes
+
+**File**: `src/router/index.ts`
+
+```typescript
+import { teamNeedsAnalysisRoutes } from '@/modules/teamNeedsAnalysis';
+
+const router = createRouter({
+  routes: [
+    ...teamNeedsAnalysisRoutes,  // ← Add this
+  ],
+});
+```
+
+## 3. Add Navigation (Optional)
+
+```vue
+<RouterLink :to="{ name: 'team-needs-dashboard' }">
+  Team Needs
+</RouterLink>
+```
+
+## 4. Configure API Base URL
+
+**File**: `.env`
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+**File**: `src/main.ts` or axios config
+```typescript
+import axios from 'axios';
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+```
+
+## Done! 🎉
+
+Navigate to: `http://localhost:5173/team-needs/dashboard`
+
+## Usage Examples
+
+### In a Component
+
+```vue
+<script setup lang="ts">
+import { useTeamNeedsAnalysisStore } from '@/modules/teamNeedsAnalysis';
+
+const store = useTeamNeedsAnalysisStore();
+await store.fetchTeamsNeedsDataTable(2025);
+</script>
+
+<template>
+  <div>{{ store.averageNeedScore }}</div>
+</template>
+```
+
+### With Composable
+
+```vue
+<script setup lang="ts">
+import { useTeamNeedsAnalysis } from '@/modules/teamNeedsAnalysis';
+
+const { 
+  store, 
+  isLoading, 
+  getSeverityColorClass 
+} = useTeamNeedsAnalysis();
+</script>
+```
+
+## Routes Available
+
+- `/team-needs/dashboard` - Main dashboard
+- `/team-needs/:teamId` - Team detail view
+
+## Module Structure
+
+```
+teamNeedsAnalysis/
+├── index.ts          ← Public API (import from here)
+├── store/            ← Pinia store
+├── types/            ← TypeScript types
+├── composables/      ← Helper functions
+├── views/            ← Page components
+└── router/           ← Route definitions
+```
+
+## Key Points
+
+✅ **Self-contained** - Everything in one folder  
+✅ **Relative imports** - Internal files use `../`  
+✅ **Clean exports** - Import from `@/modules/teamNeedsAnalysis`  
+✅ **Portable** - Copy to any project  
+✅ **Testable** - Clear boundaries
+
+## Next Steps
+
+- Integrate with your Teams API for team names
+- Add filtering by division/conference
+- Customize colors/theme
+- Add export functionality
+
+See full `README.md` for details!

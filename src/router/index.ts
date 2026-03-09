@@ -1,6 +1,7 @@
 // src/router/index.ts
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 import { useAuthStore } from "@/modules/auth/application/authStore";
+import { draftAnalysisRoutes } from '@/modules/draft-analysis/routes';
 
 // guards
 import { requireAuth } from "@/modules/auth/authGuard";
@@ -30,6 +31,8 @@ import VerifyEmailView from "@/modules/auth/presentation/views/VerifyEmailView.v
 // other views
 import UserAdminView from "@/views/admin/UserAdminView.vue";
 import { draftOrderRoutes } from "@/modules/draftOrder/presentation/router/draftOrderRoutes";
+import { mockDraftRoutes } from '@/modules/draftMock/routes';
+
 
 import { can } from "@/modules/accessControl/application/can";
 import type { ActionCode, DomainCode } from "@/modules/accessControl/domain/access.types";
@@ -39,6 +42,7 @@ import { draftPickRoutes } from "./draftPickRoutes";
 import { playoffsRoutes } from "../modules/playoffs/presentation/routes/playoffsRoute";
 import { teamNeedsRoutes } from "@/modules/teams/presentation/router/teamNeedsRoutes";
 import { adminAccessRoutes } from "@/modules/accessControl/presentation/routes/adminAccess.routes";
+import { teamNeedsAnalysisRoutes } from '@/modules/teamNeedsAnalysis';
 
 type RoutePermission = { domain: DomainCode; action: ActionCode };
 
@@ -245,6 +249,19 @@ const routes: RouteRecordRaw[] = [
         beforeEnter: requireAuth,
         meta: { requiresAuth: true, perm: { domain: "PLAYER_MAINT", action: "VIEW" } },
       },
+      // router/index.ts
+      {
+        path: '/roster-players',
+        name: 'RosterPlayers',
+        component: () => import('@/views/RosterPlayerDetail.vue'),
+        children: [
+          {
+            path: ':id',
+            name: 'RosterPlayerDetail',
+            component: () => import('@/views/RosterPlayerDetail.vue'),
+          }
+        ]
+      },
       {
         path: "combine-scores/:id?",
         name: "CombineScoreDetail",
@@ -269,10 +286,13 @@ const routes: RouteRecordRaw[] = [
       },
 
       // Bundled routes (guard will infer if meta.perm absent)
-      ...teamNeedsRoutes,
+      //...teamNeedsRoutes,
+      ...teamNeedsAnalysisRoutes,
       ...draftPickRoutes,
       ...draftOrderRoutes,
       ...playoffsRoutes,
+      ...draftAnalysisRoutes,
+      ...mockDraftRoutes,
       // inside children: [...]
       ...adminAccessRoutes,
       // Draft order explicit routes
@@ -375,6 +395,7 @@ router.beforeEach(async (to) => {
       if (to.path === "/forbidden") return true;
       return { path: "/forbidden", query: { from: to.fullPath } };
     }
+    if (to.path.startsWith("/mock-draft")) return { domain: "DRAFT_TOOLS", action: "VIEW" };
   }
 
   return true;
