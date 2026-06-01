@@ -40,7 +40,7 @@ Sets config.enabled = true
 
 Important Note: Environment variables are always strings, so DEBUG=true in your .env becomes the string "true", not a boolean. That's why we compare with === 'true'.
 If you wanted to be more flexible and accept different truthy values, you could use:
-typescriptexport const createLogger = (prefix?: string): Logger => {
+typescript export const createLogger = (prefix?: string): Logger => {
   const config: LoggerConfig = {
     enabled: process.env.DEBUG?.toLowerCase() === 'true' || 
              process.env.DEBUG === '1',

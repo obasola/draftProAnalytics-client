@@ -22,7 +22,7 @@
       <Column field="gameWeek" header="Week" sortable>
         <template #body="{ data }">
           <div class="week-badge bg-team-secondary text-team-accent px-2 py-1 rounded text-sm font-medium">
-            Week {{ data.gameWeek || 'TBD' }}
+            {{ formatScheduleWeekLabel(data.gameWeek, data.seasonType) }}
           </div>
         </template>
       </Column>
@@ -125,6 +125,7 @@ import GameResultTag from '@/components/GameResultTag.vue'
 import type { Team } from '@/types/team.types'
 import { useAuthStore } from "@/modules/auth/application/authStore";
 import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
+import { formatScheduleWeekLabel } from '@/util/scheduleWeekLabel'
 
 const auth = useAuthStore();
 const scheduleStore = useScheduleStore()

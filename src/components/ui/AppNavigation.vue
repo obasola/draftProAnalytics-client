@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import {
   useRouter,
   isNavigationFailure,
@@ -8,13 +8,14 @@ import {
 } from "vue-router";
 import PanelMenu from "primevue/panelmenu";
 import Button from "primevue/button";
-import type { MenuItem } from "primevue/menuitem";
+import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 
 import { useNavigation } from "@/composables/useNavigation";
 import { useAuthStore } from "@/modules/auth/application/authStore";
 
 import { can } from "@/modules/accessControl/application/can";
 import type { ActionCode, DomainCode } from "@/modules/accessControl/domain/access.types";
+import { logger } from "@/util/Logger";
 
 type RoutePermission = { domain: DomainCode; action: ActionCode };
 
@@ -33,27 +34,48 @@ const toggleCollapse = (): void => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-function focusSink(): void {
-  const el = document.getElementById("focus-sink");
-  if (el instanceof HTMLElement) el.focus();
-}
+const focusSinkRef = ref<HTMLSpanElement | null>(null);
 
-function safePush(to: RouteLocationRaw): void {
-  focusSink();
-  window.setTimeout(() => {
-    void router.push(to).catch((err: unknown) => {
-      if (isNavigationFailure(err, NavigationFailureType.duplicated)) return;
-      // eslint-disable-next-line no-console
-      console.error("Navigation error:", err);
-    });
-  }, 0);
-}
+const moveFocusAwayFromPrimeVueMenu = async (): Promise<void> => {
+  const activeElement = document.activeElement;
+
+  if (activeElement instanceof HTMLElement) {
+    activeElement.blur();
+  }
+
+  await nextTick();
+
+  focusSinkRef.value?.focus({
+    preventScroll: true,
+  });
+};
+
+const blurActiveMenuElement = (): void => {
+  const activeElement = document.activeElement;
+
+  if (activeElement instanceof HTMLElement) {
+    activeElement.blur();
+  }
+};
+
+const safePush = async (to: RouteLocationRaw): Promise<void> => {
+  await moveFocusAwayFromPrimeVueMenu();
+
+  const resolved = router.resolve(to);
+
+  if (resolved.fullPath === router.currentRoute.value.fullPath) {
+    return;
+  }
+
+  logger.debug("safePush invoked");
+  await router.push(to);
+};
 
 const isAdmin = computed((): boolean => (auth.activeRid ?? auth.role ?? 1) === 4);
 
 const handleLogout = async (): Promise<void> => {
   await auth.logout();
-  safePush("/login");
+  await safePush("/login");
 };
 
 function filterMenu(items: readonly MenuItemWithPerm[]): MenuItem[] {
@@ -80,23 +102,34 @@ function filterMenu(items: readonly MenuItemWithPerm[]): MenuItem[] {
 
   return out;
 }
+const routeItem = (p: {
+  label: string;
+  icon: string;
+  to?: RouteLocationRaw;
+  requiredPerm?: RoutePermission;
+  onClick?: () => void | Promise<void>;
+}): MenuItemWithPerm => ({
+  label: p.label,
+  icon: p.icon,
+  requiredPerm: p.requiredPerm,
+  command: async (event): Promise<void> => {
+    event.originalEvent.preventDefault();
+    event.originalEvent.stopPropagation();
 
+    blurActiveMenuElement();
+
+    if (p.onClick) {
+      await p.onClick();
+      return;
+    }
+
+    if (p.to != null) {
+      logger.debug("routeItem invoked: ", p);
+      await safePush(p.to);
+    }
+  },
+});
 const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
-  const routeItem = (p: {
-    label: string;
-    icon: string;
-    to?: RouteLocationRaw;
-    requiredPerm?: RoutePermission;
-    onClick?: () => void;
-  }): MenuItemWithPerm => ({
-    label: p.label,
-    icon: p.icon,
-    requiredPerm: p.requiredPerm,
-    command: () => {
-      if (p.onClick) return p.onClick();
-      if (p.to != null) return safePush(p.to);
-    },
-  });
 
   return [
     // Dashboard
@@ -208,6 +241,27 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           to: "/draft-order",
           requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
         }),
+        
+        routeItem({
+          label: 'Draft Day Scorecard',
+          icon: 'pi pi-table',
+          to: '/draft-day-scorecard',
+          requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
+        }),
+
+        routeItem({
+          label: 'Draft Pick Management',
+          icon: 'pi pi-pencil',
+          to: '/draft-day-scorecard/2026/manage',
+          requiredPerm: { domain: "DRAFT_ORDER", action: "EDIT" },
+        }),
+
+        routeItem({
+          label: "B4Me Analysis",
+          icon: "pi pi-stopwatch",
+          to: "/b4me-analysis",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
         routeItem({
           label: "Draft Simulation",
           icon: "pi pi-stopwatch",
@@ -294,9 +348,21 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
       icon: "pi pi-cog",
       items: [
         routeItem({
-          label: "Jobs",
+          label: "Load Season Schedule",
+          icon: "pi pi-cloud-download",
+          to: "/job-schedule/load-season-schedule",
+          requiredPerm: { domain: "JOBS", action: "RUN" },
+        }),
+        routeItem({
+          label: "Import Game Scores",
           icon: "pi pi-stopwatch",
-          onClick: () => goToPage("Jobs"),
+          to: "/jobs/import-game-scores",
+          requiredPerm: { domain: "JOBS", action: "RUN" },
+        }),
+        routeItem({
+          label: "Job Queue",
+          icon: "pi pi-list",
+          to: "/jobs",
           requiredPerm: { domain: "JOBS", action: "VIEW" },
         }),
       ],
@@ -330,11 +396,20 @@ const menuItems = computed<MenuItem[]>(() => {
         label: "Account",
         icon: "pi pi-user",
         items: [
-          { label: "Login", icon: "pi pi-sign-in", command: () => safePush("/login") },
-          { label: "Register", icon: "pi pi-user-plus", command: () => safePush("/register") },
+          routeItem({
+            label: "Login",
+            icon: "pi pi-sign-in",
+            to: "/login",
+          }),
+          routeItem({
+            label: "Register",
+            icon: "pi pi-user-plus",
+            to: "/register",
+          }),
         ],
       },
     ];
+
     return filterMenu(authSpec);
   }
 
@@ -345,15 +420,15 @@ const menuItems = computed<MenuItem[]>(() => {
 <template>
   <nav class="app-navigation" :class="{ collapsed: isCollapsed }" role="navigation" aria-label="Main Navigation">
     <div class="nav-header">
-      <Button
-        :icon="isCollapsed ? 'pi pi-angle-right' : 'pi pi-angle-left'"
-        class="collapse-toggle"
-        text
-        rounded
-        aria-label="Toggle navigation"
-        @click="toggleCollapse"
-      />
+      <Button :icon="isCollapsed ? 'pi pi-angle-right' : 'pi pi-angle-left'" class="collapse-toggle" text rounded
+        aria-label="Toggle navigation" @click="toggleCollapse" />
     </div>
+
+<span
+  ref="focusSinkRef"
+  class="focus-sink"
+  tabindex="-1"
+/>
 
     <PanelMenu :model="menuItems" :multiple="true" class="nav-panelmenu" />
   </nav>
@@ -383,7 +458,7 @@ const menuItems = computed<MenuItem[]>(() => {
   margin-bottom: 0.5rem;
   padding: 0 0.25rem;
   background-color: #073c98;
-  color:#ffffff;
+  color: #ffffff;
 }
 
 .collapse-toggle {
@@ -402,10 +477,10 @@ const menuItems = computed<MenuItem[]>(() => {
 /* PanelMenu base */
 :deep(.nav-panelmenu.p-panelmenu) {
   background-color: #073c98;
-  color:#ffffff;
+  color: #ffffff;
   border: none;
   width: 100%;
-  
+
 }
 
 :deep(.p-panelmenu-panel) {
@@ -453,17 +528,18 @@ const menuItems = computed<MenuItem[]>(() => {
 
 /* Collapsed mode: icons-only */
 .collapsed :deep(.p-panelmenu-header-link) {
-  color:#073c98;
+  color: #073c98;
 }
+
 .collapsed :deep(.p-menuitem-link) {
   justify-content: center;
-  color:#073c98;
+  color: #073c98;
   padding: 0.6rem;
 }
 
 .collapsed :deep(.p-menuitem-text),
 .collapsed :deep(.p-panelmenu-header-label) {
-  color:#073c98;
+  color: #073c98;
   display: none;
 }
 
@@ -481,5 +557,12 @@ const menuItems = computed<MenuItem[]>(() => {
 
 :deep(.p-panelmenu-root-list) {
   gap: 0.15rem;
+}
+.focus-sink {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 </style>

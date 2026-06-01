@@ -1,0 +1,5 @@
+
+- Keep the existing Phase 4 route and tab shell.
+- Persist `playerName`, `draftYear`, and `scoringMode` to the route query string.
+- Keep the methodology panel and filter summary as-is; the backend now returns live values.
+- Keep the deferred team-context panel as-is; the backend still returns a safe-null placeholder when requested.

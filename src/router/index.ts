@@ -2,6 +2,8 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 import { useAuthStore } from "@/modules/auth/application/authStore";
 import { draftAnalysisRoutes } from '@/modules/draft-analysis/routes';
+import B4MeAnalysisView from '@/modules/b4meAnalysis/views/B4MeAnalysisView.vue';
+import { draftDayScorecardRoutes } from '@/modules/draftDayScorecard/router/draftDayScorecard.routes'
 
 // guards
 import { requireAuth } from "@/modules/auth/authGuard";
@@ -32,7 +34,7 @@ import VerifyEmailView from "@/modules/auth/presentation/views/VerifyEmailView.v
 import UserAdminView from "@/views/admin/UserAdminView.vue";
 import { draftOrderRoutes } from "@/modules/draftOrder/presentation/router/draftOrderRoutes";
 import { mockDraftRoutes } from '@/modules/draftMock/routes';
-
+import { jobsRoutes } from "@/modules/jobs";
 
 import { can } from "@/modules/accessControl/application/can";
 import type { ActionCode, DomainCode } from "@/modules/accessControl/domain/access.types";
@@ -149,6 +151,16 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, perm: { domain: "DASHBOARD", action: "VIEW" } },
       },
 
+      {
+        path: '/b4me-analysis',
+        name: 'b4me-analysis',
+        component: B4MeAnalysisView,
+        meta: {
+          requiresAuth: true,
+          domain: 'DRAFT_TOOLS',
+          action: 'VIEW',
+        },
+      },
       // Draft Simulator
       {
         path: "draft-simulator",
@@ -290,9 +302,11 @@ const routes: RouteRecordRaw[] = [
       ...teamNeedsAnalysisRoutes,
       ...draftPickRoutes,
       ...draftOrderRoutes,
+      ...draftDayScorecardRoutes,
       ...playoffsRoutes,
       ...draftAnalysisRoutes,
       ...mockDraftRoutes,
+      //...jobsRoutes,
       // inside children: [...]
       ...adminAccessRoutes,
       // Draft order explicit routes

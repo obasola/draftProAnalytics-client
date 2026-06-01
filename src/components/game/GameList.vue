@@ -13,6 +13,8 @@ import GameEditForm from '@/components/game/GameEditForm.vue'
 import { useThemeStore } from '@/stores/theme.store'
 import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 import { useAuthStore } from '@/modules/auth/application/authStore'
+import { formatScheduleWeekLabel, type ScheduleWeekValue } from '@/util/scheduleWeekLabel'
+
 
 const auth = useAuthStore();
 
@@ -92,6 +94,31 @@ const getTeamShortNameAndLogo = (team: any) => {
   return getTeamLogoInfo(ref)
 }
 
+type GameListRow = Record<string, unknown>
+
+function getRecordValue(row: GameListRow, keys: readonly string[]): ScheduleWeekValue {
+  for (const key of keys) {
+    const value = row[key]
+    if (typeof value === 'number' || typeof value === 'string' || value === null || value === undefined) {
+      if (value !== null && value !== undefined && value !== '') return value
+    }
+  }
+
+  return null
+}
+
+function getGameWeekValue(game: GameListRow): ScheduleWeekValue {
+  return getRecordValue(game, ['gameWeek', 'week', 'game_week'])
+}
+
+function getSeasonTypeValue(game: GameListRow): ScheduleWeekValue {
+  return getRecordValue(game, ['seasonType', 'season_type'])
+}
+
+function getGameWeekLabel(game: GameListRow): string {
+  return formatScheduleWeekLabel(getGameWeekValue(game), getSeasonTypeValue(game))
+}
+
 const isWinningScore = (score1: number | undefined, score2: number | undefined) => {
   if (score1 == null || score2 == null) return false
   return score1 > score2
@@ -125,9 +152,9 @@ const getStatusClass = (status: string | undefined) => {
       <Column field="seasonYear" header="Season" sortable />
       <Column header="Week" sortable sortField="gameWeek">
         <template #body="{ data }">
-          <span v-if="data.seasonType">Pre {{ data.seasonType }}</span>
-          <span v-else-if="data.gameWeek">Week {{ data.gameWeek }}</span>
-          <span v-else>-</span>
+          <div class="week-badge bg-team-secondary text-team-accent px-2 py-1 rounded text-sm font-medium">
+            {{ getGameWeekLabel(data) }}
+          </div>
         </template>
       </Column>
       <Column field="gameDate" header="Date" sortable dataType="date">

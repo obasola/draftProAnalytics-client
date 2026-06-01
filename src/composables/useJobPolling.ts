@@ -1,7 +1,7 @@
 // src/composables/useJobPolling.ts
 import { ref, onUnmounted } from 'vue';
 import type { Job } from '../types/Job';
-import { useJobStore } from '@/stores/profootball/JobStore';
+import { useJobStore } from '@/stores/JobStore';
 
 export function useJobPolling(intervalMs = 3000) {
   const jobStore = useJobStore();

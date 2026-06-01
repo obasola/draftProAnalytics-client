@@ -5,7 +5,7 @@ import Button from 'primevue/button';
 import InputNumber from 'primevue/inputnumber';
 import Card from 'primevue/card';
 import Message from 'primevue/message';
-import { useJobStore } from '@/stores/profootball/JobStore';
+import { useJobStore } from '@/stores/JobStore';
 
 const router = useRouter();
 const jobStore = useJobStore();

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useJobStore } from '../../stores/jobStore';
-import { useJobPolling } from '../../composables/useJobPolling';
+
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import ProgressBar from 'primevue/progressbar';
@@ -10,7 +9,10 @@ import Tag from 'primevue/tag';
 import Message from 'primevue/message';
 import Divider from 'primevue/divider';
 import { format } from 'date-fns';
-import type { JobStatus } from '../../types/Job';
+import { useJobPolling } from '@/composables/useJobPolling';
+import { JobStatus } from '@/services/api';
+import { useJobStore } from '@/stores/JobStore';
+
 
 const route = useRoute();
 const router = useRouter();
