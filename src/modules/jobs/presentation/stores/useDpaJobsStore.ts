@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import { dpaJobsApi } from '../../application/DpaJobsApi';
+
 import { DPA_JOB_STATUS } from '../../domain/NflJobTypes';
 import type {
   DpaJobListQuery,
@@ -11,6 +11,7 @@ import type {
   LoadNflSeasonScheduleCommand,
   ProcessJobQueueResult,
 } from '../../domain/NflJobTypes';
+import { dpaJobsApi } from '../../application/DpaJobsApi';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {

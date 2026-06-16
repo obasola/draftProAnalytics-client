@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from "vue";
+
 import {
+  RouterLink,
   useRouter,
-  isNavigationFailure,
-  NavigationFailureType,
   type RouteLocationRaw,
 } from "vue-router";
+
 import PanelMenu from "primevue/panelmenu";
 import Button from "primevue/button";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
@@ -20,6 +21,7 @@ import { logger } from "@/util/Logger";
 type RoutePermission = { domain: DomainCode; action: ActionCode };
 
 type MenuItemWithPerm = MenuItem & {
+  to?: RouteLocationRaw;
   requiredPerm?: RoutePermission;
   adminOnly?: boolean;
 };
@@ -111,6 +113,7 @@ const routeItem = (p: {
 }): MenuItemWithPerm => ({
   label: p.label,
   icon: p.icon,
+  to: p.to,
   requiredPerm: p.requiredPerm,
   command: async (event): Promise<void> => {
     event.originalEvent.preventDefault();
@@ -129,6 +132,23 @@ const routeItem = (p: {
     }
   },
 });
+
+const handleLeafItemClick = async (
+  event: MouseEvent,
+  item: MenuItemWithPerm,
+): Promise<void> => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  await moveFocusAwayFromPrimeVueMenu();
+
+  if (item.command) {
+    await item.command({
+      originalEvent: event,
+      item,
+    });
+  }
+};
 const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
 
   return [
@@ -241,7 +261,7 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           to: "/draft-order",
           requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
         }),
-        
+
         routeItem({
           label: 'Draft Day Scorecard',
           icon: 'pi pi-table',
@@ -348,15 +368,15 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
       icon: "pi pi-cog",
       items: [
         routeItem({
-          label: "Load Season Schedule",
+          label: "Import Season Schedule",
           icon: "pi pi-cloud-download",
-          to: "/job-schedule/load-season-schedule",
+          to: "/jobs/nfl-imports/schedule",
           requiredPerm: { domain: "JOBS", action: "RUN" },
         }),
         routeItem({
-          label: "Import Game Scores",
+          label: "Import Weekly Scores",
           icon: "pi pi-stopwatch",
-          to: "/jobs/import-game-scores",
+          to: "/jobs/nfl-imports/scores",
           requiredPerm: { domain: "JOBS", action: "RUN" },
         }),
         routeItem({
@@ -424,13 +444,29 @@ const menuItems = computed<MenuItem[]>(() => {
         aria-label="Toggle navigation" @click="toggleCollapse" />
     </div>
 
-<span
-  ref="focusSinkRef"
-  class="focus-sink"
-  tabindex="-1"
-/>
+    <span ref="focusSinkRef" class="focus-sink" tabindex="-1" />
 
-    <PanelMenu :model="menuItems" :multiple="true" class="nav-panelmenu" />
+    <PanelMenu :model="menuItems" :multiple="true" class="nav-panelmenu">
+      <template #item="{ item, props, hasSubmenu }">
+        <a v-if="hasSubmenu" v-bind="props.action" class="p-panelmenu-header-link">
+          <span :class="item.icon" />
+          <span class="p-panelmenu-header-label">{{ item.label }}</span>
+          <span class="p-submenu-icon pi pi-chevron-down" />
+        </a>
+
+        <RouterLink v-else-if="item.to" :to="item.to" custom v-slot="{ href }">
+          <a :href="href" class="p-menuitem-link" @click="handleLeafItemClick($event, item as MenuItemWithPerm)">
+            <span :class="item.icon" />
+            <span class="p-menuitem-text">{{ item.label }}</span>
+          </a>
+        </RouterLink>
+
+        <a v-else href="#" class="p-menuitem-link" @click="handleLeafItemClick($event, item as MenuItemWithPerm)">
+          <span :class="item.icon" />
+          <span class="p-menuitem-text">{{ item.label }}</span>
+        </a>
+      </template>
+    </PanelMenu>
   </nav>
 </template>
 
@@ -558,6 +594,7 @@ const menuItems = computed<MenuItem[]>(() => {
 :deep(.p-panelmenu-root-list) {
   gap: 0.15rem;
 }
+
 .focus-sink {
   position: fixed;
   width: 1px;

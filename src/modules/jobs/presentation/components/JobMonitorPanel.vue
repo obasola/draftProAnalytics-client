@@ -13,7 +13,9 @@ import Tag from 'primevue/tag';
 import { useDpaJobsStore } from '../stores/useDpaJobsStore';
 import { DPA_JOB_STATUS } from '../../domain/NflJobTypes';
 import type { DpaJobStatus, DpaJobSummary, DpaJobType } from '../../domain/NflJobTypes';
-import { dpaJobStatusOptions, dpaJobTypeOptions, getJobTypeLabel, getStatusSeverity } from '../../domain/NflJobLabels';
+import { dpaJobStatusOptions, dpaJobTypeOptions } from '../../domain/NflJobLabels';
+import { JobStatus } from '@/types/Job';
+
 
 const jobsStore = useDpaJobsStore();
 
@@ -79,7 +81,35 @@ const formatDateTime = (value: string | null): string => {
 const canCancel = (job: DpaJobSummary): boolean => (
   job.status === DPA_JOB_STATUS.PENDING || job.status === DPA_JOB_STATUS.IN_PROGRESS
 );
+function getStatusSeverity(status: JobStatus): 'success' | 'info' | 'warning' | 'danger' | 'secondary' {
+  switch (status) {
+    case 'COMPLETED':
+      return 'success';
+    case 'RUNNING':
+      return 'info';
+    case 'PENDING':
+      return 'warning';
+    case 'FAILED':
+      return 'danger';
+    case 'CANCELLED':
+      return 'secondary';
+    default:
+      return 'secondary';
+  }
+}
 
+function getJobTypeLabel(type: string): string {
+  switch (type) {
+    case 'PF_DRAFT_SCRAPER':
+      return 'Pro Football Draft Scraper';
+    case 'ESPN_PLAYER_IMPORT':
+      return 'ESPN Player Import';
+    case 'NFL_STATS_IMPORT':
+      return 'NFL Stats Import';
+    default:
+      return type;
+  }
+}
 const renderPayload = (payload: DpaJobSummary['payload']): string => {
   if (!payload || typeof payload !== 'object') {
     return '—';

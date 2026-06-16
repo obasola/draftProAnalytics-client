@@ -1,3 +1,4 @@
+// draftproanalytics-client/src/components/jobs/JobDetail.vue
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
