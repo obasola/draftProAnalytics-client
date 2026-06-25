@@ -373,7 +373,6 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           to: "/jobs/nfl-imports/schedule",
           requiredPerm: { domain: "JOBS", action: "RUN" },
         }),
-
         routeItem({
           label: "Job Queue",
           icon: "pi pi-list",

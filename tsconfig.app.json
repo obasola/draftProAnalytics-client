@@ -1,28 +1,33 @@
-// tsconfig.app.json
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "experimentalDecorators": true,
-    "allowJs": false,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
     "jsx": "preserve",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "useDefineForClassFields": true,
-    "baseUrl": "src",
-    "rootDir": "./src",
-    "outDir": "./dist",
+
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     },
-    "noEmit": true  // ADD THIS LINE - prevents TypeScript from emitting .js files
+
+    "types": ["vite/client"],
+    "noEmit": true
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "vite-env.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/vite-env.d.ts"
+  ],
   "exclude": ["dist", "node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }

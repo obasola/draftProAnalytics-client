@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { AccessMeResponse } from "../../../../../../draftProAnalytics-server/src/modules/accessControl/domain/access.types";
+import { AccessMeResponse } from "../../domain/access.types";
 
 function apiBaseUrl(): string {
   return (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";

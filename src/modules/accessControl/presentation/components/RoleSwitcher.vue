@@ -24,7 +24,14 @@ const placeholder = computed<string>(() => {
 });
 
 async function onAssume(): Promise<void> {
-  if (selectedRid.value == null) return;
+  console.log("Assume clicked", {
+    selectedRid: selectedRid.value,
+    activeRid: auth.activeRid,
+  });
+  if (selectedRid.value == null) {
+    alert("No Selection found...Please select a role to assume.")
+    return
+  };
   await auth.assumeRole(selectedRid.value);
   selectedRid.value = null;
 }
