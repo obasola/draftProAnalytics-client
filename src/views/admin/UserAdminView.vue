@@ -67,6 +67,7 @@ function formatRoles(roles: AdminRoleDto[]): string {
 }
 
 async function reload(): Promise<void> {
+  //alert("Reloading Users for User Admin display")
   loading.value = true;
   try {
     const res = await adminAccessApi.listUsers(search.value);

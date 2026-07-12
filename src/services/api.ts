@@ -4,7 +4,8 @@ import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosHeaders } from 'a
 /* ==================== base URL resolution ==================== */
 const dropTrailingSlash = (u?: string) => (u ? u.replace(/\/+$/, '') : '')
 const hasApiSuffix = (u: string) => /\/api(?:\/|$)/i.test(u)
-
+const AUTH_SESSION_KEY = 'auth_session'
+const AUTH_PERSIST_KEY = 'auth_persist'
 /**
  * If VITE_API_BASE_URL is set, use it as-is (may or may not include /api).
  * Otherwise:
@@ -30,15 +31,46 @@ const axiosInstance = axios.create({
   withCredentials: true,
 })
 
+function readAccessTokenFromJsonStorage(storage: Storage, key: string): string {
+  const stored = storage.getItem(key)
+  if (!stored) return ''
+
+  try {
+    const parsed = JSON.parse(stored) as { accessToken?: unknown }
+    return typeof parsed.accessToken === 'string' ? parsed.accessToken : ''
+  } catch {
+    storage.removeItem(key)
+    return ''
+  }
+}
+
+function getStoredAccessToken(): string {
+  const sessionToken = readAccessTokenFromJsonStorage(sessionStorage, AUTH_SESSION_KEY)
+  if (sessionToken) return sessionToken
+
+  return readAccessTokenFromJsonStorage(localStorage, AUTH_PERSIST_KEY)
+}
+
+function clearStoredAuth(): void {
+  sessionStorage.removeItem(AUTH_SESSION_KEY)
+  localStorage.removeItem(AUTH_PERSIST_KEY)
+}
 /* ==================== interceptors ==================== */
 function setupInterceptors(instance: AxiosInstance): void {
   instance.interceptors.request.use(
     config => {
-      const token = localStorage.getItem('auth_token')
+      const token = getStoredAccessToken()
+      // DEBUG 
+      console.log('AUTH REQUEST DEBUG', {
+        url: config.url,
+        hasToken: Boolean(token),
+        hasSessionAuth: Boolean(sessionStorage.getItem(AUTH_SESSION_KEY)),
+        hasPersistAuth: Boolean(localStorage.getItem(AUTH_PERSIST_KEY)),
+      })
+      
       if (token) {
         const headers = (config.headers ??= new AxiosHeaders())
         headers.set('Authorization', `Bearer ${token}`)
-        // optionally: headers.set('Content-Type', 'application/json');
       }
       const method = (config.method || 'get').toUpperCase()
       const base = config.baseURL?.replace(/\/+$/, '') || ''
@@ -66,8 +98,19 @@ function setupInterceptors(instance: AxiosInstance): void {
 
       switch (status) {
         case 401:
-          localStorage.removeItem('auth_token')
-          window.location.href = '/login'
+          // TEMPORARY DEBUG ONLY:
+          console.error('AUTH 401 DEBUG', {
+            url,
+            hasSessionAuth: Boolean(sessionStorage.getItem(AUTH_SESSION_KEY)),
+            hasPersistAuth: Boolean(localStorage.getItem(AUTH_PERSIST_KEY)),
+            responseData: error.response?.data,
+          })
+          // -- OR --
+          // PRODUCTION RUN NO DEBUG:
+          /*clearStoredAuth()
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login'
+          } */
           break
         case 403:
           console.error('Access forbidden')
@@ -207,7 +250,7 @@ class ApiService {
   ): Promise<{ id: number; message?: string }> {
     const res = await this.post<{ id: number; message?: string }>(
       `/jobs/kickoff/scoreboard/by-week`,
-      { seasonYear: year, seasonType, week}
+      { seasonYear: year, seasonType, week }
     )
     return res.data
   }
@@ -242,10 +285,11 @@ export const ScoreboardApi = {
     return res.data
   },
   async getCurrent(): Promise<{ year: number; seasonType: 1 | 2 | 3; week: number }> {
-    const res = await apiService.get<{ year: number; seasonType: 1 | 2 | 3; week: number }>(`/scoreboard/current`)
+    const res = await apiService.get<{ year: number; seasonType: 1 | 2 | 3; week: number }>(
+      `/scoreboard/current`
+    )
     return res.data
   },
-
 }
 
 /* ---- Jobs API ---- */

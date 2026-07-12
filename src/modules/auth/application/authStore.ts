@@ -6,6 +6,7 @@ import { loginWithPasswordUseCase } from './usecases/loginWithPasswordUseCase'
 import { refreshAccessTokenUseCase } from './usecases/refreshAccessTokenUseCase'
 import { logoutUseCase } from './usecases/logoutUseCase'
 
+
 import type {
   AccessMeResponse,
   AssignedRole,
@@ -62,6 +63,9 @@ export const useAuthStore = defineStore('auth', () => {
   const tokenExpiry = ref<number>(0) // UNIX seconds
   const refreshIntervalId = ref<number | null>(null)
 
+  const AUTH_SESSION_KEY = 'auth_session'
+  const AUTH_PERSIST_KEY = 'auth_persist'
+
   // ─────────────────────────────────────
   // COMPUTED
   // ─────────────────────────────────────
@@ -82,36 +86,8 @@ export const useAuthStore = defineStore('auth', () => {
     tokenExpiry: number
   }
 
-  function loadFromStorage(): void {
-    const stored = localStorage.getItem('auth_persist')
-    if (!stored) return
-
-    const data = JSON.parse(stored) as PersistedAuth
-
-    accessToken.value = data.accessToken
-    personId.value = data.personId
-    userName.value = data.userName
-    activeRid.value = data.activeRid
-
-    // keep legacy role synced to activeRid
-    role.value = data.activeRid ?? data.role ?? null
-
-    tokenExpiry.value = data.tokenExpiry
-    rememberMe.value = true
-
-    scheduleAutoRefresh()
-
-    // load /access/me after boot if we have a token
-    void ensureAccessContext()
-  }
-
-  function persistIfNeeded(): void {
-    if (!rememberMe.value) {
-      localStorage.removeItem('auth_persist')
-      return
-    }
-
-    const data: PersistedAuth = {
+  function toPersistedAuth(): PersistedAuth {
+    return {
       accessToken: accessToken.value,
       personId: personId.value ?? 0,
       userName: userName.value,
@@ -119,8 +95,77 @@ export const useAuthStore = defineStore('auth', () => {
       role: role.value ?? null,
       tokenExpiry: tokenExpiry.value,
     }
+  }
 
-    localStorage.setItem('auth_persist', JSON.stringify(data))
+  function readStoredAuth(): { data: PersistedAuth; remembered: boolean } | null {
+    const sessionStored = sessionStorage.getItem(AUTH_SESSION_KEY)
+
+    if (sessionStored) {
+      try {
+        return {
+          data: JSON.parse(sessionStored) as PersistedAuth,
+          remembered: false,
+        }
+      } catch {
+        sessionStorage.removeItem(AUTH_SESSION_KEY)
+      }
+    }
+
+    const persistedStored = localStorage.getItem(AUTH_PERSIST_KEY)
+
+    if (persistedStored) {
+      try {
+        return {
+          data: JSON.parse(persistedStored) as PersistedAuth,
+          remembered: true,
+        }
+      } catch {
+        localStorage.removeItem(AUTH_PERSIST_KEY)
+      }
+    }
+
+    return null
+  }
+
+  function loadFromStorage(): void {
+    const stored = readStoredAuth()
+    if (!stored) return
+
+    const data = stored.data
+
+    if (!data.accessToken) return
+
+    accessToken.value = data.accessToken
+    personId.value = data.personId
+    userName.value = data.userName
+    activeRid.value = data.activeRid
+    role.value = data.activeRid ?? data.role ?? null
+    tokenExpiry.value = data.tokenExpiry
+    rememberMe.value = stored.remembered
+
+    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(data))
+
+    scheduleAutoRefresh()
+
+    void ensureAccessContext()
+  }
+
+  function persistIfNeeded(): void {
+    const data = toPersistedAuth()
+
+    if (!data.accessToken) {
+      sessionStorage.removeItem(AUTH_SESSION_KEY)
+      localStorage.removeItem(AUTH_PERSIST_KEY)
+      return
+    }
+
+    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(data))
+
+    if (rememberMe.value) {
+      localStorage.setItem(AUTH_PERSIST_KEY, JSON.stringify(data))
+    } else {
+      localStorage.removeItem(AUTH_PERSIST_KEY)
+    }
   }
 
   watch(accessToken, persistIfNeeded)
@@ -187,8 +232,21 @@ export const useAuthStore = defineStore('auth', () => {
   async function assumeRole(toRid: number): Promise<void> {
     if (!accessToken.value) return
 
-    const ctx = await apiAssumeRole(accessToken.value, toRid)
-    applyAccessContext(ctx)
+    const result = await apiAssumeRole(accessToken.value, toRid)
+
+    accessToken.value = result.accessToken
+
+    const payload = decodeJwt(result.accessToken)
+    tokenExpiry.value = payload.exp
+
+    applyAccessContext({
+      personId: result.personId,
+      userName: result.userName,
+      activeRid: result.activeRid,
+      activeRoleName: result.activeRoleName,
+      assignedRoles: result.assignedRoles,
+      permissions: result.permissions,
+    })
   }
 
   // ─────────────────────────────────────
@@ -265,9 +323,18 @@ export const useAuthStore = defineStore('auth', () => {
     const payload = decodeJwt(result.accessToken)
     personId.value = payload.sub
     userName.value = payload.userName
+    activeRid.value = payload.activeRid ?? null
+    role.value = activeRid.value
     tokenExpiry.value = payload.exp
 
+    accessLoaded.value = false
+    assignedRoles.value = []
+    permissions.value = {}
+    activeRoleName.value = ''
+
     scheduleAutoRefresh()
+
+    await ensureAccessContext()
   }
   async function loginWithApple(credential: string): Promise<void> {
     const result = await loginWithAppleUseCase(credential)
@@ -277,9 +344,18 @@ export const useAuthStore = defineStore('auth', () => {
     const payload = decodeJwt(result.accessToken)
     personId.value = payload.sub
     userName.value = payload.userName
+    activeRid.value = payload.activeRid ?? null
+    role.value = activeRid.value
     tokenExpiry.value = payload.exp
 
+    accessLoaded.value = false
+    assignedRoles.value = []
+    permissions.value = {}
+    activeRoleName.value = ''
+
     scheduleAutoRefresh()
+
+    await ensureAccessContext()
   }
 
   // ─────────────────────────────────────
@@ -303,7 +379,8 @@ export const useAuthStore = defineStore('auth', () => {
     accessLoaded.value = false
     accessLoadInFlight.value = null
 
-    localStorage.removeItem('auth_persist')
+    sessionStorage.removeItem(AUTH_SESSION_KEY)
+    localStorage.removeItem(AUTH_PERSIST_KEY)
 
     if (refreshIntervalId.value !== null) {
       window.clearInterval(refreshIntervalId.value)

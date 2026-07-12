@@ -103,9 +103,15 @@ function close(): void {
 async function save(): Promise<void> {
   if (!props.user) return;
 
+  const roleIds = Array.from(new Set(selectedRoleIds.value));
+
+  if (!roleIds.includes(1)) {
+    roleIds.push(1);
+  }
+
   saving.value = true;
   try {
-    await adminAccessApi.updateUserRoles(props.user.pid, selectedRoleIds.value);
+    await adminAccessApi.updateUserRoles(props.user.pid, roleIds);
     emit("saved");
     close();
   } finally {

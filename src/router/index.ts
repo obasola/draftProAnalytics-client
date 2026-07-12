@@ -31,7 +31,6 @@ import RegisterView from '@/modules/auth/presentation/views/RegisterView.vue'
 import VerifyEmailView from '@/modules/auth/presentation/views/VerifyEmailView.vue'
 
 // other views
-import UserAdminView from '@/views/admin/UserAdminView.vue'
 import { draftOrderRoutes } from '@/modules/draftOrder/presentation/router/draftOrderRoutes'
 import { mockDraftRoutes } from '@/modules/draftMock/routes'
 import { jobsRoutes } from '@/modules/jobs'
@@ -372,14 +371,6 @@ const routes: RouteRecordRaw[] = [
           title: 'Draft Pick Scraper',
           icon: 'pi-cloud-download',
         },
-      },
-
-      {
-        path: 'admin/users',
-        name: 'UserAdmin',
-        component: UserAdminView,
-        beforeEnter: requireAuth,
-        meta: { requiresAuth: true, perm: { domain: 'ADMIN_USERS', action: 'VIEW' } },
       },
     ],
   },

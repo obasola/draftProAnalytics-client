@@ -109,12 +109,14 @@ const routeItem = (p: {
   icon: string;
   to?: RouteLocationRaw;
   requiredPerm?: RoutePermission;
+  adminOnly?: boolean;
   onClick?: () => void | Promise<void>;
 }): MenuItemWithPerm => ({
   label: p.label,
   icon: p.icon,
   to: p.to,
   requiredPerm: p.requiredPerm,
+  adminOnly: p.adminOnly,
   command: async (event): Promise<void> => {
     event.originalEvent.preventDefault();
     event.originalEvent.stopPropagation();
@@ -392,6 +394,7 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           icon: "pi pi-users",
           to: "/admin/users",
           requiredPerm: { domain: "ADMIN_USERS", action: "VIEW" },
+          adminOnly: true,
         }),
         routeItem({
           label: "Logout",

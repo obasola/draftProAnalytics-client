@@ -6,7 +6,7 @@ import { requireAuth } from "@/modules/auth/authGuard";
 
 export const adminAccessRoutes: RouteRecordRaw[] = [
   {
-    path: "/admin/users",
+    path: "admin/users",
     name: "UserAdmin",
     component: UserAdminView,
     beforeEnter: requireAuth,
@@ -17,3 +17,4 @@ export const adminAccessRoutes: RouteRecordRaw[] = [
     },
   },
 ];
+

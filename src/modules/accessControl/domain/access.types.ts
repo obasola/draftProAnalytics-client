@@ -44,3 +44,8 @@ export type AccessMeResponse = {
  */
 export type PermissionTuple = { domain: string; action: string };
 export type AccessContext = AccessMeResponse;
+
+export type AssumeRoleResponse = AccessMeResponse & {
+  accessToken: string;
+  accessExpiresInSec?: number;
+};
