@@ -2,14 +2,17 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useJobStore } from '../../stores/jobStore';
+//import { useJobStore } from '../../stores/jobStore';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import ProgressBar from 'primevue/progressbar';
 import Tag from 'primevue/tag';
 import { formatDistanceToNow } from 'date-fns';
-import type { Job, JobStatus } from '../../types/Job';
+import { Job } from '@/types/Job';
+import { useJobStore } from '@/stores/JobStore';
+import { JobStatus } from '@/services/api';
+//import type { Job, JobStatus } from '../../types/Job';
 
 const router = useRouter();
 const jobStore = useJobStore();
@@ -37,6 +40,7 @@ await jobStore.createJob({
 });
 */
 function viewJobDetail(job: Job) {
+  alert("JobList::Show JobDetails view")
   router.push({ name: 'JobDetail', params: { id: job.id } });
 }
 

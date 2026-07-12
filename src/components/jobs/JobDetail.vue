@@ -1,7 +1,8 @@
+// draftproanalytics-client/src/components/jobs/JobDetail.vue
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useJobStore } from '../../stores/jobStore';
+//import { useJobStore } from '../../stores/JobStore';
 import { useJobPolling } from '../../composables/useJobPolling';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
@@ -11,6 +12,7 @@ import Message from 'primevue/message';
 import Divider from 'primevue/divider';
 import { format } from 'date-fns';
 import type { JobStatus } from '../../types/Job';
+import { useJobStore } from '@/stores/JobStore';
 
 const route = useRoute();
 const router = useRouter();

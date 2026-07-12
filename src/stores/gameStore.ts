@@ -4,6 +4,7 @@ import { normalizePaged } from '@/util/paging'
 import { defineStore } from 'pinia'
 import { gameService } from '@/services/gameService'
 import type { Game, CrudMode, PaginationMeta } from '@/types'
+import { formatScheduleWeekLabel as formatWeekLabel } from '@/util/scheduleWeekLabel'
 
 export interface GameRow {
   id: number
@@ -42,6 +43,7 @@ export interface GameRow {
   gameStatus: string
 
   /* ✅ add these (match your Prisma model fields) */
+  seasonWeekLabel?: string
   isPlayoff?: boolean
   playoffRound?: string | null
   playoffConference?: string | null
@@ -203,6 +205,17 @@ export const useGameStore = defineStore('games', {
 })
 
 // ---------- helpers ----------
+export function formatGameWeekLabel(gameWeek: number | string | null | undefined): string {
+  return formatWeekLabel(gameWeek)
+}
+
+export function formatGameSeasonWeekLabel(
+  gameWeek: number | string | null | undefined,
+  seasonType: number | string | null | undefined,
+): string {
+  return formatWeekLabel(gameWeek, seasonType)
+}
+
 function toPaginationMeta(total: number, page: number, limit: number): PaginationMeta {
   const totalPages = Math.max(1, Math.ceil((total || 0) / (limit || 1)))
   return { total, page, limit, totalPages, hasNext: page < totalPages, hasPrev: page > 1 }
@@ -214,6 +227,7 @@ function normalizeToRow(g: Game): GameRow {
     seasonYear: String(g.seasonYear),
     gameWeek: g.gameWeek ?? null,
     seasonType: (g as any).seasonType ?? null,
+    seasonWeekLabel: formatWeekLabel(g.gameWeek ?? null, (g as any).seasonType ?? null),
     gameDate: g.gameDate as unknown as string,
     homeTeamId: g.homeTeamId,
     awayTeamId: g.awayTeamId,

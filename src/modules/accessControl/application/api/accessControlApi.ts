@@ -1,26 +1,30 @@
-import axios from "axios";
-import type { AccessMeResponse } from "../../../../../../draftProAnalytics-server/src/modules/accessControl/domain/access.types";
+import { api } from "@/services/api";
+import type { AccessMeResponse } from "../../domain/access.types";
 
-function apiBaseUrl(): string {
-  return (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
+export interface AssumeRoleResponse extends AccessMeResponse {
+  accessToken: string;
+  accessExpiresInSec?: number;
 }
 
 export async function getMyAccessContext(accessToken: string): Promise<AccessMeResponse> {
-  const res = await axios.get<AccessMeResponse>(`${apiBaseUrl()}/access/me`, {
+  const res = await api.get<AccessMeResponse>("/access/me", {
     headers: { Authorization: `Bearer ${accessToken}` },
-    withCredentials: true,
   });
+
   return res.data;
 }
 
-export async function assumeRole(accessToken: string, toRid: number): Promise<AccessMeResponse> {
-  const res = await axios.post<AccessMeResponse>(
-    `${apiBaseUrl()}/access/assume-role`,
+export async function assumeRole(
+  accessToken: string,
+  toRid: number,
+): Promise<AssumeRoleResponse> {
+  const res = await api.post<AssumeRoleResponse>(
+    "/access/assume-role",
     { toRid },
     {
       headers: { Authorization: `Bearer ${accessToken}` },
-      withCredentials: true,
-    }
+    },
   );
+
   return res.data;
 }

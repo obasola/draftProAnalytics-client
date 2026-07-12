@@ -72,9 +72,7 @@
         <!-- Week -->
         <Column field="gameWeek" header="Week" sortable>
           <template #body="{ data }">
-            <span v-if="data.seasonType">Pre {{ data.seasonType }}</span>
-            <span v-else-if="data.gameWeek">{{ data.gameWeek }}</span>
-            <span v-else>-</span>
+            <span>{{ formatScheduleWeekLabel(data.gameWeek, data.seasonType) }}</span>
           </template>
         </Column>
 
@@ -209,6 +207,10 @@ import Column from 'primevue/column'
 import { useToast } from 'primevue/usetoast'
 import { Team } from '@/types'
 import {
+  formatScheduleWeekLabel,
+  getScheduleWeekSortValue,
+} from '@/util/scheduleWeekLabel'
+import {
   getTeamLogoInfo,
   getTeamShortName as getShortName,
   type TeamRef,
@@ -309,7 +311,8 @@ const scheduleGames = computed(() => {
   }
 
   return games.slice().sort((a, b) => {
-    if (a.gameWeek !== b.gameWeek) return (a.gameWeek || 0) - (b.gameWeek || 0)
+    const weekSort = getScheduleWeekSortValue(a.gameWeek, a.seasonType) - getScheduleWeekSortValue(b.gameWeek, b.seasonType)
+    if (weekSort !== 0) return weekSort
     if (a.gameDate && b.gameDate) return new Date(a.gameDate).getTime() - new Date(b.gameDate).getTime()
     return 0
   })
