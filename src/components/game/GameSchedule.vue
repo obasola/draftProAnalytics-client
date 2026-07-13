@@ -290,9 +290,9 @@ const nflTeams = ref([
   { id: '68', name: 'Cincinnati Bengals' }, { id: '69', name: 'Cleveland Browns' }, { id: '70', name: 'Dallas Cowboys' },
   { id: '72', name: 'Denver Broncos' }, { id: '71', name: 'Detroit Lions' }, { id: '73', name: 'Green Bay Packers' },
   { id: '93', name: 'Houston Texans' }, { id: '75', name: 'Indianapolis Colts' }, { id: '76', name: 'Jacksonville Jaguars' },
-  { id: '78', name: 'Kansas City Chiefs' }, { id: '79', name: 'Las Vegas Raiders' }, { id: '95', name: 'Los Angeles Chargers' },
+  { id: '78', name: 'Kansas City Chiefs' }, { id: '79', name: 'Las Vegas Raiders' }, { id: '96', name: 'Los Angeles Chargers' },
   { id: '77', name: 'Los Angeles Rams' }, { id: '94', name: 'Miami Dolphins' }, { id: '80', name: 'Minnesota Vikings' },
-  { id: '96', name: 'New England Patriots' }, { id: '92', name: 'New Orleans Saints' }, { id: '82', name: 'New York Giants' },
+  { id: '95', name: 'New England Patriots' }, { id: '92', name: 'New Orleans Saints' }, { id: '82', name: 'New York Giants' },
   { id: '83', name: 'New York Jets' }, { id: '84', name: 'Philadelphia Eagles' }, { id: '85', name: 'Pittsburgh Steelers' },
   { id: '86', name: 'San Francisco 49ers' }, { id: '87', name: 'Seattle Seahawks' }, { id: '88', name: 'Tampa Bay Buccaneers' },
   { id: '89', name: 'Tennessee Titans' }, { id: '90', name: 'Washington Commanders' }
