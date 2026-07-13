@@ -5,7 +5,7 @@ export const jobsRoutes: readonly RouteRecordRaw[] = [
   {
     path: 'jobs',
     name: 'Jobs',
-    component: () => import('@/modules/jobs/presentation/pages/DpaNflJobsPage.vue'),
+    component: () => import('@/modules/jobs/presentation/pages/DpaNflJobsQueuePage.vue'),
     meta: {
       requiresAuth: true,
       perm: { domain: 'JOBS', action: 'VIEW' },
