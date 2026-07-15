@@ -52,7 +52,7 @@ watch(() => props.teamId, loadRoster)
   <section class="team-roster-list">
     <div class="roster-toolbar">
       <div>
-        <h2>Roster for Team</h2>
+        <h2>Team Roster</h2>
         <span class="roster-count">
           {{ filteredRosterPlayers.length }} player{{ filteredRosterPlayers.length === 1 ? '' : 's' }}
         </span>

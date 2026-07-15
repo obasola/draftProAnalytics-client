@@ -11,6 +11,8 @@ import type {
   LoadNflSeasonScheduleCommand,
   LoadEspnDraftClassPlayersCommand,
   LoadEspnDraftResultsCommand,
+  EnrichPlayerTeamPositionsCommand,
+  LoadEspnTeamRostersCommand,
   ProcessJobQueueResult,
 } from '../../domain/NflJobTypes';
 import { dpaJobsApi } from '../../application/DpaJobsApi';
@@ -80,6 +82,18 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
   const enqueueLoadEspnDraftResults = async (command: LoadEspnDraftResultsCommand): Promise<DpaJobSummary> => {
     submitting.value = true; errorMessage.value = null;
     try { const job = await dpaJobsApi.enqueueLoadEspnDraftResults(command); await refreshJobs({ limit: 50 }); return job; }
+    catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
+  };
+
+  const enqueueEnrichPlayerTeamPositions = async (command: EnrichPlayerTeamPositionsCommand): Promise<DpaJobSummary> => {
+    submitting.value = true; errorMessage.value = null;
+    try { const job = await dpaJobsApi.enqueueEnrichPlayerTeamPositions(command); await refreshJobs({ limit: 50 }); return job; }
+    catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
+  };
+
+  const enqueueLoadEspnTeamRosters = async (command: LoadEspnTeamRostersCommand): Promise<DpaJobSummary> => {
+    submitting.value = true; errorMessage.value = null;
+    try { const job = await dpaJobsApi.enqueueLoadEspnTeamRosters(command); await refreshJobs({ limit: 50 }); return job; }
     catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
   };
 
@@ -181,6 +195,8 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
     enqueueImportNflGameScores,
     enqueueLoadEspnDraftClassPlayers,
     enqueueLoadEspnDraftResults,
+    enqueueEnrichPlayerTeamPositions,
+    enqueueLoadEspnTeamRosters,
     processJobQueue,
     refreshJobs,
     readJob,

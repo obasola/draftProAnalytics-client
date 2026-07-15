@@ -8,6 +8,8 @@ import type {
   LoadNflSeasonScheduleCommand,
   LoadEspnDraftClassPlayersCommand,
   LoadEspnDraftResultsCommand,
+  EnrichPlayerTeamPositionsCommand,
+  LoadEspnTeamRostersCommand,
   ProcessJobQueueCommand,
   ProcessJobQueueResult,
 } from '../domain/NflJobTypes';
@@ -42,6 +44,8 @@ export class DpaJobsApi {
 
   public async enqueueLoadEspnDraftClassPlayers(command: LoadEspnDraftClassPlayersCommand): Promise<DpaJobSummary> { const response = await httpClient.post<DpaJobSummary>('/jobs/imports/espn-draft-class-players', command); return response.data; }
   public async enqueueLoadEspnDraftResults(command: LoadEspnDraftResultsCommand): Promise<DpaJobSummary> { const response = await httpClient.post<DpaJobSummary>('/jobs/imports/espn-draft-results', command); return response.data; }
+  public async enqueueEnrichPlayerTeamPositions(command: EnrichPlayerTeamPositionsCommand): Promise<DpaJobSummary> { const response = await httpClient.post<DpaJobSummary>('/jobs/imports/player-team-positions', command); return response.data; }
+  public async enqueueLoadEspnTeamRosters(command: LoadEspnTeamRostersCommand): Promise<DpaJobSummary> { const response = await httpClient.post<DpaJobSummary>('/jobs/imports/espn-team-rosters', command); return response.data; }
 
   public async processJobQueue(command: ProcessJobQueueCommand): Promise<ProcessJobQueueResult> {
     const response = await httpClient.post<ProcessJobQueueResult>('/jobs/queue/process', command);
