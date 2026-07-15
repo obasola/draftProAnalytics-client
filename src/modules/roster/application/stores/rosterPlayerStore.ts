@@ -8,7 +8,8 @@ import type {
   RosterPlayerListDto,
   CreateRosterPlayerDto,
   UpdateRosterPlayerDto,
-  RosterPlayersByTeamDto
+  RosterPlayersByTeamDto,
+  TeamRosterPlayerDto
 } from '@/modules/roster/application/dto/rosterPlayer.dto'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
@@ -17,7 +18,8 @@ export const useRosterPlayerStore = defineStore('rosterPlayer', () => {
   // State
   const rosterPlayers = ref<RosterPlayerListDto[]>([])
   const currentRosterPlayer = ref<RosterPlayerResponseDto | null>(null)
-  const rosterPlayersByTeam = ref<Map<number, RosterPlayerListDto[]>>(new Map())
+  const rosterPlayersByTeam = ref<Map<number, TeamRosterPlayerDto[]>>(new Map())
+  const teamRosterPlayers = ref<TeamRosterPlayerDto[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -75,11 +77,11 @@ export const useRosterPlayerStore = defineStore('rosterPlayer', () => {
     error.value = null
     
     try {
-      const response = await axios.get<RosterPlayerListDto[]>(
+      const response = await axios.get<TeamRosterPlayerDto[]>(
         `${API_BASE_URL}/roster-players/team/${teamId}`
       )
       rosterPlayersByTeam.value.set(teamId, response.data)
-      rosterPlayers.value = response.data
+      teamRosterPlayers.value = response.data
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch team roster'
       throw err
@@ -233,6 +235,7 @@ export const useRosterPlayerStore = defineStore('rosterPlayer', () => {
     rosterPlayers.value = []
     currentRosterPlayer.value = null
     rosterPlayersByTeam.value.clear()
+    teamRosterPlayers.value = []
     error.value = null
   }
 
@@ -241,6 +244,7 @@ export const useRosterPlayerStore = defineStore('rosterPlayer', () => {
     rosterPlayers,
     currentRosterPlayer,
     rosterPlayersByTeam,
+    teamRosterPlayers,
     loading,
     error,
     

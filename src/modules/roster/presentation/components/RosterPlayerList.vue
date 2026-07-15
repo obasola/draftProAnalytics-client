@@ -1,310 +1,179 @@
-<!-- src/components/rosterPlayer/RosterPlayerList.vue -->
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useRosterPlayerStore } from '../../application/stores/rosterPlayerStore'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import Dropdown from 'primevue/dropdown'
-import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref, watch } from 'vue'
 import { FilterMatchMode } from 'primevue/api'
+import Button from 'primevue/button'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
+import { useRosterPlayerStore } from '../../application/stores/rosterPlayerStore'
+
+const props = defineProps<{
+  teamId?: number
+}>()
 
 const rosterPlayerStore = useRosterPlayerStore()
-const router = useRouter()
-const toast = useToast()
-
+const playerNameSearch = ref('')
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  playerName: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  position: { value: null, matchMode: FilterMatchMode.EQUALS },
-  positionGroup: { value: null, matchMode: FilterMatchMode.EQUALS },
-  isStarter: { value: null, matchMode: FilterMatchMode.EQUALS },
 })
 
-const positionGroupOptions = ref([
-  { label: 'Offense', value: 'OFF' },
-  { label: 'Defense', value: 'DEF' },
-  { label: 'Special Teams', value: 'ST' },
-])
+const rosterPlayers = computed(() => rosterPlayerStore.teamRosterPlayers)
 
-const starterOptions = ref([
-  { label: 'Yes', value: true },
-  { label: 'No', value: false },
-])
-
-onMounted(() => {
-  rosterPlayerStore.fetchAll()
+const filteredRosterPlayers = computed(() => {
+  const search = playerNameSearch.value.trim().toLowerCase()
+  if (!search) return rosterPlayers.value
+  return rosterPlayers.value.filter((membership) =>
+    membership.playerName.toLowerCase().includes(search),
+  )
 })
 
-const viewRosterPlayer = (id: string) => {
-  router.push(`/roster-players/${id}?mode=read`)
+const loadRoster = async (): Promise<void> => {
+  if (!props.teamId) return
+  await rosterPlayerStore.fetchByTeamId(props.teamId)
 }
 
-const editRosterPlayer = (id: string) => {
-  router.push(`/roster-players/${id}?mode=edit`)
+const clearSearch = (): void => {
+  playerNameSearch.value = ''
 }
 
-const createRosterPlayer = () => {
-  router.push('/roster-players?mode=create')
+const positionSeverity = (position: string | null): 'info' | 'success' | 'warning' | 'secondary' => {
+  if (!position) return 'secondary'
+  if (['QB', 'RB', 'FB', 'WR', 'TE', 'C', 'G', 'OG', 'T', 'OT', 'OL'].includes(position)) return 'info'
+  if (['K', 'P', 'LS', 'RET'].includes(position)) return 'warning'
+  return 'success'
 }
 
-const deleteRosterPlayer = async (id: string) => {
-  if (confirm('Are you sure you want to remove this player from the roster?')) {
-    try {
-      await rosterPlayerStore.remove(id)
-      toast.add({
-        severity: 'success',
-        summary: 'Success',
-        detail: 'Roster player removed successfully',
-      })
-    } catch (error) {
-      toast.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to remove roster player',
-      })
-    }
-  }
-}
-
-const getInjurySeverity = (status: string | null) => {
-  if (!status || status === 'HEALTHY') return 'success'
-  if (status === 'QUESTIONABLE') return 'info'
-  if (status === 'DOUBTFUL') return 'warning'
-  return 'danger'
-}
-
-const getInjuryLabel = (status: string | null) => {
-  if (!status) return 'N/A'
-  return status.replace(/_/g, ' ')
-}
-
-const getPerformanceGradeSeverity = (grade: number) => {
-  if (grade >= 80) return 'success'
-  if (grade >= 60) return 'info'
-  if (grade >= 40) return 'warning'
-  return 'danger'
-}
+onMounted(loadRoster)
+watch(() => props.teamId, loadRoster)
 </script>
 
 <template>
-  <div class="roster-player-list">
-    <div class="list-header">
-      <h2>Team Roster</h2>
-      <Button
-        @click="createRosterPlayer"
-        label="Add Player"
-        icon="pi pi-plus"
-        class="p-button-success"
-      />
+  <section class="team-roster-list">
+    <div class="roster-toolbar">
+      <div>
+        <h2>Roster for Team</h2>
+        <span class="roster-count">
+          {{ filteredRosterPlayers.length }} player{{ filteredRosterPlayers.length === 1 ? '' : 's' }}
+        </span>
+      </div>
+
+      <div class="toolbar-actions">
+        <span class="p-input-icon-left player-search">
+          <i class="pi pi-search" />
+          <InputText
+            v-model="playerNameSearch"
+            placeholder="Search by player name"
+            aria-label="Search roster by player name"
+          />
+        </span>
+        <Button
+          icon="pi pi-times"
+          label="Clear"
+          severity="secondary"
+          text
+          :disabled="!playerNameSearch"
+          @click="clearSearch"
+        />
+        <Button
+          icon="pi pi-refresh"
+          label="Refresh"
+          severity="secondary"
+          outlined
+          :loading="rosterPlayerStore.loading"
+          @click="loadRoster"
+        />
+      </div>
+    </div>
+
+    <div v-if="rosterPlayerStore.error" class="error-message">
+      {{ rosterPlayerStore.error }}
     </div>
 
     <DataTable
-      :value="rosterPlayerStore.rosterPlayers"
-      :loading="rosterPlayerStore.loading"
       v-model:filters="filters"
-      filterDisplay="row"
+      :value="filteredRosterPlayers"
+      :loading="rosterPlayerStore.loading"
       paginator
-      :rows="10"
-      :rowsPerPageOptions="[10, 20, 50]"
+      :rows="20"
+      :rowsPerPageOptions="[10, 20, 50, 100]"
       responsiveLayout="scroll"
-      sortField="depthChartOrder"
+      sortField="lastName"
       :sortOrder="1"
-      :globalFilterFields="['playerName', 'position', 'positionGroup']"
-      :rowClass="(data) => data.isStarter ? 'starter-row' : ''"
+      dataKey="playerTeamId"
+      stripedRows
+      removableSort
     >
-      <Column field="playerName" header="Player Name" sortable>
-        <template #filter="{ filterModel, filterCallback }">
-          <InputText
-            v-model="filterModel.value"
-            type="text"
-            @input="filterCallback()"
-            class="p-column-filter"
-            placeholder="Search by name"
-          />
+      <Column field="playerName" header="Player" sortable>
+        <template #body="{ data }">
+          <div class="player-cell">
+            <strong>{{ data.playerName }}</strong>
+            <small v-if="data.university">{{ data.university }}</small>
+          </div>
         </template>
       </Column>
-      
+
       <Column field="position" header="Position" sortable>
-        <template #filter="{ filterModel, filterCallback }">
-          <InputText
-            v-model="filterModel.value"
-            type="text"
-            @input="filterCallback()"
-            class="p-column-filter"
-            placeholder="Search position"
-          />
-        </template>
-      </Column>
-      
-      <Column field="positionGroup" header="Group" sortable>
         <template #body="{ data }">
-          <Tag 
-            :value="data.positionGroup"
-            :severity="data.positionGroup === 'OFF' ? 'info' : data.positionGroup === 'DEF' ? 'danger' : 'warning'"
-          />
-        </template>
-        <template #filter="{ filterModel, filterCallback }">
-          <Dropdown
-            v-model="filterModel.value"
-            :options="positionGroupOptions"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Filter by group"
-            @change="filterCallback()"
-            showClear
-            class="p-column-filter"
-          />
-        </template>
-      </Column>
-      
-      <Column field="depthChartOrder" header="Depth" sortable>
-        <template #body="{ data }">
-          <span :class="{ 'starter-depth': data.depthChartOrder === 1 }">
-            {{ data.depthChartOrder }}
-          </span>
-        </template>
-      </Column>
-      
-      <Column field="isStarter" header="Starter" sortable>
-        <template #body="{ data }">
-          <Tag 
-            :severity="data.isStarter ? 'success' : 'secondary'"
-            :value="data.isStarter ? 'Yes' : 'No'"
-          />
-        </template>
-        <template #filter="{ filterModel, filterCallback }">
-          <Dropdown
-            v-model="filterModel.value"
-            :options="starterOptions"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Filter by starter"
-            @change="filterCallback()"
-            showClear
-            class="p-column-filter"
-          />
-        </template>
-      </Column>
-      
-      <Column field="age" header="Age" sortable />
-      
-      <Column field="yearsExperience" header="Exp" sortable>
-        <template #body="{ data }">
-          {{ data.yearsExperience }}yr
-        </template>
-      </Column>
-      
-      <Column field="performanceGrade" header="Grade" sortable>
-        <template #body="{ data }">
-          <Tag 
-            :severity="getPerformanceGradeSeverity(data.performanceGrade)"
-            :value="data.performanceGrade.toFixed(1)"
-          />
-        </template>
-      </Column>
-      
-      <Column field="contractYearsRemaining" header="Contract" sortable>
-        <template #body="{ data }">
-          {{ data.contractYearsRemaining }}yr
-        </template>
-      </Column>
-      
-      <Column field="injuryStatus" header="Health" sortable>
-        <template #body="{ data }">
-          <Tag 
-            :severity="getInjurySeverity(data.injuryStatus)"
-            :value="getInjuryLabel(data.injuryStatus)"
+          <Tag
+            :value="data.position || 'Unknown'"
+            :severity="positionSeverity(data.position)"
           />
         </template>
       </Column>
 
-      <Column header="Actions" frozen alignFrozen="right">
+      <Column field="jerseyNumber" header="No." sortable>
         <template #body="{ data }">
-          <div class="action-buttons">
-            <Button
-              @click="viewRosterPlayer(data.id)"
-              icon="pi pi-eye"
-              class="p-button-info p-button-sm"
-              v-tooltip="'View'"
-            />
-            <Button
-              @click="editRosterPlayer(data.id)"
-              icon="pi pi-pencil"
-              class="p-button-warning p-button-sm"
-              v-tooltip="'Edit'"
-            />
-            <Button
-              @click="deleteRosterPlayer(data.id)"
-              icon="pi pi-trash"
-              class="p-button-danger p-button-sm"
-              v-tooltip="'Remove'"
-            />
-          </div>
+          {{ data.jerseyNumber ?? '—' }}
+        </template>
+      </Column>
+
+      <Column field="age" header="Age" sortable />
+
+      <Column field="yearsExperience" header="Experience" sortable>
+        <template #body="{ data }">
+          {{ data.yearsExperience === 0 ? 'Rookie' : `${data.yearsExperience} yr` }}
+        </template>
+      </Column>
+
+      <Column field="startYear" header="Joined" sortable>
+        <template #body="{ data }">
+          {{ data.startYear ?? '—' }}
+        </template>
+      </Column>
+
+      <Column field="isActive" header="Status" sortable>
+        <template #body="{ data }">
+          <Tag
+            :value="data.isActive ? 'Active' : 'Inactive'"
+            :severity="data.isActive ? 'success' : 'secondary'"
+          />
         </template>
       </Column>
 
       <template #empty>
         <div class="empty-state">
-          <i class="pi pi-users" style="font-size: 3rem; color: var(--text-secondary);"></i>
-          <p>No players on roster</p>
-          <Button
-            @click="createRosterPlayer"
-            label="Add First Player"
-            icon="pi pi-plus"
-            class="p-button-sm"
-          />
+          <i class="pi pi-users" />
+          <p>{{ playerNameSearch ? 'No players match this search.' : 'No current team assignments were found.' }}</p>
         </div>
       </template>
     </DataTable>
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.roster-player-list {
-  width: 100%;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-:deep(.starter-row) {
-  background-color: rgba(34, 197, 94, 0.05);
-  font-weight: 500;
-}
-
-.starter-depth {
-  font-weight: bold;
-  color: var(--green-600);
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  gap: 1rem;
-}
-
-.empty-state p {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
-  margin: 0;
-}
-
-:deep(.p-column-filter) {
-  width: 100%;
-}
+.team-roster-list { width: 100%; }
+.roster-toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.roster-toolbar h2 { margin: 0; }
+.roster-count { color: var(--text-color-secondary); font-size: 0.9rem; }
+.toolbar-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.player-search { min-width: min(22rem, 100%); }
+.player-search :deep(.p-inputtext) { width: 100%; }
+.player-cell { display: flex; flex-direction: column; gap: 0.15rem; }
+.player-cell small { color: var(--text-color-secondary); }
+.error-message { margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 6px; background: var(--red-50); color: var(--red-700); }
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem 1rem; color: var(--text-color-secondary); }
+.empty-state i { font-size: 2.5rem; }
+.empty-state p { margin: 0; }
+@media (max-width: 720px) { .toolbar-actions, .player-search { width: 100%; } }
 </style>

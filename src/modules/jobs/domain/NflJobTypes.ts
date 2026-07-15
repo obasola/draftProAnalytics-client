@@ -10,6 +10,8 @@ export const DPA_JOB_TYPE = {
   LOAD_NFL_SEASON_SCHEDULE: 'LOAD_NFL_SEASON_SCHEDULE',
   IMPORT_NFL_GAME_SCORES: 'IMPORT_NFL_GAME_SCORES',
   PROCESS_JOB_QUEUE: 'PROCESS_JOB_QUEUE',
+  LOAD_ESPN_DRAFT_CLASS_PLAYERS: 'LOAD_ESPN_DRAFT_CLASS_PLAYERS',
+  LOAD_ESPN_DRAFT_RESULTS: 'LOAD_ESPN_DRAFT_RESULTS',
 } as const;
 
 export type DpaJobType = (typeof DPA_JOB_TYPE)[keyof typeof DPA_JOB_TYPE];
@@ -37,6 +39,9 @@ export interface ImportNflGameScoresCommand {
   readonly requestedByPersonId?: number;
 }
 
+export interface LoadEspnDraftClassPlayersCommand { readonly draftYear: number; readonly requestedByPersonId?: number; }
+export interface LoadEspnDraftResultsCommand extends LoadEspnDraftClassPlayersCommand { readonly activateMembership: boolean; }
+
 export interface ProcessJobQueueCommand {
   readonly take: number;
 }
@@ -44,6 +49,8 @@ export interface ProcessJobQueueCommand {
 export type DpaJobPayload =
   | LoadNflSeasonScheduleCommand
   | ImportNflGameScoresCommand
+  | LoadEspnDraftClassPlayersCommand
+  | LoadEspnDraftResultsCommand
   | Record<string, unknown>
   | null;
 

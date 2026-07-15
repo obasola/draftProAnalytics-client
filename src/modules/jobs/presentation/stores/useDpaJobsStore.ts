@@ -9,6 +9,8 @@ import type {
   DpaJobSummary,
   ImportNflGameScoresCommand,
   LoadNflSeasonScheduleCommand,
+  LoadEspnDraftClassPlayersCommand,
+  LoadEspnDraftResultsCommand,
   ProcessJobQueueResult,
 } from '../../domain/NflJobTypes';
 import { dpaJobsApi } from '../../application/DpaJobsApi';
@@ -67,6 +69,18 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
     } finally {
       submitting.value = false;
     }
+  };
+
+
+  const enqueueLoadEspnDraftClassPlayers = async (command: LoadEspnDraftClassPlayersCommand): Promise<DpaJobSummary> => {
+    submitting.value = true; errorMessage.value = null;
+    try { const job = await dpaJobsApi.enqueueLoadEspnDraftClassPlayers(command); await refreshJobs({ limit: 50 }); return job; }
+    catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
+  };
+  const enqueueLoadEspnDraftResults = async (command: LoadEspnDraftResultsCommand): Promise<DpaJobSummary> => {
+    submitting.value = true; errorMessage.value = null;
+    try { const job = await dpaJobsApi.enqueueLoadEspnDraftResults(command); await refreshJobs({ limit: 50 }); return job; }
+    catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
   };
 
   const processJobQueue = async (take: number): Promise<ProcessJobQueueResult> => {
@@ -165,6 +179,8 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
     hasActiveJobs,
     enqueueLoadNflSeasonSchedule,
     enqueueImportNflGameScores,
+    enqueueLoadEspnDraftClassPlayers,
+    enqueueLoadEspnDraftResults,
     processJobQueue,
     refreshJobs,
     readJob,
