@@ -51,6 +51,9 @@ export const getJobTypeLabel = (jobType: string): string => {
     return 'Import NFL Game Scores';
   }
 
+  if (jobType === DPA_JOB_TYPE.LOAD_ESPN_DRAFT_CLASS_PLAYERS) return 'Load ESPN Draft Class Players';
+  if (jobType === DPA_JOB_TYPE.LOAD_ESPN_DRAFT_RESULTS) return 'Load ESPN Draft Results';
+
   if (jobType === DPA_JOB_TYPE.PROCESS_JOB_QUEUE) {
     return 'Process Job Queue';
   }
@@ -93,4 +96,6 @@ export const dpaJobStatusOptions: readonly { readonly label: string; readonly va
 export const dpaJobTypeOptions: readonly { readonly label: string; readonly value: DpaJobType }[] = [
   { label: 'Load NFL Season Schedule', value: DPA_JOB_TYPE.LOAD_NFL_SEASON_SCHEDULE },
   { label: 'Import NFL Game Scores', value: DPA_JOB_TYPE.IMPORT_NFL_GAME_SCORES },
+  { label: 'Load ESPN Draft Class Players', value: DPA_JOB_TYPE.LOAD_ESPN_DRAFT_CLASS_PLAYERS },
+  { label: 'Load ESPN Draft Results', value: DPA_JOB_TYPE.LOAD_ESPN_DRAFT_RESULTS },
 ];

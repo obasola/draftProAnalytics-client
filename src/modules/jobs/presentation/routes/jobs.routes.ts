@@ -42,6 +42,13 @@ export const jobsRoutes: readonly RouteRecordRaw[] = [
   },
 
   {
+    path: 'jobs/nfl-imports/draft',
+    name: 'ImportEspnDraftData',
+    component: () => import('@/modules/jobs/presentation/views/EspnDraftImportPage.vue'),
+    meta: { requiresAuth: true, perm: { domain: 'JOBS', action: 'RUN' }, title: 'Import ESPN Draft Data' },
+  },
+
+  {
     path: 'jobs/:id',
     name: 'JobDetail',
     component: () => import('@/components/jobs/JobDetail.vue'),
