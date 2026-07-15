@@ -2,7 +2,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useTeamStore } from '@/stores/teamStore'
-import { useRosterPlayerStore } from '@/modules/roster/application/stores/rosterPlayerStore'
 import Card from 'primevue/card'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
@@ -22,7 +21,6 @@ const currentDate: Date = new Date()
 const currentYear: number = currentDate.getFullYear()
 
 const teamStore = useTeamStore()
-const rosterPlayerStore = useRosterPlayerStore()
 const router = useRouter()
 
 const team = computed(() => teamStore.currentTeam)
@@ -73,13 +71,6 @@ const calc = computed(() => {
   }
 })
 
-const loadTeamRoster = async (teamId: number) => {
-  try {
-    await rosterPlayerStore.fetchByTeamId(teamId)
-  } catch (error) {
-    console.error('Failed to load team roster:', error)
-  }
-}
 
 const loadTeamStatistics = async (teamId: number, seasonYear: number) => {
   statsLoading.value = true
@@ -109,10 +100,7 @@ onMounted(async () => {
     await themeStore.selectTeam(route.params.teamId)
   }
   if (team.value?.id) {
-    await Promise.all([
-      loadTeamRoster(team.value.id),
-      loadTeamStatistics(team.value.id, currentYear)
-    ])
+    await loadTeamStatistics(team.value.id, currentYear)
   }
 })
 
@@ -120,10 +108,7 @@ watch(
   () => team.value?.id,
   async (newTeamId) => {
     if (newTeamId) {
-      await Promise.all([
-        loadTeamRoster(newTeamId),
-        loadTeamStatistics(newTeamId, currentYear)
-      ])
+      await loadTeamStatistics(newTeamId, currentYear)
     }
   }
 )
@@ -203,7 +188,7 @@ const createRosterPlayer = () => {
       <Accordion class="relationships-accordion">
         <AccordionTab header="Roster">
           <div class="roster-section">
-            <RosterPlayerList />
+            <RosterPlayerList :team-id="team.id" />
           </div>
         </AccordionTab>
 
