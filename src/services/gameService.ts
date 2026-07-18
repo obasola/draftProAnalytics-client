@@ -20,6 +20,20 @@ export class GameService {
     )
     return response.data.data
   }
+
+  async getTeamSeasonGames(teamId: number, seasonYear: number): Promise<readonly Game[]> {
+    const response = await apiService.get<ApiResponse<Game[]>>(
+      `${this.endpoint}/team/${teamId}/season/${seasonYear}`
+    )
+    return response.data.data ?? []
+  }
+
+  async getTeamSeasonYears(teamId: number): Promise<readonly number[]> {
+    const response = await apiService.get<ApiResponse<readonly number[]>>(
+      `${this.endpoint}/team/${teamId}/seasons`
+    )
+    return response.data.data ?? []
+  }
   // CRITICAL: Enhanced pagination with fallback for unsupported endpoints
   async getAll(page = 1, limit = 10): Promise<PaginatedResponse<Game>> {
     const pageNum = Number(page)

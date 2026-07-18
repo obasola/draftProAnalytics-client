@@ -1,7 +1,7 @@
-import DpaNflJobsQueuePanel from './presentation/components/DpaNflJobsQueuePanel.vue';
-
-export { jobsRoutes } from './presentation/routes/jobs.routes';
-export { useDpaJobsStore } from './presentation/stores/useDpaJobsStore';
-export { default as DpaNflJobsPanel } from './presentation/components/DpaNflJobsPanel.vue';
-export { default as DpaNflJobsQueuePane} from './presentation/components/DpaNflJobsQueuePanel.vue';
-export { default as DpaNflJobsPage } from './presentation/pages/DpaNflJobsPage.vue';
+export { jobsRoutes } from './presentation/routes/jobs.routes'
+export { useDpaJobsStore } from './presentation/stores/useDpaJobsStore'
+export { default as DpaNflJobsPanel } from './presentation/components/DpaNflJobsPanel.vue'
+export { default as DpaNflJobsPage } from './presentation/pages/DpaNflJobsPage.vue'
+export { default as DpaNflJobsQueuePage } from './presentation/pages/DpaNflJobsQueuePage.vue'
+export { default as EspnDraftImportPage } from './presentation/views/EspnDraftImportPage.vue'
+export { default as EspnTeamRosterImportPage } from './presentation/views/EspnTeamRosterImportPage.vue'

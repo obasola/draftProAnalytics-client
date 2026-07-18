@@ -1,5 +1,5 @@
 // src/modules/jobs/presentation/routes/jobs.routes.ts
-import type { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
 
 export const jobsRoutes: readonly RouteRecordRaw[] = [
   {
@@ -12,42 +12,44 @@ export const jobsRoutes: readonly RouteRecordRaw[] = [
       title: 'Job Queue',
     },
   },
-
+  {
+    path: 'jobs/nfl-imports',
+    name: 'ImportNflData',
+    component: () => import('@/modules/jobs/presentation/pages/DpaNflJobsPage.vue'),
+    meta: {
+      requiresAuth: true,
+      perm: { domain: 'JOBS', action: 'RUN' },
+      title: 'Import NFL Data',
+    },
+  },
   {
     path: 'jobs/nfl-imports/schedule',
-    name: 'ImportSeasonSchedule',
-    component: () => import('@/modules/jobs/presentation/pages/DpaNflJobsPage.vue'),
-    props: {
-      mode: 'season-schedule',
-    },
-    meta: {
-      requiresAuth: true,
-      perm: { domain: 'JOBS', action: 'RUN' },
-      title: 'Import Season Schedule',
-    },
+    redirect: '/jobs/nfl-imports',
   },
-
   {
     path: 'jobs/nfl-imports/scores',
-    name: 'ImportWeeklyScores',
-    component: () => import('@/modules/jobs/presentation/pages/DpaNflJobsPage.vue'),
-    props: {
-      mode: 'weekly-scores',
-    },
-    meta: {
-      requiresAuth: true,
-      perm: { domain: 'JOBS', action: 'RUN' },
-      title: 'Import Weekly Scores',
-    },
+    redirect: '/jobs/nfl-imports',
   },
-
   {
     path: 'jobs/nfl-imports/draft',
     name: 'ImportEspnDraftData',
     component: () => import('@/modules/jobs/presentation/views/EspnDraftImportPage.vue'),
-    meta: { requiresAuth: true, perm: { domain: 'JOBS', action: 'RUN' }, title: 'Import ESPN Draft Data' },
+    meta: {
+      requiresAuth: true,
+      perm: { domain: 'JOBS', action: 'RUN' },
+      title: 'Import ESPN Draft Data',
+    },
   },
-
+  {
+    path: 'jobs/nfl-imports/team-roster',
+    name: 'ImportTeamRoster',
+    component: () => import('@/modules/jobs/presentation/views/EspnTeamRosterImportPage.vue'),
+    meta: {
+      requiresAuth: true,
+      perm: { domain: 'JOBS', action: 'RUN' },
+      title: 'Import Team Roster',
+    },
+  },
   {
     path: 'jobs/:id',
     name: 'JobDetail',
@@ -58,4 +60,4 @@ export const jobsRoutes: readonly RouteRecordRaw[] = [
       title: 'Job Detail',
     },
   },
-];
+]

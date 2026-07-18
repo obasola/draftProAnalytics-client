@@ -13,6 +13,7 @@ const currentYear = new Date().getFullYear();
 const draftYear = ref(currentYear);
 const activateMembership = ref(true);
 const overwriteExistingPositions = ref(false);
+const overwriteExistingDraftPicks = ref(false);
 const message = ref<string | null>(null);
 const valid = computed(() => Number.isInteger(draftYear.value) && draftYear.value >= 1936 && draftYear.value <= currentYear + 2);
 
@@ -27,6 +28,16 @@ const loadResults = async (): Promise<void> => {
   if (!valid.value) return;
   const job = await store.enqueueLoadEspnDraftResults({ draftYear: draftYear.value, activateMembership: activateMembership.value });
   message.value = `Queued draft-results job #${job.id}.`;
+  emit('job-submitted', job.id);
+};
+
+const syncDraftPicks = async (): Promise<void> => {
+  if (!valid.value) return;
+  const job = await store.enqueueSyncEspnDraftPicksToDpa({
+    draftYear: draftYear.value,
+    overwriteExisting: overwriteExistingDraftPicks.value,
+  });
+  message.value = `Queued ESPN-to-DraftPick sync job #${job.id}.`;
   emit('job-submitted', job.id);
 };
 
@@ -60,12 +71,19 @@ const enrichPositions = async (): Promise<void> => {
           <label for="overwriteExistingPositions">Overwrite existing PlayerTeam positions during position enrichment</label>
         </div>
 
+
+        <div class="check">
+          <Checkbox input-id="overwriteExistingDraftPicks" v-model="overwriteExistingDraftPicks" binary />
+          <label for="overwriteExistingDraftPicks">Overwrite existing imported DraftPick fields during ESPN synchronization</label>
+        </div>
+
         <Message v-if="message" severity="success" :closable="false">{{ message }}</Message>
         <Message v-if="store.errorMessage" severity="error" :closable="false">{{ store.errorMessage }}</Message>
 
         <div class="actions">
           <Button label="Load Draft Class Players" icon="pi pi-users" :disabled="!valid" :loading="store.submitting" @click="loadClass" />
           <Button label="Load Draft Results + Teams" icon="pi pi-download" :disabled="!valid" :loading="store.submitting" @click="loadResults" />
+          <Button label="Sync ESPN Picks to DraftPick" icon="pi pi-sync" severity="help" :disabled="!valid" :loading="store.submitting" @click="syncDraftPicks" />
           <Button label="Enrich PlayerTeam Positions" icon="pi pi-refresh" severity="secondary" :disabled="!valid" :loading="store.submitting" @click="enrichPositions" />
         </div>
       </div>

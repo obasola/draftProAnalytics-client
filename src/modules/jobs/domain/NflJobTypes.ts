@@ -13,7 +13,9 @@ export const DPA_JOB_TYPE = {
   LOAD_ESPN_DRAFT_CLASS_PLAYERS: 'LOAD_ESPN_DRAFT_CLASS_PLAYERS',
   LOAD_ESPN_DRAFT_RESULTS: 'LOAD_ESPN_DRAFT_RESULTS',
   ENRICH_PLAYER_TEAM_POSITIONS: 'ENRICH_PLAYER_TEAM_POSITIONS',
+  SYNC_ESPN_DRAFT_PICKS_TO_DPA: 'SYNC_ESPN_DRAFT_PICKS_TO_DPA',
   LOAD_ESPN_TEAM_ROSTERS: 'LOAD_ESPN_TEAM_ROSTERS',
+  SYNC_POSTSEASON_RESULTS_FROM_GAMES: 'SYNC_POSTSEASON_RESULTS_FROM_GAMES',
 } as const;
 
 export type DpaJobType = (typeof DPA_JOB_TYPE)[keyof typeof DPA_JOB_TYPE];
@@ -44,6 +46,7 @@ export interface ImportNflGameScoresCommand {
 export interface LoadEspnDraftClassPlayersCommand { readonly draftYear: number; readonly requestedByPersonId?: number; }
 export interface LoadEspnDraftResultsCommand extends LoadEspnDraftClassPlayersCommand { readonly activateMembership: boolean; }
 export interface EnrichPlayerTeamPositionsCommand extends LoadEspnDraftClassPlayersCommand { readonly overwriteExisting: boolean; }
+export interface SyncEspnDraftPicksToDpaCommand extends LoadEspnDraftClassPlayersCommand { readonly overwriteExisting: boolean; }
 
 export type RosterImportMode = 'CURRENT' | 'HISTORICAL';
 
@@ -55,6 +58,8 @@ export interface LoadEspnTeamRostersCommand {
   readonly requestedByPersonId?: number;
 }
 
+export interface SyncPostSeasonResultsCommand { readonly seasonYear: number; readonly overwriteExisting: boolean; readonly requestedByPersonId?: number; }
+
 export interface ProcessJobQueueCommand {
   readonly take: number;
 }
@@ -65,7 +70,9 @@ export type DpaJobPayload =
   | LoadEspnDraftClassPlayersCommand
   | LoadEspnDraftResultsCommand
   | EnrichPlayerTeamPositionsCommand
+  | SyncEspnDraftPicksToDpaCommand
   | LoadEspnTeamRostersCommand
+  | SyncPostSeasonResultsCommand
   | Record<string, unknown>
   | null;
 

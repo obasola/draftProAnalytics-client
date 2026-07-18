@@ -35,6 +35,8 @@ export interface Game {
   homeScore?: number | null;
   awayScore?: number | null;
   gameStatus?: string | null;
+  isPlayoff?: boolean;
+  playoffRound?: string | null;
   createdAt?: Date | string | null;
   updatedAt?: Date | string | null;
   

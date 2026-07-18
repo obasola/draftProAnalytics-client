@@ -54,7 +54,9 @@ export const getJobTypeLabel = (jobType: string): string => {
   if (jobType === DPA_JOB_TYPE.LOAD_ESPN_DRAFT_CLASS_PLAYERS) return 'Load ESPN Draft Class Players';
   if (jobType === DPA_JOB_TYPE.LOAD_ESPN_DRAFT_RESULTS) return 'Load ESPN Draft Results';
   if (jobType === DPA_JOB_TYPE.ENRICH_PLAYER_TEAM_POSITIONS) return 'Enrich PlayerTeam Positions';
+  if (jobType === DPA_JOB_TYPE.SYNC_ESPN_DRAFT_PICKS_TO_DPA) return 'Sync ESPN Draft Picks to DPA';
   if (jobType === DPA_JOB_TYPE.LOAD_ESPN_TEAM_ROSTERS) return 'Load ESPN Team Rosters';
+  if (jobType === DPA_JOB_TYPE.SYNC_POSTSEASON_RESULTS_FROM_GAMES) return 'Sync Postseason Results from Games';
 
   if (jobType === DPA_JOB_TYPE.PROCESS_JOB_QUEUE) {
     return 'Process Job Queue';
@@ -101,5 +103,7 @@ export const dpaJobTypeOptions: readonly { readonly label: string; readonly valu
   { label: 'Load ESPN Draft Class Players', value: DPA_JOB_TYPE.LOAD_ESPN_DRAFT_CLASS_PLAYERS },
   { label: 'Load ESPN Draft Results', value: DPA_JOB_TYPE.LOAD_ESPN_DRAFT_RESULTS },
   { label: 'Enrich PlayerTeam Positions', value: DPA_JOB_TYPE.ENRICH_PLAYER_TEAM_POSITIONS },
+  { label: 'Sync ESPN Draft Picks to DPA', value: DPA_JOB_TYPE.SYNC_ESPN_DRAFT_PICKS_TO_DPA },
   { label: 'Load ESPN Team Rosters', value: DPA_JOB_TYPE.LOAD_ESPN_TEAM_ROSTERS },
+  { label: 'Sync Postseason Results from Games', value: DPA_JOB_TYPE.SYNC_POSTSEASON_RESULTS_FROM_GAMES },
 ];
