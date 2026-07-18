@@ -14,6 +14,7 @@ import type { TeamStatistics } from '@/services/gameService'
 import TeamDraftPickTable from './TeamDraftPickTable.vue'
 import TeamScheduleGamesTable from './TeamScheduleGamesTable.vue'
 import TeamPlayoffResultsTable from './TeamPlayoffResultsTable.vue'
+import TeamNeedsPanel from './TeamNeedsPanel.vue'
 import RosterPlayerList from '@/modules/roster/presentation/components/RosterPlayerList.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
@@ -250,7 +251,7 @@ const createRosterPlayer = () => {
         </AccordionTab>
 
         <AccordionTab header="Team Needs">
-          <p>Team draft needs will be displayed here when team needs relationships are implemented.</p>
+          <TeamNeedsPanel :team-id="team.id" />
         </AccordionTab>
 
         <AccordionTab header="Playoff Results">

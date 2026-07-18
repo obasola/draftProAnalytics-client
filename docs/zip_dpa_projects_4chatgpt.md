@@ -1,0 +1,27 @@
+cd ~/aiAssistWS
+
+zip -r draftProAnalytics-client-review2.zip draftProAnalytics-client \
+  -x "draftProAnalytics-client/node_modules/*" \
+     "draftProAnalytics-client/dist/*" \
+     "draftProAnalytics-client/coverage/*" \
+     "draftProAnalytics-client/.git/*" \
+     "draftProAnalytics-client/.vite/*" \
+     "draftProAnalytics-client/.env" \
+     "draftProAnalytics-client/.env.*" \
+     "draftProAnalytics-client/*.log" \
+     "draftProAnalytics-client/logs/*"
+
+
+cd ~/aiAssistWS
+
+zip -r draftProAnalytics-server-review2.zip draftProAnalytics-server \
+  -x "draftProAnalytics-server/node_modules/*" \
+     "draftProAnalytics-server/dist/*" \
+     "draftProAnalytics-server/coverage/*" \
+     "draftProAnalytics-server/.git/*" \
+     "draftProAnalytics-server/.env" \
+     "draftProAnalytics-server/.env.*" \
+     "draftProAnalytics-server/*.log" \
+     "draftProAnalytics-server/logs/*" \
+     "draftProAnalytics-server/tmp/*" \
+     "draftProAnalytics-server/uploads/*"
