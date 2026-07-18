@@ -6,11 +6,14 @@ import Card from 'primevue/card'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 import Button from 'primevue/button'
+import Dropdown from 'primevue/dropdown'
+import Message from 'primevue/message'
 import { useRouter } from 'vue-router'
 import { gameService } from '@/services/gameService'
 import type { TeamStatistics } from '@/services/gameService'
 import TeamDraftPickTable from './TeamDraftPickTable.vue'
 import TeamScheduleGamesTable from './TeamScheduleGamesTable.vue'
+import TeamPlayoffResultsTable from './TeamPlayoffResultsTable.vue'
 import RosterPlayerList from '@/modules/roster/presentation/components/RosterPlayerList.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
@@ -19,6 +22,14 @@ const route = useRoute()
 const themeStore = useThemeStore()
 const currentDate: Date = new Date()
 const currentYear: number = currentDate.getFullYear()
+const selectedSeasonYear = ref<number>(currentYear)
+const TEN_SEASONS = 10
+const firstSeasonYear = currentYear - (TEN_SEASONS - 1)
+const fallbackSeasonYears = Array.from(
+  { length: TEN_SEASONS },
+  (_, index) => firstSeasonYear + index,
+)
+const availableSeasonYears = ref<readonly number[]>(fallbackSeasonYears)
 
 const teamStore = useTeamStore()
 const router = useRouter()
@@ -72,6 +83,25 @@ const calc = computed(() => {
 })
 
 
+const loadAvailableSeasonYears = async (teamId: number): Promise<void> => {
+  try {
+    const databaseYears = await gameService.getTeamSeasonYears(teamId)
+    const databaseYearSet = new Set(databaseYears)
+
+    availableSeasonYears.value = fallbackSeasonYears
+
+    const latestAvailableYear = [...fallbackSeasonYears]
+      .reverse()
+      .find((year) => databaseYearSet.has(year))
+    if (latestAvailableYear !== undefined) {
+      selectedSeasonYear.value = latestAvailableYear
+    }
+  } catch (error) {
+    console.error('Failed to load team season years:', error)
+    availableSeasonYears.value = fallbackSeasonYears
+  }
+}
+
 const loadTeamStatistics = async (teamId: number, seasonYear: number) => {
   statsLoading.value = true
   statsError.value = null
@@ -100,7 +130,8 @@ onMounted(async () => {
     await themeStore.selectTeam(route.params.teamId)
   }
   if (team.value?.id) {
-    await loadTeamStatistics(team.value.id, currentYear)
+    await loadAvailableSeasonYears(team.value.id)
+    await loadTeamStatistics(team.value.id, selectedSeasonYear.value)
   }
 })
 
@@ -108,10 +139,17 @@ watch(
   () => team.value?.id,
   async (newTeamId) => {
     if (newTeamId) {
-      await loadTeamStatistics(newTeamId, currentYear)
+      await loadAvailableSeasonYears(newTeamId)
+      await loadTeamStatistics(newTeamId, selectedSeasonYear.value)
     }
   }
 )
+
+watch(selectedSeasonYear, async (year) => {
+  if (team.value?.id) {
+    await loadTeamStatistics(team.value.id, year)
+  }
+})
 
 const createRosterPlayer = () => {
   router.push(`/roster-players?mode=create&teamId=${team.value?.id}`)
@@ -157,9 +195,20 @@ const createRosterPlayer = () => {
         </div>
 
         <div class="info-section">
-          <h3>Season Statistics</h3>
+          <div class="section-heading-row">
+            <h3>Season Statistics</h3>
+            <Dropdown
+              v-model="selectedSeasonYear"
+              :options="availableSeasonYears"
+              placeholder="Season"
+              class="season-select"
+            />
+          </div>
+          <Message v-if="statsError" severity="error" :closable="false" class="stats-message">
+            {{ statsError }}
+          </Message>
           <div class="info-row">
-            <span class="label">Won/Loss):</span>
+            <span class="label">Won/Loss:</span>
             <span class="value">{{ calc.wlRecord }}</span>
           </div>
           <div class="info-row">
@@ -193,11 +242,11 @@ const createRosterPlayer = () => {
         </AccordionTab>
 
         <AccordionTab header="Schedule">
-          <TeamScheduleGamesTable :team-id="team?.id" :initialSeasonYear="currentYear" />
+          <TeamScheduleGamesTable :team-id="team?.id" :initialSeasonYear="selectedSeasonYear" />
         </AccordionTab>
 
         <AccordionTab header="Draft Picks">
-          <TeamDraftPickTable :team-id="team?.id" :initialYear="currentYear" />
+          <TeamDraftPickTable :team-id="team?.id" :initialYear="selectedSeasonYear" />
         </AccordionTab>
 
         <AccordionTab header="Team Needs">
@@ -205,7 +254,7 @@ const createRosterPlayer = () => {
         </AccordionTab>
 
         <AccordionTab header="Playoff Results">
-          <p>Playoff history will be displayed here when post-season results are implemented.</p>
+          <TeamPlayoffResultsTable :team-id="team.id" :playoff-year="selectedSeasonYear" />
         </AccordionTab>
       </Accordion>
     </template>
@@ -283,4 +332,9 @@ const createRosterPlayer = () => {
   width: 100%;
   box-sizing: border-box;
 }
+
+.section-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.section-heading-row h3 { flex: 1; }
+.season-select { min-width: 8rem; }
+.stats-message { margin-bottom: 0.75rem; }
 </style>

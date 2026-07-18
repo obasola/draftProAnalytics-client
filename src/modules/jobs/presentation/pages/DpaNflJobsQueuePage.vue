@@ -1,27 +1,20 @@
 <script setup lang="ts">
-import DpaNflJobsQueuePanel from '../components/DpaNflJobsQueuePanel.vue';
-
-const handleJobsSubmitted = (jobIds: number[]): void => {
-  console.info('DPA NFL jobs submitted:', jobIds);
-};
+import JobMonitorPanel from '../components/JobMonitorPanel.vue'
 </script>
 
 <template>
-  <section class="dpa-nfl-jobs-queue-page">
+  <section class="dpa-jobs-queue-page">
     <div class="page-header">
-      <h2>NFL Jobs</h2>
-      <p>
-        Queue NFL season schedule imports, import weekly scores, and monitor pending, running,
-        completed, failed, or canceled jobs.
-      </p>
+      <h2>Job Queue</h2>
+      <p>Monitor and manage pending, running, completed, failed, and canceled jobs.</p>
     </div>
 
-    <DpaNflJobsQueuePanel @jobs-submitted="handleJobsSubmitted" />
+    <JobMonitorPanel />
   </section>
 </template>
 
 <style scoped>
-.dpa-nfl-jobs-queue-page,
+.dpa-jobs-queue-page,
 .page-header {
   display: flex;
   flex-direction: column;

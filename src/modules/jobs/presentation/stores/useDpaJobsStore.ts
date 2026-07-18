@@ -12,7 +12,9 @@ import type {
   LoadEspnDraftClassPlayersCommand,
   LoadEspnDraftResultsCommand,
   EnrichPlayerTeamPositionsCommand,
+  SyncEspnDraftPicksToDpaCommand,
   LoadEspnTeamRostersCommand,
+  SyncPostSeasonResultsCommand,
   ProcessJobQueueResult,
 } from '../../domain/NflJobTypes';
 import { dpaJobsApi } from '../../application/DpaJobsApi';
@@ -85,6 +87,12 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
     catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
   };
 
+  const enqueueSyncEspnDraftPicksToDpa = async (command: SyncEspnDraftPicksToDpaCommand): Promise<DpaJobSummary> => {
+    submitting.value = true; errorMessage.value = null;
+    try { const job = await dpaJobsApi.enqueueSyncEspnDraftPicksToDpa(command); await refreshJobs({ limit: 50 }); return job; }
+    catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
+  };
+
   const enqueueEnrichPlayerTeamPositions = async (command: EnrichPlayerTeamPositionsCommand): Promise<DpaJobSummary> => {
     submitting.value = true; errorMessage.value = null;
     try { const job = await dpaJobsApi.enqueueEnrichPlayerTeamPositions(command); await refreshJobs({ limit: 50 }); return job; }
@@ -94,6 +102,12 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
   const enqueueLoadEspnTeamRosters = async (command: LoadEspnTeamRostersCommand): Promise<DpaJobSummary> => {
     submitting.value = true; errorMessage.value = null;
     try { const job = await dpaJobsApi.enqueueLoadEspnTeamRosters(command); await refreshJobs({ limit: 50 }); return job; }
+    catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
+  };
+
+  const enqueueSyncPostSeasonResults = async (command: SyncPostSeasonResultsCommand): Promise<DpaJobSummary> => {
+    submitting.value = true; errorMessage.value = null;
+    try { const job = await dpaJobsApi.enqueueSyncPostSeasonResults(command); await refreshJobs({ limit: 50 }); return job; }
     catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
   };
 
@@ -196,7 +210,9 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
     enqueueLoadEspnDraftClassPlayers,
     enqueueLoadEspnDraftResults,
     enqueueEnrichPlayerTeamPositions,
+    enqueueSyncEspnDraftPicksToDpa,
     enqueueLoadEspnTeamRosters,
+    enqueueSyncPostSeasonResults,
     processJobQueue,
     refreshJobs,
     readJob,

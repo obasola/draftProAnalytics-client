@@ -74,7 +74,9 @@ function inferPermFromPath(path: string): RoutePermission | null {
   }
 
   if (path.startsWith('/standings')) return { domain: 'STANDINGS', action: 'VIEW' }
-  if (path.startsWith('/playoffs')) return { domain: 'PLAYOFFS', action: 'VIEW' }
+  if (path.startsWith('/playoffs') || path.startsWith('/post-season-results')) {
+    return { domain: 'PLAYOFFS', action: 'VIEW' }
+  }
 
   if (path.startsWith('/draft-order')) return { domain: 'DRAFT_ORDER', action: 'VIEW' }
 
@@ -220,6 +222,18 @@ const routes: RouteRecordRaw[] = [
         component: TeamDetail,
         beforeEnter: requireAuth,
         meta: { requiresAuth: true, perm: { domain: 'TEAMS', action: 'EDIT' } },
+      },
+
+      {
+        path: 'post-season-results',
+        name: 'PostSeasonResults',
+        component: () => import('@/views/PostSeasonResultsView.vue'),
+        beforeEnter: requireAuth,
+        meta: {
+          requiresAuth: true,
+          perm: { domain: 'PLAYOFFS', action: 'VIEW' },
+          title: 'Post Season Results',
+        },
       },
 
       {

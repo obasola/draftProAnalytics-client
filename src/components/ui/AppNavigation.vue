@@ -372,13 +372,19 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
         routeItem({
           label: "Import NFL Data",
           icon: "pi pi-cloud-download",
-          to: "/jobs/nfl-imports/schedule",
+          to: "/jobs/nfl-imports",
           requiredPerm: { domain: "JOBS", action: "RUN" },
         }),
         routeItem({
           label: "Import ESPN Draft Data",
           icon: "pi pi-users",
           to: "/jobs/nfl-imports/draft",
+          requiredPerm: { domain: "JOBS", action: "RUN" },
+        }),
+        routeItem({
+          label: "Import Team Roster",
+          icon: "pi pi-id-card",
+          to: "/jobs/nfl-imports/team-roster",
           requiredPerm: { domain: "JOBS", action: "RUN" },
         }),
         routeItem({

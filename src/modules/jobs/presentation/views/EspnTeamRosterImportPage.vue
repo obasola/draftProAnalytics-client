@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import EspnDraftImportPanel from '../components/EspnDraftImportPanel.vue'
+import EspnTeamRosterImportPanel from '../components/EspnTeamRosterImportPanel.vue'
 </script>
 
 <template>
   <section class="page">
     <header>
-      <h2>Import ESPN Draft Data</h2>
+      <h2>Import Team Roster</h2>
       <p>
-        Queue ESPN draft-class and draft-result imports, synchronize staged ESPN picks to
-        DraftPick, and enrich PlayerTeam positions by draft year.
+        Queue complete ESPN roster imports for one selected team or every configured NFL team.
       </p>
     </header>
 
-    <EspnDraftImportPanel />
+    <EspnTeamRosterImportPanel />
   </section>
 </template>
 
