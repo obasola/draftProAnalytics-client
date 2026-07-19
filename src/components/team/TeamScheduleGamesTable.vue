@@ -246,7 +246,7 @@ onMounted(() => {
 }
 .matchup-cell { display:flex; align-items:center; gap:0.25rem; }
 .team { display:flex; align-items:center; gap:0.25rem; }
-.team-logo { width:36px; height:36px; object-fit:contain; }
+.team-logo { width:42px; height:42px; object-fit:contain; filter: none; opacity: 1; }
 .at-symbol { font-weight:bold; margin:0 0.25rem; }
 .loading-state { text-align:center; padding:1rem; color:var(--text-color-secondary); }
 .text-muted { color:#6c757d; font-style:italic; }
