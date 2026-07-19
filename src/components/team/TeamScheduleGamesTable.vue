@@ -85,7 +85,7 @@ const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: stri
     const shortName = parts[parts.length - 1]
     const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
     const logoFile = `${shortName}.${fileExt}`
-    return { shortName, logoPath: `/images/${team.conference.toLowerCase()}/${logoFile}` }
+    return { shortName, logoPath: `/logos/${team.conference.toLowerCase()}/${logoFile}` }
   }
   if (typeof team === 'number') {
     const found = themeStore.teams.find(t => Number(t.id) === team)
