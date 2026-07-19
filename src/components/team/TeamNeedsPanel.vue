@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
@@ -34,14 +35,18 @@ interface PositionOption {
   value: string
 }
 
+interface TeamNeedDisplayRow extends TeamNeedRow {
+  positionName: string
+}
+
 const props = defineProps<Props>()
 
 const positionOptions: readonly PositionOption[] = [
   { label: 'Center', value: 'C' },
   { label: 'Cornerback', value: 'CB' },
   { label: 'Defensive Tackle', value: 'DT' },
-  { label: 'Edge Rusher', value: 'EDGE' },
-  { label: 'Fullback', value: 'FB' },
+  { label: 'EDGE', value: 'EDGE' },
+  { label: 'Full Back', value: 'FB' },
   { label: 'Kicker', value: 'K' },
   { label: 'Linebacker', value: 'LB' },
   { label: 'Long Snapper', value: 'LS' },
@@ -59,16 +64,25 @@ const needs = ref<TeamNeedRow[]>([])
 const formVisible = ref(false)
 const loading = ref(false)
 const saving = ref(false)
+const deleting = ref(false)
+const selectedNeedIds = ref<number[]>([])
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const selectedPosition = ref<string | null>(null)
 const priority = ref<number>(1)
 
-const sortedNeeds = computed<TeamNeedRow[]>(() =>
-  [...needs.value].sort((left, right) =>
-    left.position.localeCompare(right.position) || left.priority - right.priority,
-  ),
+const positionNameByCode = new Map(
+  positionOptions.map((option) => [option.value, option.label]),
 )
+
+const displayNeeds = computed<TeamNeedDisplayRow[]>(() =>
+  needs.value.map((need) => ({
+    ...need,
+    positionName: positionNameByCode.get(need.position) ?? need.position,
+  })),
+)
+
+const hasSelectedNeeds = computed<boolean>(() => selectedNeedIds.value.length > 0)
 
 const resetForm = (): void => {
   selectedPosition.value = null
@@ -94,11 +108,54 @@ const loadNeeds = async (): Promise<void> => {
       `/team-need-records/team/${props.teamId}`,
     )
     needs.value = response.data.data
+    selectedNeedIds.value = selectedNeedIds.value.filter((id) =>
+      needs.value.some((need) => need.id === id),
+    )
   } catch (error: unknown) {
     needs.value = []
     errorMessage.value = readErrorMessage(error)
   } finally {
     loading.value = false
+  }
+}
+
+const toggleNeedSelection = (needId: number, checked: boolean): void => {
+  if (checked) {
+    if (!selectedNeedIds.value.includes(needId)) {
+      selectedNeedIds.value = [...selectedNeedIds.value, needId]
+    }
+    return
+  }
+
+  selectedNeedIds.value = selectedNeedIds.value.filter((id) => id !== needId)
+}
+
+const removeSelectedNeeds = async (): Promise<void> => {
+  if (!hasSelectedNeeds.value) return
+
+  const confirmed = window.confirm(
+    `Remove ${selectedNeedIds.value.length} selected team need${selectedNeedIds.value.length === 1 ? '' : 's'}?`,
+  )
+  if (!confirmed) return
+
+  deleting.value = true
+  errorMessage.value = null
+  successMessage.value = null
+
+  try {
+    const idsToDelete = [...selectedNeedIds.value]
+    await Promise.all(
+      idsToDelete.map((id) => api.delete(`/team-need-records/${id}`)),
+    )
+
+    selectedNeedIds.value = []
+    await loadNeeds()
+    successMessage.value = `${idsToDelete.length} team need${idsToDelete.length === 1 ? '' : 's'} removed successfully.`
+  } catch (error: unknown) {
+    errorMessage.value = readErrorMessage(error)
+    await loadNeeds()
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -151,6 +208,7 @@ watch(
     formVisible.value = false
     resetForm()
     successMessage.value = null
+    selectedNeedIds.value = []
     await loadNeeds()
   },
 )
@@ -163,6 +221,14 @@ watch(
         label="Add Need"
         icon="pi pi-plus"
         @click="showAddForm"
+      />
+      <Button
+        label="Remove Need"
+        icon="pi pi-trash"
+        severity="danger"
+        :disabled="!hasSelectedNeeds || deleting"
+        :loading="deleting"
+        @click="removeSelectedNeeds"
       />
     </div>
 
@@ -180,16 +246,27 @@ watch(
     </Message>
 
     <DataTable
-      v-if="loading || sortedNeeds.length > 0"
-      :value="sortedNeeds"
+      v-if="loading || displayNeeds.length > 0"
+      :value="displayNeeds"
       data-key="id"
       :loading="loading"
       responsive-layout="scroll"
       striped-rows
       class="needs-table"
     >
-      <Column field="position" header="Position" />
-      <Column field="priority" header="Priority" />
+      <Column field="positionName" header="Position" sortable />
+      <Column field="priority" header="Priority" sortable />
+      <Column header="Action" body-class="action-column" header-class="action-column">
+        <template #body="{ data }">
+          <Checkbox
+            :model-value="selectedNeedIds.includes(data.id)"
+            binary
+            :input-id="`team-need-${data.id}`"
+            :aria-label="`Select ${data.positionName}`"
+            @update:model-value="toggleNeedSelection(data.id, $event)"
+          />
+        </template>
+      </Column>
     </DataTable>
 
     <div v-else class="empty-state">
@@ -267,7 +344,13 @@ watch(
 .actions-row {
   display: flex;
   justify-content: flex-start;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+:deep(.action-column) {
+  width: 7rem;
+  text-align: center;
 }
 
 .panel-message {
