@@ -21,8 +21,9 @@ export const postseasonWeekOptions: readonly WeekOption[] = [
   { label: 'Wild Card', value: 1 },
   { label: 'Divisional', value: 2 },
   { label: 'Conference Championship', value: 3 },
-  { label: 'Super Bowl', value: 4 },
-  { label: 'Postseason Week 5', value: 5 },
+  { label: 'Pro Bowl', value: 4 },,
+  { label: 'Super Bowl', value: 5 }
+  
 ];
 
 export const getWeekOptionsForSeasonType = (seasonType: NflSeasonType): readonly WeekOption[] => {

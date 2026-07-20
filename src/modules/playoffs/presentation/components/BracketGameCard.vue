@@ -3,6 +3,7 @@ import BracketTeamRow, { type BracketTeam, type BracketSideAlign } from './Brack
 
 export interface BracketGameViewModel {
   id: string
+  gameId: number | null
   topTeam: BracketTeam | null
   bottomTeam: BracketTeam | null
   topScore: number | null
@@ -14,6 +15,11 @@ const props = defineProps<{
   game: BracketGameViewModel
   align: BracketSideAlign
   title?: string
+  clickable?: boolean
+}>()
+
+const emit = defineEmits<{
+  select: [game: BracketGameViewModel]
 }>()
 
 const isTopWinner = (): boolean =>
@@ -24,7 +30,15 @@ const isBottomWinner = (): boolean =>
 </script>
 
 <template>
-  <div class="game-card">
+  <div
+    class="game-card"
+    :class="{ 'game-card--clickable': props.clickable }"
+    :role="props.clickable ? 'button' : undefined"
+    :tabindex="props.clickable ? 0 : undefined"
+    @click="props.clickable && emit('select', props.game)"
+    @keydown.enter="props.clickable && emit('select', props.game)"
+    @keydown.space.prevent="props.clickable && emit('select', props.game)"
+  >
     <!-- Title container: transparent, no border -->
     <div v-if="props.title" class="title-container">
       <div class="title">{{ props.title }}</div>
@@ -49,6 +63,22 @@ const isBottomWinner = (): boolean =>
 <style scoped>
 .game-card {
   width: 100%;
+}
+
+.game-card--clickable {
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.game-card--clickable:hover,
+.game-card--clickable:focus-visible {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+  outline: none;
+}
+
+.game-card--clickable:focus-visible .match-parent {
+  box-shadow: 0 0 0 3px rgba(255, 210, 124, 0.72);
 }
 
 .title-container {

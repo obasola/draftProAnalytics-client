@@ -8,7 +8,8 @@ import Button from 'primevue/button'
 
 import { usePlayoffBracketStore } from '@/modules/playoffs/application/playoffBracketStore'
 import BracketConnectorOverlay from '../components/BracketConnectorOverlay.vue'
-import BracketGameCard from '../components/BracketGameCard.vue'
+import BracketGameCard, { type BracketGameViewModel } from '../components/BracketGameCard.vue'
+import PlayoffGameDetailsDialog from '../components/PlayoffGameDetailsDialog.vue'
 
 import ProgressSpinner from 'primevue/progressspinner'
 
@@ -79,6 +80,14 @@ onMounted(async () => {
 const nfc = computed(() => store.nfcBracket)
 const afc = computed(() => store.afcBracket)
 const superBowl = computed(() => store.superBowl)
+const showPlayoffGameDialog = ref(false)
+const selectedPlayoffGameId = ref<number | null>(null)
+
+const openPlayoffGameDialog = (game: BracketGameViewModel): void => {
+  if (game.gameId === null) return
+  selectedPlayoffGameId.value = game.gameId
+  showPlayoffGameDialog.value = true
+}
 </script>
 
 <template>
@@ -131,12 +140,12 @@ const superBowl = computed(() => store.superBowl)
         <div class="side-title">NFC</div>
         <div class="side-inner">
           <BracketConnectorOverlay side="left" />
-          <BracketGameCard class="pos wc-1" :game="nfc.wcGames[0]" :align="nfcAlign" title="Wild Card" />
-          <BracketGameCard class="pos wc-2" :game="nfc.wcGames[1]" :align="nfcAlign" />
-          <BracketGameCard class="pos wc-3" :game="nfc.wcGames[2]" :align="nfcAlign" />
-          <BracketGameCard class="pos div-1" :game="nfc.divGames[0]" :align="nfcAlign" title="Divisional" />
-          <BracketGameCard class="pos div-2" :game="nfc.divGames[1]" :align="nfcAlign" />
-          <BracketGameCard class="pos conf-1" :game="nfc.confGame" :align="nfcAlign" title="Conference" />
+          <BracketGameCard class="pos wc-1" :game="nfc.wcGames[0]" :align="nfcAlign" title="Wild Card" :clickable="nfc.wcGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-2" :game="nfc.wcGames[1]" :align="nfcAlign" :clickable="nfc.wcGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-3" :game="nfc.wcGames[2]" :align="nfcAlign" :clickable="nfc.wcGames[2].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-1" :game="nfc.divGames[0]" :align="nfcAlign" title="Divisional" :clickable="nfc.divGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-2" :game="nfc.divGames[1]" :align="nfcAlign" :clickable="nfc.divGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos conf-1" :game="nfc.confGame" :align="nfcAlign" title="Conference" :clickable="nfc.confGame.gameId !== null" @select="openPlayoffGameDialog" />
         </div>
       </section>
 
@@ -146,7 +155,12 @@ const superBowl = computed(() => store.superBowl)
           <div class="sb-label">SUPER BOWL</div>
         </div>
         <div class="center-slot">
-          <BracketGameCard :game="superBowl" align="left" />
+          <BracketGameCard
+            :game="superBowl"
+            align="left"
+            :clickable="superBowl.gameId !== null"
+            @select="openPlayoffGameDialog"
+          />
         </div>
       </section>
 
@@ -155,12 +169,12 @@ const superBowl = computed(() => store.superBowl)
         <div class="side-title">AFC</div>
         <div class="side-inner side-inner--right">
           <BracketConnectorOverlay side="right" />
-          <BracketGameCard class="pos wc-1" :game="afc.wcGames[0]" :align="afcAlign" title="Wild Card" />
-          <BracketGameCard class="pos wc-2" :game="afc.wcGames[1]" :align="afcAlign" />
-          <BracketGameCard class="pos wc-3" :game="afc.wcGames[2]" :align="afcAlign" />
-          <BracketGameCard class="pos div-1" :game="afc.divGames[0]" :align="afcAlign" title="Divisional" />
-          <BracketGameCard class="pos div-2" :game="afc.divGames[1]" :align="afcAlign" />
-          <BracketGameCard class="pos conf-1" :game="afc.confGame" :align="afcAlign" title="Conference" />
+          <BracketGameCard class="pos wc-1" :game="afc.wcGames[0]" :align="afcAlign" title="Wild Card" :clickable="afc.wcGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-2" :game="afc.wcGames[1]" :align="afcAlign" :clickable="afc.wcGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-3" :game="afc.wcGames[2]" :align="afcAlign" :clickable="afc.wcGames[2].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-1" :game="afc.divGames[0]" :align="afcAlign" title="Divisional" :clickable="afc.divGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-2" :game="afc.divGames[1]" :align="afcAlign" :clickable="afc.divGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos conf-1" :game="afc.confGame" :align="afcAlign" title="Conference" :clickable="afc.confGame.gameId !== null" @select="openPlayoffGameDialog" />
         </div>
       </section>
     </div>
@@ -170,12 +184,12 @@ const superBowl = computed(() => store.superBowl)
       <section v-if="showNfc" class="side side--left">
         <div class="side-title">NFC</div>
         <div class="side-inner">
-          <BracketGameCard class="pos wc-1" :game="nfc.wcGames[0]" :align="nfcAlign" title="Wild Card" />
-          <BracketGameCard class="pos wc-2" :game="nfc.wcGames[1]" :align="nfcAlign" />
-          <BracketGameCard class="pos wc-3" :game="nfc.wcGames[2]" :align="nfcAlign" />
-          <BracketGameCard class="pos div-1" :game="nfc.divGames[0]" :align="nfcAlign" title="Divisional" />
-          <BracketGameCard class="pos div-2" :game="nfc.divGames[1]" :align="nfcAlign" />
-          <BracketGameCard class="pos conf-1" :game="nfc.confGame" :align="nfcAlign" title="Conference" />
+          <BracketGameCard class="pos wc-1" :game="nfc.wcGames[0]" :align="nfcAlign" title="Wild Card" :clickable="nfc.wcGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-2" :game="nfc.wcGames[1]" :align="nfcAlign" :clickable="nfc.wcGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-3" :game="nfc.wcGames[2]" :align="nfcAlign" :clickable="nfc.wcGames[2].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-1" :game="nfc.divGames[0]" :align="nfcAlign" title="Divisional" :clickable="nfc.divGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-2" :game="nfc.divGames[1]" :align="nfcAlign" :clickable="nfc.divGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos conf-1" :game="nfc.confGame" :align="nfcAlign" title="Conference" :clickable="nfc.confGame.gameId !== null" @select="openPlayoffGameDialog" />
           <BracketConnectorOverlay side="left" />
         </div>
       </section>
@@ -183,16 +197,20 @@ const superBowl = computed(() => store.superBowl)
       <section v-if="showAfc" class="side side--right">
         <div class="side-title">AFC</div>
         <div class="side-inner side-inner--right">
-          <BracketGameCard class="pos wc-1" :game="afc.wcGames[0]" :align="afcAlign" title="Wild Card" />
-          <BracketGameCard class="pos wc-2" :game="afc.wcGames[1]" :align="afcAlign" />
-          <BracketGameCard class="pos wc-3" :game="afc.wcGames[2]" :align="afcAlign" />
-          <BracketGameCard class="pos div-1" :game="afc.divGames[0]" :align="afcAlign" title="Divisional" />
-          <BracketGameCard class="pos div-2" :game="afc.divGames[1]" :align="afcAlign" />
-          <BracketGameCard class="pos conf-1" :game="afc.confGame" :align="afcAlign" title="Conference" />
+          <BracketGameCard class="pos wc-1" :game="afc.wcGames[0]" :align="afcAlign" title="Wild Card" :clickable="afc.wcGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-2" :game="afc.wcGames[1]" :align="afcAlign" :clickable="afc.wcGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos wc-3" :game="afc.wcGames[2]" :align="afcAlign" :clickable="afc.wcGames[2].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-1" :game="afc.divGames[0]" :align="afcAlign" title="Divisional" :clickable="afc.divGames[0].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos div-2" :game="afc.divGames[1]" :align="afcAlign" :clickable="afc.divGames[1].gameId !== null" @select="openPlayoffGameDialog" />
+          <BracketGameCard class="pos conf-1" :game="afc.confGame" :align="afcAlign" title="Conference" :clickable="afc.confGame.gameId !== null" @select="openPlayoffGameDialog" />
           <BracketConnectorOverlay side="right" />
         </div>
       </section>
     </div>
+    <PlayoffGameDetailsDialog
+      v-model:visible="showPlayoffGameDialog"
+      :game-id="selectedPlayoffGameId"
+    />
   </div>
 </template>
 

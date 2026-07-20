@@ -29,6 +29,7 @@ function safeTime(date: string | null): number {
 function emptyGame(id: string): BracketGameViewModel {
   return {
     id,
+    gameId: null,
     topTeam: null,
     bottomTeam: null,
     topScore: null,
@@ -171,7 +172,7 @@ function toVm(
     return topScore > bottomScore ? topTeam.id : bottomTeam.id
   })()
 
-  return { id, topTeam, bottomTeam, topScore, bottomScore, winnerTeamId }
+  return { id, gameId: e.id, topTeam, bottomTeam, topScore, bottomScore, winnerTeamId }
 }
 
 function buildConferenceBracket(
@@ -284,6 +285,7 @@ export const usePlayoffBracketStore = defineStore('playoffBracket', {
 
       return {
         id: 'SB',
+        gameId: null,
         topTeam: nfc.champion,
         bottomTeam: afc.champion,
         topScore: null,

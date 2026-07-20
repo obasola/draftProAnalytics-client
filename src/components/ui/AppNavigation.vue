@@ -264,12 +264,7 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
         }),
 
-        routeItem({
-          label: 'Draft Day Scorecard',
-          icon: 'pi pi-table',
-          to: '/draft-day-scorecard',
-          requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
-        }),
+        
 
         routeItem({
           label: 'Draft Pick Management',
@@ -278,12 +273,7 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           requiredPerm: { domain: "DRAFT_ORDER", action: "EDIT" },
         }),
 
-        routeItem({
-          label: "B4Me Analysis",
-          icon: "pi pi-stopwatch",
-          to: "/b4me-analysis",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
+        
         routeItem({
           label: "Draft Simulation",
           icon: "pi pi-stopwatch",
@@ -338,6 +328,18 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           label: "Draft Analysis",
           icon: "pi pi-chart-bar",
           to: "/draft-analysis",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: "B4Me Analysis",
+          icon: "pi pi-stopwatch",
+          to: "/b4me-analysis",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
+          label: 'Draft Day Scorecard',
+          icon: 'pi pi-table',
+          to: '/draft-day-scorecard',
           requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
         }),
         routeItem({
