@@ -6,6 +6,7 @@ import Message from 'primevue/message'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import { fetchPlayoffGameDetails } from '@/modules/playoffs/infrastructure/playoffGameDetailsApi'
+import { resolveTeamLogo } from '@/util/resolveTeamLogo'
 import type {
   PlayoffGameDetailsDto,
   PlayoffGamePlayDto,
@@ -25,6 +26,8 @@ const emit = defineEmits<{
 const details = ref<PlayoffGameDetailsDto | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const awayLogoFailed = ref(false)
+const homeLogoFailed = ref(false)
 
 const dialogVisible = computed({
   get: () => props.visible,
@@ -44,6 +47,28 @@ const displayHomeRecord = computed<string>(() =>
   || 'Record unavailable'
 )
 
+const awayLogoUrl = computed<string>(() => {
+  if (!details.value || awayLogoFailed.value) return ''
+  return resolveTeamLogo(details.value.awayTeam.displayName)
+    || details.value.awayTeam.logoUrl?.trim()
+    || ''
+})
+
+const homeLogoUrl = computed<string>(() => {
+  if (!details.value || homeLogoFailed.value) return ''
+  return resolveTeamLogo(details.value.homeTeam.displayName)
+    || details.value.homeTeam.logoUrl?.trim()
+    || ''
+})
+
+const markAwayLogoFailed = (): void => {
+  awayLogoFailed.value = true
+}
+
+const markHomeLogoFailed = (): void => {
+  homeLogoFailed.value = true
+}
+
 const formattedDate = computed(() => {
   if (!details.value?.date) return 'Date unavailable'
   return new Intl.DateTimeFormat('en-US', {
@@ -57,10 +82,19 @@ const formattedDate = computed(() => {
 })
 
 const periodCount = computed(() =>
-  Math.max(details.value?.awayTeam.linescores.length ?? 0, details.value?.homeTeam.linescores.length ?? 0)
+  Math.max(
+    4,
+    details.value?.awayTeam.linescores.length ?? 0,
+    details.value?.homeTeam.linescores.length ?? 0
+  )
 )
 
 const periods = computed(() => Array.from({ length: periodCount.value }, (_, index) => index + 1))
+
+const periodLabel = (period: number): string => {
+  if (period <= 4) return `Q${period}`
+  return period === 5 ? 'OT' : `${period - 4}OT`
+}
 
 const playLabel = (play: PlayoffGamePlayDto): string => {
   const period = play.period ? `Q${play.period}` : ''
@@ -77,6 +111,8 @@ const load = async (): Promise<void> => {
   if (!props.visible || props.gameId === null || props.gameId <= 0) return
   loading.value = true
   error.value = null
+  awayLogoFailed.value = false
+  homeLogoFailed.value = false
   try {
     details.value = await fetchPlayoffGameDetails(props.gameId)
   } catch (caught: unknown) {
@@ -134,9 +170,16 @@ watch(
 
         <div class="matchup">
           <article class="team team--away" :class="{ champion: details.awayTeam.winner }">
-            <img v-if="details.awayTeam.logoUrl" :src="details.awayTeam.logoUrl" :alt="details.awayTeam.displayName" />
+            <div class="team-logo-shell">
+              <img
+                v-if="awayLogoUrl"
+                :src="awayLogoUrl"
+                :alt="`${details.awayTeam.displayName} logo`"
+                @error="markAwayLogoFailed"
+              />
+              <span v-else class="logo-fallback">{{ details.awayTeam.abbreviation }}</span>
+            </div>
             <div class="team-copy">
-              <span class="abbrev">{{ details.awayTeam.abbreviation }}</span>
               <strong>{{ details.awayTeam.displayName }}</strong>
               <span>{{ displayAwayRecord }}</span>
             </div>
@@ -148,40 +191,49 @@ watch(
           <article class="team team--home" :class="{ champion: details.homeTeam.winner }">
             <div class="final-score">{{ details.homeTeam.score ?? '—' }}</div>
             <div class="team-copy team-copy--right">
-              <span class="abbrev">{{ details.homeTeam.abbreviation }}</span>
               <strong>{{ details.homeTeam.displayName }}</strong>
               <span>{{ displayHomeRecord }}</span>
             </div>
-            <img v-if="details.homeTeam.logoUrl" :src="details.homeTeam.logoUrl" :alt="details.homeTeam.displayName" />
+            <div class="team-logo-shell">
+              <img
+                v-if="homeLogoUrl"
+                :src="homeLogoUrl"
+                :alt="`${details.homeTeam.displayName} logo`"
+                @error="markHomeLogoFailed"
+              />
+              <span v-else class="logo-fallback">{{ details.homeTeam.abbreviation }}</span>
+            </div>
           </article>
         </div>
       </section>
 
-      <section class="line-score-card">
-        <table>
-          <thead>
-            <tr>
-              <th>Team</th>
-              <th v-for="period in periods" :key="period">Q{{ period }}</th>
-              <th>T</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>{{ details.awayTeam.abbreviation }}</th>
-              <td v-for="period in periods" :key="period">{{ details.awayTeam.linescores[period - 1] ?? '—' }}</td>
-              <td class="total">{{ details.awayTeam.score ?? '—' }}</td>
-            </tr>
-            <tr>
-              <th>{{ details.homeTeam.abbreviation }}</th>
-              <td v-for="period in periods" :key="period">{{ details.homeTeam.linescores[period - 1] ?? '—' }}</td>
-              <td class="total">{{ details.homeTeam.score ?? '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
       <TabView class="details-tabs">
+        <TabPanel header="Overview">
+          <section class="line-score-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th v-for="period in periods" :key="period">{{ periodLabel(period) }}</th>
+                  <th>T</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>{{ details.awayTeam.abbreviation }}</th>
+                  <td v-for="period in periods" :key="period">{{ details.awayTeam.linescores[period - 1] ?? '—' }}</td>
+                  <td class="total">{{ details.awayTeam.score ?? '—' }}</td>
+                </tr>
+                <tr>
+                  <th>{{ details.homeTeam.abbreviation }}</th>
+                  <td v-for="period in periods" :key="period">{{ details.homeTeam.linescores[period - 1] ?? '—' }}</td>
+                  <td class="total">{{ details.homeTeam.score ?? '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </TabPanel>
+
         <TabPanel header="Team Stats">
           <div class="comparison-table">
             <div class="comparison-head">
@@ -218,16 +270,6 @@ watch(
           </div>
         </TabPanel>
 
-        <TabPanel header="Recent Plays">
-          <div class="plays-list">
-            <article v-for="(play, index) in details.recentPlays" :key="`${index}-${play.text}`" class="play-row">
-              <div class="play-time">{{ playLabel(play) }}</div>
-              <div class="play-text">{{ play.text }}</div>
-              <div v-if="scoreText(play)" class="play-score">{{ scoreText(play) }}</div>
-            </article>
-            <div v-if="details.recentPlays.length === 0" class="empty-copy">No recent plays available.</div>
-          </div>
-        </TabPanel>
       </TabView>
     </div>
   </Dialog>
@@ -247,11 +289,12 @@ watch(
 .matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 18px; margin-top: 22px; }
 .team { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 14px; border-radius: 14px; }
 .team.champion { background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(255,215,0,.45); }
-.team img { width: 72px; height: 72px; object-fit: contain; }
+.team-logo-shell { width: 80px; height: 80px; flex: 0 0 80px; display: grid; place-items: center; }
+.team-logo-shell img { width: 76px; height: 76px; object-fit: contain; }
+.logo-fallback { width: 64px; height: 64px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.28); border-radius: 50%; color: #ffd27c; background: rgba(0,0,0,.18); font-size: .88rem; font-weight: 900; letter-spacing: .08em; }
 .team-copy { display: grid; gap: 3px; color: rgba(255,255,255,.76); }
 .team-copy strong { color: #fff; font-size: 1.05rem; }
 .team-copy--right { text-align: right; }
-.abbrev { color: #ffd27c; font-size: .8rem; font-weight: 900; letter-spacing: .12em; }
 .final-score { color: #fff; font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; line-height: 1; }
 .team--away .final-score { margin-left: auto; }
 .versus { color: rgba(255,255,255,.62); font-weight: 900; font-size: .78rem; letter-spacing: .12em; }
