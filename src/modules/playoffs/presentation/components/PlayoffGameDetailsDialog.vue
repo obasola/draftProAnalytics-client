@@ -133,15 +133,8 @@ watch(
 </script>
 
 <template>
-  <Dialog
-    v-model:visible="dialogVisible"
-    modal
-    dismissable-mask
-    :draggable="false"
-    class="playoff-game-dialog"
-    :style="{ width: 'min(1100px, 96vw)' }"
-    :breakpoints="{ '900px': '96vw' }"
-  >
+  <Dialog v-model:visible="dialogVisible" modal dismissable-mask :draggable="false" class="playoff-game-dialog"
+    :style="{ width: 'min(1100px, 96vw)' }" :breakpoints="{ '900px': '96vw' }">
     <template #header>
       <div class="dialog-heading">
         <span class="trophy" aria-hidden="true">🏆</span>
@@ -171,12 +164,8 @@ watch(
         <div class="matchup">
           <article class="team team--away" :class="{ champion: details.awayTeam.winner }">
             <div class="team-logo-shell">
-              <img
-                v-if="awayLogoUrl"
-                :src="awayLogoUrl"
-                :alt="`${details.awayTeam.displayName} logo`"
-                @error="markAwayLogoFailed"
-              />
+              <img v-if="awayLogoUrl" :src="awayLogoUrl" :alt="`${details.awayTeam.displayName} logo`"
+                @error="markAwayLogoFailed" />
               <span v-else class="logo-fallback">{{ details.awayTeam.abbreviation }}</span>
             </div>
             <div class="team-copy">
@@ -189,20 +178,18 @@ watch(
           <div class="versus">FINAL</div>
 
           <article class="team team--home" :class="{ champion: details.homeTeam.winner }">
-            <div class="final-score">{{ details.homeTeam.score ?? '—' }}</div>
+            <div class="team-logo-shell">
+              <img v-if="homeLogoUrl" :src="homeLogoUrl" :alt="`${details.homeTeam.displayName} logo`"
+                @error="markHomeLogoFailed" />
+              <span v-else class="logo-fallback">{{ details.homeTeam.abbreviation }}</span>
+            </div>
             <div class="team-copy team-copy--right">
               <strong>{{ details.homeTeam.displayName }}</strong>
               <span>{{ displayHomeRecord }}</span>
             </div>
-            <div class="team-logo-shell">
-              <img
-                v-if="homeLogoUrl"
-                :src="homeLogoUrl"
-                :alt="`${details.homeTeam.displayName} logo`"
-                @error="markHomeLogoFailed"
-              />
-              <span v-else class="logo-fallback">{{ details.homeTeam.abbreviation }}</span>
-            </div>
+            <div class="final-score">{{ details.homeTeam.score ?? '—' }}</div>
+            
+
           </article>
         </div>
       </section>
@@ -253,8 +240,10 @@ watch(
           <div class="leader-grid">
             <article v-for="leader in details.leaders" :key="leader.category" class="leader-card">
               <h3>{{ leader.category }}</h3>
-              <div><strong>{{ details.awayTeam.abbreviation }}</strong><span>{{ leader.away ?? 'Unavailable' }}</span></div>
-              <div><strong>{{ details.homeTeam.abbreviation }}</strong><span>{{ leader.home ?? 'Unavailable' }}</span></div>
+              <div><strong>{{ details.awayTeam.abbreviation }}</strong><span>{{ leader.away ?? 'Unavailable' }}</span>
+              </div>
+              <div><strong>{{ details.homeTeam.abbreviation }}</strong><span>{{ leader.home ?? 'Unavailable' }}</span>
+              </div>
             </article>
           </div>
         </TabPanel>
@@ -276,65 +265,326 @@ watch(
 </template>
 
 <style scoped>
-.dialog-heading { display: flex; align-items: center; gap: 12px; }
-.trophy { font-size: 2rem; }
-.eyebrow { color: #b66e00; font-size: .72rem; font-weight: 900; letter-spacing: .14em; }
-.dialog-title { color: #fff; font-size: 1.45rem; font-weight: 900; }
-.state-panel { min-height: 300px; display: grid; place-items: center; gap: 12px; }
-.details-shell { display: grid; gap: 16px; }
-.score-hero, .line-score-card { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; background: linear-gradient(135deg, #031c4b, #0757cc); }
-.score-hero { padding: 20px; }
-.game-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; color: rgba(255,255,255,.82); font-size: .9rem; }
-.status-pill { padding: 3px 10px; border-radius: 999px; background: #b66e00; color: #fff; font-weight: 900; }
-.matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 18px; margin-top: 22px; }
-.team { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 14px; border-radius: 14px; }
-.team.champion { background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(255,215,0,.45); }
-.team-logo-shell { width: 80px; height: 80px; flex: 0 0 80px; display: grid; place-items: center; }
-.team-logo-shell img { width: 76px; height: 76px; object-fit: contain; }
-.logo-fallback { width: 64px; height: 64px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.28); border-radius: 50%; color: #ffd27c; background: rgba(0,0,0,.18); font-size: .88rem; font-weight: 900; letter-spacing: .08em; }
-.team-copy { display: grid; gap: 3px; color: rgba(255,255,255,.76); }
-.team-copy strong { color: #fff; font-size: 1.05rem; }
-.team-copy--right { text-align: right; }
-.final-score { color: #fff; font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; line-height: 1; }
-.team--away .final-score { margin-left: auto; }
-.versus { color: rgba(255,255,255,.62); font-weight: 900; font-size: .78rem; letter-spacing: .12em; }
-.line-score-card { overflow: hidden; background: #071a38; }
-table { width: 100%; border-collapse: collapse; color: #fff; }
-th, td { padding: 11px 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.1); }
-th:first-child { text-align: left; }
-thead th { color: #9fc3ff; font-size: .78rem; letter-spacing: .08em; }
-.total { color: #ffd27c; font-weight: 900; }
-.details-tabs :deep(.p-tabview-nav), .details-tabs :deep(.p-tabview-panels) { background: transparent; }
-.details-tabs :deep(.p-tabview-panels) { padding: 16px 0 0; }
-.comparison-table { display: grid; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; overflow: hidden; }
-.comparison-head, .comparison-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; text-align: center; padding: 10px 14px; }
-.comparison-head { background: #084db2; color: #fff; }
-.comparison-row { border-top: 1px solid rgba(255,255,255,.1); }
-.comparison-row span { color: rgba(255,255,255,.68); }
-.leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.leader-card { border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 14px; }
-.leader-card h3 { margin: 0 0 12px; color: #ffd27c; }
-.leader-card div { display: grid; grid-template-columns: 48px 1fr; gap: 10px; margin-top: 10px; }
-.plays-list { display: grid; gap: 8px; max-height: 390px; overflow: auto; }
-.play-row { display: grid; grid-template-columns: 78px 1fr auto; gap: 12px; align-items: start; padding: 11px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; }
-.play-time, .play-score { color: #ffd27c; font-weight: 900; }
-.play-text { color: rgba(255,255,255,.88); }
-.empty-copy { padding: 20px; text-align: center; color: rgba(255,255,255,.62); }
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trophy {
+  font-size: 2rem;
+}
+
+.eyebrow {
+  color: #b66e00;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.dialog-title {
+  color: #fff;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.state-panel {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+}
+
+.details-shell {
+  display: grid;
+  gap: 16px;
+}
+
+.score-hero,
+.line-score-card {
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #031c4b, #0757cc);
+}
+
+.score-hero {
+  padding: 20px;
+}
+
+.game-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  color: rgba(255, 255, 255, .82);
+  font-size: .9rem;
+}
+
+.status-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #b66e00;
+  color: #fff;
+  font-weight: 900;
+}
+
+.matchup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.team.champion {
+  background: rgba(255, 255, 255, .1);
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 0, .45);
+}
+
+.team-logo-shell {
+  width: 80px;
+  height: 80px;
+  flex: 0 0 80px;
+  display: grid;
+  place-items: center;
+}
+
+.team-logo-shell img {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+}
+
+.logo-fallback {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 50%;
+  color: #ffd27c;
+  background: rgba(0, 0, 0, .18);
+  font-size: .88rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.team-copy {
+  display: grid;
+  gap: 3px;
+  color: rgba(255, 255, 255, .76);
+}
+
+.team-copy strong {
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+.team-copy--right {
+  text-align: right;
+}
+
+.final-score {
+  color: #fff;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.team--away .final-score {
+  margin-left: auto;
+}
+
+.versus {
+  color: rgba(255, 255, 255, .62);
+  font-weight: 900;
+  font-size: .78rem;
+  letter-spacing: .12em;
+}
+
+.line-score-card {
+  overflow: hidden;
+  background: #071a38;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #fff;
+}
+
+th,
+td {
+  padding: 11px 14px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+th:first-child {
+  text-align: left;
+}
+
+thead th {
+  color: #9fc3ff;
+  font-size: .78rem;
+  letter-spacing: .08em;
+}
+
+.total {
+  color: #ffd27c;
+  font-weight: 900;
+}
+
+.details-tabs :deep(.p-tabview-nav),
+.details-tabs :deep(.p-tabview-panels) {
+  background: transparent;
+}
+
+.details-tabs :deep(.p-tabview-panels) {
+  padding: 16px 0 0;
+}
+
+.comparison-table {
+  display: grid;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.comparison-head,
+.comparison-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  text-align: center;
+  padding: 10px 14px;
+}
+
+.comparison-head {
+  background: #084db2;
+  color: #fff;
+}
+
+.comparison-row {
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.comparison-row span {
+  color: rgba(255, 255, 255, .68);
+}
+
+.leader-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.leader-card {
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.leader-card h3 {
+  margin: 0 0 12px;
+  color: #ffd27c;
+}
+
+.leader-card div {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.plays-list {
+  display: grid;
+  gap: 8px;
+  max-height: 390px;
+  overflow: auto;
+}
+
+.play-row {
+  display: grid;
+  grid-template-columns: 78px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 12px;
+}
+
+.play-time,
+.play-score {
+  color: #ffd27c;
+  font-weight: 900;
+}
+
+.play-text {
+  color: rgba(255, 255, 255, .88);
+}
+
+.empty-copy {
+  padding: 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, .62);
+}
+
 @media (max-width: 760px) {
-  .matchup { grid-template-columns: 1fr; }
-  .versus { text-align: center; }
-  .team--home { flex-direction: row-reverse; }
-  .team-copy--right { text-align: left; }
-  .team--away .final-score { margin-left: auto; }
-  .leader-grid { grid-template-columns: 1fr; }
-  .play-row { grid-template-columns: 70px 1fr; }
-  .play-score { grid-column: 2; }
+  .matchup {
+    grid-template-columns: 1fr;
+  }
+
+  .versus {
+    text-align: center;
+  }
+
+  .team--home {
+    flex-direction: row-reverse;
+  }
+
+  .team-copy--right {
+    text-align: left;
+  }
+
+  .team--away .final-score {
+    margin-left: auto;
+  }
+
+  .leader-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .play-row {
+    grid-template-columns: 70px 1fr;
+  }
+
+  .play-score {
+    grid-column: 2;
+  }
 }
 </style>
 
 <style>
 .playoff-game-dialog .p-dialog-header,
-.playoff-game-dialog .p-dialog-content { background: #071426; color: #fff; }
-.playoff-game-dialog .p-dialog-header { border-radius: 18px 18px 0 0; }
-.playoff-game-dialog .p-dialog-content { border-radius: 0 0 18px 18px; }
+.playoff-game-dialog .p-dialog-content {
+  background: #071426;
+  color: #fff;
+}
+
+.playoff-game-dialog .p-dialog-header {
+  border-radius: 18px 18px 0 0;
+}
+
+.playoff-game-dialog .p-dialog-content {
+  border-radius: 0 0 18px 18px;
+}
 </style>
