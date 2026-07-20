@@ -14,6 +14,8 @@ import type {
 const props = defineProps<{
   visible: boolean
   gameId: number | null
+  fallbackAwayRecord?: string | null
+  fallbackHomeRecord?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -28,6 +30,19 @@ const dialogVisible = computed({
   get: () => props.visible,
   set: (value: boolean) => emit('update:visible', value),
 })
+
+
+const displayAwayRecord = computed<string>(() =>
+  details.value?.awayTeam.record?.trim()
+  || props.fallbackAwayRecord?.trim()
+  || 'Record unavailable'
+)
+
+const displayHomeRecord = computed<string>(() =>
+  details.value?.homeTeam.record?.trim()
+  || props.fallbackHomeRecord?.trim()
+  || 'Record unavailable'
+)
 
 const formattedDate = computed(() => {
   if (!details.value?.date) return 'Date unavailable'
@@ -123,7 +138,7 @@ watch(
             <div class="team-copy">
               <span class="abbrev">{{ details.awayTeam.abbreviation }}</span>
               <strong>{{ details.awayTeam.displayName }}</strong>
-              <span>{{ details.awayTeam.record ?? 'Record unavailable' }}</span>
+              <span>{{ displayAwayRecord }}</span>
             </div>
             <div class="final-score">{{ details.awayTeam.score ?? '—' }}</div>
           </article>
@@ -135,7 +150,7 @@ watch(
             <div class="team-copy team-copy--right">
               <span class="abbrev">{{ details.homeTeam.abbreviation }}</span>
               <strong>{{ details.homeTeam.displayName }}</strong>
-              <span>{{ details.homeTeam.record ?? 'Record unavailable' }}</span>
+              <span>{{ displayHomeRecord }}</span>
             </div>
             <img v-if="details.homeTeam.logoUrl" :src="details.homeTeam.logoUrl" :alt="details.homeTeam.displayName" />
           </article>

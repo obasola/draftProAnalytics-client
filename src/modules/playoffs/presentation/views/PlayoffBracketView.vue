@@ -82,10 +82,17 @@ const afc = computed(() => store.afcBracket)
 const superBowl = computed(() => store.superBowl)
 const showPlayoffGameDialog = ref(false)
 const selectedPlayoffGameId = ref<number | null>(null)
+const selectedAwayRecord = ref<string | null>(null)
+const selectedHomeRecord = ref<string | null>(null)
 
 const openPlayoffGameDialog = (game: BracketGameViewModel): void => {
   if (game.gameId === null) return
   selectedPlayoffGameId.value = game.gameId
+  // Bracket topTeam is the away team and bottomTeam is the home team.
+  // These records are already calculated from DPA standings and provide a
+  // reliable fallback when ESPN omits the record in its game-summary payload.
+  selectedAwayRecord.value = game.topTeam?.record?.trim() || null
+  selectedHomeRecord.value = game.bottomTeam?.record?.trim() || null
   showPlayoffGameDialog.value = true
 }
 </script>
@@ -210,6 +217,8 @@ const openPlayoffGameDialog = (game: BracketGameViewModel): void => {
     <PlayoffGameDetailsDialog
       v-model:visible="showPlayoffGameDialog"
       :game-id="selectedPlayoffGameId"
+      :fallback-away-record="selectedAwayRecord"
+      :fallback-home-record="selectedHomeRecord"
     />
   </div>
 </template>
