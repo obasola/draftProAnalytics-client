@@ -68,6 +68,9 @@
         paginator
         :rows="25"
         :rowsPerPageOptions="[10, 25, 50]"
+        rowHover
+        :rowClass="() => 'game-details-row'"
+        @row-click="openGameDetails($event.data)"
       >
         <!-- Week -->
         <Column field="gameWeek" header="Week" sortable>
@@ -175,13 +178,13 @@
         <Column header="Actions" class="actions-column">
           <template #body="{ data }">
             <div class="action-buttons">
-              <button v-if="!isRowEditing(data.id)" @click="startEdit(data)" class="edit-btn-row" :disabled="isRowSaving(data.id)">
+              <button v-if="!isRowEditing(data.id)" @click.stop="startEdit(data)" class="edit-btn-row" :disabled="isRowSaving(data.id)">
                 <i class="pi pi-pencil"></i> Edit
               </button>
-              <button v-if="isRowEditing(data.id)" @click="saveScore(data)" class="save-btn-row" :disabled="isRowSaving(data.id)">
+              <button v-if="isRowEditing(data.id)" @click.stop="saveScore(data)" class="save-btn-row" :disabled="isRowSaving(data.id)">
                 <i class="pi pi-check"></i> {{ isRowSaving(data.id) ? 'Saving...' : 'Save' }}
               </button>
-              <button v-if="isRowEditing(data.id)" @click="cancelEdit(data)" class="cancel-btn-row" :disabled="isRowSaving(data.id)">
+              <button v-if="isRowEditing(data.id)" @click.stop="cancelEdit(data)" class="cancel-btn-row" :disabled="isRowSaving(data.id)">
                 <i class="pi pi-times"></i> Cancel
               </button>
             </div>
@@ -194,6 +197,12 @@
     <div v-if="!loading && !error && scheduleGames.length === 0 && selectedSeason && selectedTeam" class="message-container">
       <div class="no-data-message">No games found for the selected season and team.</div>
     </div>
+
+    <PlayoffGameDetailsDialog
+      v-model:visible="gameDetailsVisible"
+      :game-id="selectedGameId"
+      :fallback-title="selectedGameTitle"
+    />
   </div>
 </template>
 
@@ -204,6 +213,7 @@ import { useGameStore } from '@/stores/gameStore'
 import { useTeamStore } from '@/stores/teamStore'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue'
 import { useToast } from 'primevue/usetoast'
 import { Team } from '@/types'
 import {
@@ -231,6 +241,10 @@ const seasonYearInit = 2025
 
 const loading = ref(false)
 const error = ref('')
+
+const selectedGameId = ref<number | null>(null)
+const selectedGameTitle = ref<string | null>(null)
+const gameDetailsVisible = ref(false)
 
 const editingRows  = ref(new Set<number>())
 const savingRows   = ref(new Set<number>())
@@ -367,6 +381,18 @@ const loadSchedule = async () => {
   }
 }
 
+const openGameDetails = (game: any): void => {
+  const gameId = Number(game?.id)
+  if (!Number.isInteger(gameId) || gameId <= 0 || isRowEditing(gameId)) return
+
+  const awayName = game?.awayTeam?.name ?? 'Away Team'
+  const homeName = game?.homeTeam?.name ?? 'Home Team'
+
+  selectedGameId.value = gameId
+  selectedGameTitle.value = `${awayName} at ${homeName}`
+  gameDetailsVisible.value = true
+}
+
 // editing helpers
 const startEdit = (g: any) => {
   originalVals.value.set(g.id, { homeScore: g.homeScore, awayScore: g.awayScore, gameStatus: g.gameStatus })
@@ -476,6 +502,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+:deep(.game-details-row) { cursor: pointer; }
 .matchup-cell { display:flex; align-items:center; gap:0.25rem; }
 .team { font-size:22pt; display:flex; align-items:center; gap:0.25rem; }
 

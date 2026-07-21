@@ -5,6 +5,7 @@ import { useUpcomingGamesController } from '@/composables/schedule/useUpcomingGa
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
+import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue';
 
 const controller = useUpcomingGamesController();
 const { loading, runImportScoresWeek } = controller;
@@ -18,7 +19,15 @@ const staticWeekOptions: { label: string; value: number }[] = [
   
 ];
 
-const expandedRows = ref<UpcomingGameUI[]>([]);
+const selectedGameId = ref<number | null>(null);
+const gameDetailsVisible = ref(false);
+const selectedGameTitle = ref<string | null>(null);
+
+const openGameDetails = (game: UpcomingGameUI): void => {
+  selectedGameId.value = game.id;
+  selectedGameTitle.value = `${game.awayTeamName} at ${game.homeTeamName}`;
+  gameDetailsVisible.value = true;
+};
 
 onMounted(() => {
   // optional: preload current week here if you want
@@ -75,12 +84,9 @@ onMounted(() => {
       tableStyle="min-width: 100%"
       rowHover
       dataKey="id"
-      v-model:expandedRows="expandedRows"
-      :rowClass="(data) => controller.isRecentlyUpdated(data.id) ? 'score-updated' : ''"
+      :rowClass="(data) => controller.isRecentlyUpdated(data.id) ? 'score-updated game-details-row' : 'game-details-row'"
+      @row-click="openGameDetails($event.data)"
     >
-      <!-- EXPANDER -->
-      <Column type="expander" headerStyle="width: 3rem" />
-
       <!-- DATE/TIME COLUMN -->
       <Column header="Date/Time" style="width: 160px">
         <template #body="{ data }">
@@ -146,27 +152,21 @@ onMounted(() => {
         </template>
       </Column>
 
-      <!-- EXPANSION TEMPLATE: FULL SCORING DETAIL -->
-      <template #expansion="{ data }">
-        <div class="scoring-expansion">
-          <template v-if="data.scoringDetails && data.scoringDetails.length">
-            <h4 class="scoring-header">Scoring Plays</h4>
-            <ul class="scoring-list">
-              <li v-for="(line, idx) in data.scoringDetails" :key="idx">
-                {{ line }}
-              </li>
-            </ul>
-          </template>
-          <template v-else>
-            <em>No scoring plays yet.</em>
-          </template>
-        </div>
-      </template>
     </DataTable>
+
+    <PlayoffGameDetailsDialog
+      v-model:visible="gameDetailsVisible"
+      :game-id="selectedGameId"
+      :fallback-title="selectedGameTitle"
+    />
   </div>
 </template>
 
 <style scoped>
+:deep(.game-details-row) {
+  cursor: pointer;
+}
+
 .controls-row {
   display: flex;
   gap: 0.75rem;
