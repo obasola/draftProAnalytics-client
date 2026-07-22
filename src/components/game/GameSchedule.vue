@@ -389,7 +389,7 @@ const openGameDetails = (game: any): void => {
   const homeName = game?.homeTeam?.name ?? 'Home Team'
 
   selectedGameId.value = gameId
-  selectedGameTitle.value = `${awayName} at ${homeName}`
+  selectedGameTitle.value = `${awayName} @ ${homeName}`
   gameDetailsVisible.value = true
 }
 

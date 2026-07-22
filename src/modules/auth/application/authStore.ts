@@ -336,8 +336,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     await ensureAccessContext()
   }
-  async function loginWithApple(credential: string): Promise<void> {
-    const result = await loginWithAppleUseCase(credential)
+  async function loginWithApple(credential: string, firstName?: string, lastName?: string): Promise<void> {
+    const result = await loginWithAppleUseCase(credential, firstName, lastName)
 
     accessToken.value = result.accessToken
 

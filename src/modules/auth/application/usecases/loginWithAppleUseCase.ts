@@ -2,6 +2,6 @@
 import type { LoginResponse } from '../../domain/AuthTypes';
 import { authApi } from '../../infrastructure/authApi';
 
-export async function loginWithAppleUseCase(credential: string): Promise<LoginResponse> {
-  return authApi.loginWithApple(credential);
+export async function loginWithAppleUseCase(credential: string, firstName?: string, lastName?: string): Promise<LoginResponse> {
+  return authApi.loginWithApple(credential, firstName, lastName);
 }

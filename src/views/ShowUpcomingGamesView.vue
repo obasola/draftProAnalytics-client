@@ -25,7 +25,7 @@ const selectedGameTitle = ref<string | null>(null);
 
 const openGameDetails = (game: UpcomingGameUI): void => {
   selectedGameId.value = game.id;
-  selectedGameTitle.value = `${game.awayTeamName} at ${game.homeTeamName}`;
+  selectedGameTitle.value = `${game.awayTeamName} @ ${game.homeTeamName}`;
   gameDetailsVisible.value = true;
 };
 

@@ -21,7 +21,7 @@ export const useUpcomingScheduleStore = defineStore('upcomingSchedule', {
           await scheduleService.getUpcomingSchedule(year, seasonType, week)
 
         this.upcomingEvents = api.events.map(ev => {
-          const [away, home] = ev.name.split(' at ')
+          const [away, home] = ev.name.split(' @ ')
 
           return {
             id: ev.id,

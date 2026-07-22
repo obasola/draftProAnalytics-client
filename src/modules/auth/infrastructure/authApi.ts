@@ -23,8 +23,8 @@ export const authApi = {
     return data;
   },
 
-  async loginWithApple(credential: string): Promise<LoginResponse> {
-    const { data } = await api.post<LoginResponse>('/auth/apple', { credential });
+  async loginWithApple(credential: string, firstName?: string, lastName?: string): Promise<LoginResponse> {
+    const { data } = await api.post<LoginResponse>('/auth/apple', { credential, firstName, lastName });
     return data;
   },
 
