@@ -5,15 +5,23 @@ export type SeasonType = 1 | 2 | 3
 export interface DraftOrderTeamDto {
   id: number
   name: string
-  abbreviation: string
+  abbreviation: string | null
 }
 
-export type DraftOrderAuditDto = Record<string, unknown>
+export interface DraftOrderAuditDto {
+  id?: number
+  stepNbr?: number
+  ruleCode?: string
+  resultCode?: string
+  resultSummary?: string
+  detailsJson?: unknown
+  createdAt?: string
+}
 
 export interface DraftOrderEntryDto {
   teamId: number
   team: DraftOrderTeamDto
-  conference: string
+  conference?: string
   draftSlot: number
   wins: number
   losses: number

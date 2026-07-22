@@ -1,225 +1,187 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { computed, onMounted, ref } from "vue"
+import { useRoute } from "vue-router"
 import { useDraftOrderStore } from "@/modules/draftOrder/presentation/store/draftOrderStore"
-import type { DraftOrderSnapshotListItemDto, SeasonType } from "@/modules/draftOrder/application/dtos"
-import type { DraftOrderMode } from "@/modules/draftOrder/domain/types"
+import type { DraftOrderAuditDto, DraftOrderEntryDto } from "@/modules/draftOrder/application/dtos"
 
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import Button from "primevue/button"
+import Column from "primevue/column"
+import DataTable from "primevue/datatable"
 import Dropdown from "primevue/dropdown"
-import InputNumber from "primevue/inputnumber"
-import InputText from "primevue/inputtext"
 import Message from "primevue/message"
-import TimezoneSelector from "@/modules/draftOrder/presentation/components/TimezoneSelector.vue"
 
-type ModeOption = { label: string; value: DraftOrderMode }
-type SeasonTypeOption = { label: string; value: SeasonType }
+interface NumberOption {
+  label: string
+  value: number
+}
 
 const store = useDraftOrderStore()
 const route = useRoute()
-const router = useRouter()
+const computing = ref(false)
+const errorMessage = ref<string | null>(null)
 
-const seasonTypes: SeasonTypeOption[] = [
-  { label: "Preseason", value: 1 },
-  { label: "Regular", value: 2 },
-  { label: "Postseason", value: 3 },
-]
-
-const modeOptions: ModeOption[] = [
-  { label: "Current", value: "current" },
-  { label: "Projection", value: "projection" },
-]
+const currentYear = new Date().getFullYear()
+const seasonOptions: NumberOption[] = Array.from({ length: 12 }, (_, index) => {
+  const year = currentYear - index
+  return { label: String(year), value: year }
+})
+const weekOptions: NumberOption[] = Array.from({ length: 18 }, (_, index) => ({
+  label: `Week ${index + 1}`,
+  value: index + 1,
+}))
 
 const selectedTeamId = computed<number | null>(() => {
-  const v = route.query.teamId
-  if (typeof v !== "string") return null
-  const n = Number(v)
-  return Number.isFinite(n) ? n : null
+  const raw = route.query.teamId
+  if (typeof raw !== "string") return null
+  const parsed = Number(raw)
+  return Number.isInteger(parsed) ? parsed : null
 })
 
-const selectedTeamDraftSlot = ref<number | null>(null)
-const selectedTeamSnapshotId = ref<number | null>(null)
+const rows = computed<DraftOrderEntryDto[]>(() => store.detail?.entries ?? [])
 
-async function refresh(): Promise<void> {
-  store.resetPaging()
-  await store.fetchSnapshots()
+function formatPercentage(value: string): string {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed.toFixed(3) : value
+}
 
-  // optional: if teamId is provided, resolve its slot using newest snapshot (first row)
-  selectedTeamDraftSlot.value = null
-  selectedTeamSnapshotId.value = null
+function record(row: DraftOrderEntryDto): string {
+  return `${row.wins}-${row.losses}-${row.ties}`
+}
 
-  if (selectedTeamId.value && store.list.length > 0) {
-    const newest = store.list[0]
-    selectedTeamSnapshotId.value = newest.id
-    try {
-      await store.fetchSnapshotDetail(newest.id)
-      const entry = store.detail?.entries.find((e) => e.teamId === selectedTeamId.value) ?? null
-      selectedTeamDraftSlot.value = entry?.draftSlot ?? null
-    } catch {
-      selectedTeamDraftSlot.value = null
-    }
+function tiebreakSummary(row: DraftOrderEntryDto): string {
+  const audits = row.audits as DraftOrderAuditDto[]
+  const nflAudit = audits.find((audit) => audit.ruleCode === "NFL_TIEBREAK_CHAIN")
+  if (nflAudit) return "NFL tiebreak chain applied as needed"
+  const sosAudit = audits.find((audit) => audit.ruleCode === "SOS")
+  return sosAudit ? "Strength of schedule" : "Record"
+}
+
+function rowClass(row: DraftOrderEntryDto): string | undefined {
+  return selectedTeamId.value === row.teamId ? "selected-team-row" : undefined
+}
+
+async function calculateDraftOrder(): Promise<void> {
+  computing.value = true
+  errorMessage.value = null
+  store.mode = "current"
+  store.seasonType = 2
+
+  try {
+    await store.computeNow()
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : "Unable to calculate the draft order."
+  } finally {
+    computing.value = false
   }
 }
-
-function goDetail(row: DraftOrderSnapshotListItemDto): void {
-  const q: Record<string, string> = {}
-  if (selectedTeamId.value) q.teamId = String(selectedTeamId.value)
-  void router.push({ path: `/draft-order/snapshots/${row.id}`, query: q })
-}
-
-async function onComputeSync(): Promise<void> {
-  const snap = await store.computeNow()
-  void router.push({
-    path: `/draft-order/snapshots/${snap.id}`,
-    query: selectedTeamId.value ? { teamId: String(selectedTeamId.value) } : undefined,
-  })
-}
-
-async function onQueueJob(): Promise<void> {
-  const jobId = await store.queueJob()
-  // keep you on this page, but make it easy to jump to job monitor
-  void jobId
-}
-
-function openJob(): void {
-  if (!store.lastQueuedJobId) return
-  void router.push(`/jobs/${store.lastQueuedJobId}`)
-}
-
-function computedAtCell(row: DraftOrderSnapshotListItemDto): string {
-  return store.computedAtFormatted(row.computedAt)
-}
-
-watch(
-  () => route.query,
-  async () => {
-    // if someone deep-links with teamId/season filters in query later, this keeps it responsive
-    await refresh()
-  },
-)
 
 onMounted(async () => {
-  // allow deep-link overrides for season filters
-  const qYear = route.query.seasonYear
-  const qType = route.query.seasonType
-  const qWeek = route.query.throughWeek
-  const qMode = route.query.mode
-  const qStrat = route.query.strategy
-
-  if (typeof qYear === "string") {
-    const y = Number(qYear)
-    if (Number.isFinite(y)) store.seasonYear = y
-  }
-  if (typeof qType === "string") {
-    const t = Number(qType)
-    if (t === 1 || t === 2 || t === 3) store.seasonType = t
-  }
-  if (typeof qWeek === "string") {
-    const w = Number(qWeek)
-    store.throughWeek = Number.isFinite(w) ? w : store.throughWeek
-  }
-  if (typeof qMode === "string" && (qMode === "current" || qMode === "projection")) {
-    store.mode = qMode
-  }
-  if (typeof qStrat === "string" && qStrat.length) {
-    store.strategy = qStrat
-  }
-
-  await refresh()
+  const year = Number(route.query.seasonYear)
+  const week = Number(route.query.throughWeek)
+  if (Number.isInteger(year)) store.seasonYear = year
+  if (Number.isInteger(week) && week >= 1 && week <= 18) store.throughWeek = week
+  await calculateDraftOrder()
 })
-
-const showStrategy = computed(() => store.canUseStrategy)
 </script>
 
 <template>
   <div class="page draft-order p-4">
-    <div class="flex align-items-center justify-content-between mb-3">
-      <h2 class="text-xl font-bold">Draft Order</h2>
-      <TimezoneSelector :modelValue="store.tzMode" @update:modelValue="store.setTimezoneMode" />
+    <div class="mb-3">
+      <h2 class="text-2xl font-bold mb-1">NFL Draft Order</h2>
+      <p class="m-0 text-color-secondary">
+        Provisional order through the selected regular-season week. Lower winning percentage selects first;
+        tied records use strength of schedule and the remaining NFL tiebreak sequence.
+      </p>
     </div>
 
-    <div class="grid">
-      <div class="col-12">
-        <div class="p-3 surface-card border-round">
-          <div class="flex flex-wrap gap-3 align-items-end">
-            <div class="flex flex-column gap-1">
-              <label class="font-semibold">Season Year</label>
-              <InputNumber v-model="store.seasonYear" :useGrouping="false" inputClass="w-10rem" />
-            </div>
-
-            <div class="flex flex-column gap-1">
-              <label class="font-semibold">Season Type</label>
-              <Dropdown v-model="store.seasonType" :options="seasonTypes" optionLabel="label" optionValue="value" class="w-12rem" />
-            </div>
-
-            <div class="flex flex-column gap-1">
-              <label class="font-semibold">Through Week</label>
-              <InputNumber v-model="store.throughWeek" :useGrouping="false" inputClass="w-10rem" />
-            </div>
-
-            <div class="flex flex-column gap-1">
-              <label class="font-semibold">Mode</label>
-              <Dropdown v-model="store.mode" :options="modeOptions" optionLabel="label" optionValue="value" class="w-12rem" />
-            </div>
-
-            <div v-if="showStrategy" class="flex flex-column gap-1">
-              <label class="font-semibold">Strategy</label>
-              <InputText v-model="store.strategy" class="w-12rem" placeholder="baseline" />
-            </div>
-
-            <div class="flex gap-2 ml-auto">
-              <Button label="Refresh" icon="pi pi-refresh" outlined :loading="store.loadingList" @click="refresh" />
-              <Button label="Compute Now (Sync)" icon="pi pi-bolt" :loading="store.loadingList" @click="onComputeSync" />
-              <Button label="Queue Job (Async)" icon="pi pi-clock" severity="secondary" :loading="store.loadingList" @click="onQueueJob" />
-            </div>
-          </div>
-
-          <div class="mt-3" v-if="store.lastQueuedJobId">
-            <Message severity="info" :closable="true">
-              Job queued: <b>{{ store.lastQueuedJobId }}</b>
-              <Button class="ml-2" size="small" label="Open Job" icon="pi pi-external-link" outlined @click="openJob" />
-            </Message>
-          </div>
-
-          <div class="mt-3" v-if="selectedTeamId">
-            <Message severity="success" :closable="false">
-              Deep-link teamId: <b>{{ selectedTeamId }}</b>
-              <span v-if="selectedTeamDraftSlot !== null">
-                — Draft Slot (newest snapshot #{{ selectedTeamSnapshotId }}): <b>#{{ selectedTeamDraftSlot }}</b>
-              </span>
-              <span v-else class="opacity-80">— Select a snapshot to see slot.</span>
-            </Message>
-          </div>
+    <div class="surface-card border-round p-3 mb-3">
+      <div class="flex flex-wrap gap-3 align-items-end">
+        <div class="flex flex-column gap-1">
+          <label class="font-semibold" for="draft-season">Season</label>
+          <Dropdown
+            id="draft-season"
+            v-model="store.seasonYear"
+            :options="seasonOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="w-10rem"
+          />
         </div>
-      </div>
 
-      <div class="col-12 mt-3">
-        <DataTable
-          :value="store.list"
-          :loading="store.loadingList"
-          dataKey="id"
-          responsiveLayout="scroll"
-          selectionMode="single"
-          @rowSelect="(e) => goDetail(e.data as DraftOrderSnapshotListItemDto)"
-        >
-          <Column field="id" header="Id" style="width: 90px" />
-          <Column header="Computed At">
-            <template #body="{ data }">
-              {{ computedAtCell(data as DraftOrderSnapshotListItemDto) }}
-            </template>
-          </Column>
-          <Column field="mode" header="Mode" style="width: 120px" />
-          <Column field="strategy" header="Strategy" style="width: 160px" />
-          <Column field="seasonYear" header="Year" style="width: 110px" />
-          <Column field="seasonType" header="Type" style="width: 110px" />
-          <Column field="throughWeek" header="Week" style="width: 110px" />
-          <Column field="entryCount" header="Entries" style="width: 110px" />
-          <Column field="source" header="Source" style="width: 140px" />
-          <Column field="jobId" header="JobId" style="width: 160px" />
-        </DataTable>
+        <div class="flex flex-column gap-1">
+          <label class="font-semibold" for="draft-week">Through Week</label>
+          <Dropdown
+            id="draft-week"
+            v-model="store.throughWeek"
+            :options="weekOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="w-10rem"
+          />
+        </div>
+
+        <Button
+          label="Calculate Draft Order"
+          icon="pi pi-calculator"
+          :loading="computing"
+          @click="calculateDraftOrder"
+        />
       </div>
     </div>
+
+    <Message v-if="errorMessage" severity="error" :closable="false" class="mb-3">
+      {{ errorMessage }}
+    </Message>
+
+    <Message v-else-if="!computing && rows.length !== 32" severity="warn" :closable="false" class="mb-3">
+      The calculation returned {{ rows.length }} teams. The Team table must contain exactly 32 NFL clubs.
+    </Message>
+
+    <DataTable
+      :value="rows"
+      :loading="computing"
+      dataKey="teamId"
+      stripedRows
+      responsiveLayout="scroll"
+      :rowClass="rowClass"
+      sortField="draftSlot"
+      :sortOrder="1"
+    >
+      <Column field="draftSlot" header="Pick" sortable style="width: 6rem">
+        <template #body="{ data }">
+          <span class="font-bold">#{{ (data as DraftOrderEntryDto).draftSlot }}</span>
+        </template>
+      </Column>
+      <Column field="team.name" header="Team" sortable>
+        <template #body="{ data }">
+          <div class="flex align-items-center gap-2">
+            <span class="font-semibold">{{ (data as DraftOrderEntryDto).team.name }}</span>
+            <span class="text-color-secondary">{{ (data as DraftOrderEntryDto).team.abbreviation }}</span>
+          </div>
+        </template>
+      </Column>
+      <Column header="Record" sortable sortField="winPct" style="width: 8rem">
+        <template #body="{ data }">{{ record(data as DraftOrderEntryDto) }}</template>
+      </Column>
+      <Column field="winPct" header="Win %" sortable style="width: 8rem">
+        <template #body="{ data }">{{ formatPercentage((data as DraftOrderEntryDto).winPct) }}</template>
+      </Column>
+      <Column field="sos" header="SOS" sortable style="width: 8rem">
+        <template #body="{ data }">{{ formatPercentage((data as DraftOrderEntryDto).sos) }}</template>
+      </Column>
+      <Column field="pointsFor" header="PF" sortable style="width: 6rem" />
+      <Column field="pointsAgainst" header="PA" sortable style="width: 6rem" />
+      <Column header="Ranking Basis" style="min-width: 14rem">
+        <template #body="{ data }">{{ tiebreakSummary(data as DraftOrderEntryDto) }}</template>
+      </Column>
+    </DataTable>
   </div>
 </template>
+
+<style scoped>
+:deep(.selected-team-row) {
+  font-weight: 700;
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+}
+</style>
