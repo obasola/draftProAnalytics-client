@@ -98,20 +98,34 @@ onMounted(async () => {
       <div class="draft-order-controls">
         <div class="flex flex-column gap-1">
           <label class="font-semibold" for="draft-season">Season</label>
-          <Dropdown id="draft-season" v-model="store.seasonYear" :options="seasonOptions" optionLabel="label"
-            optionValue="value" class="w-10rem" />
+          <Dropdown
+            id="draft-season"
+            v-model="store.seasonYear"
+            :options="seasonOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="w-10rem"
+          />
         </div>
 
         <div class="flex flex-column gap-1">
           <label class="font-semibold" for="draft-week">Thru Week</label>
-          <Dropdown id="draft-week" v-model="store.throughWeek" :options="weekOptions" optionLabel="label"
-            optionValue="value" class="w-10rem" />
+          <Dropdown
+            id="draft-week"
+            v-model="store.throughWeek"
+            :options="weekOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="w-10rem"
+          />
         </div>
 
-        <div class="draft-order-submit">
-          <Button label="Calculate Draft Order" icon="pi pi-calculator" :loading="computing"
-            @click="calculateDraftOrder" />
-        </div>
+        <Button
+          label="Calculate Draft Order"
+          icon="pi pi-calculator"
+          :loading="computing"
+          @click="calculateDraftOrder"
+        />
       </div>
     </div>
 
@@ -123,8 +137,16 @@ onMounted(async () => {
       The calculation returned {{ rows.length }} teams. The Team table must contain exactly 32 NFL clubs.
     </Message>
 
-    <DataTable :value="rows" :loading="computing" dataKey="teamId" stripedRows responsiveLayout="scroll"
-      :rowClass="rowClass" sortField="draftSlot" :sortOrder="1">
+    <DataTable
+      :value="rows"
+      :loading="computing"
+      dataKey="teamId"
+      stripedRows
+      responsiveLayout="scroll"
+      :rowClass="rowClass"
+      sortField="draftSlot"
+      :sortOrder="1"
+    >
       <Column field="draftSlot" header="Pick" sortable style="width: 6rem">
         <template #body="{ data }">
           <span class="font-bold">#{{ (data as DraftOrderEntryDto).draftSlot }}</span>
@@ -163,16 +185,11 @@ onMounted(async () => {
   outline-offset: -2px;
 }
 
-
 .draft-order-controls {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  align-items: end;
-  column-gap: 0.7em;
-  width: 100%;
-}
-
-.draft-order-submit {
-  justify-self: end;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.7em;
 }
 </style>
