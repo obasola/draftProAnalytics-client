@@ -1,6 +1,7 @@
 <!-- src/components/player/PlayerList.vue -->
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import type { DataTablePageEvent } from 'primevue/datatable'
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/playerStore'
 import DataTable from 'primevue/datatable'
@@ -11,8 +12,12 @@ const playerStore = usePlayerStore()
 const router = useRouter()
 
 onMounted(() => {
-  playerStore.fetchAll()
+  void playerStore.fetchPage(1, playerStore.rowsPerPage)
 })
+
+const onPage = (event: DataTablePageEvent): void => {
+  void playerStore.fetchPage(event.page + 1, event.rows)
+}
 
 const viewPlayer = (id: number) => {
   router.push(`/players/${id}?mode=read`)
@@ -43,11 +48,13 @@ const getNflLogo = (): string => {
       <h2>
         Players
       </h2>
-      <Button @click="createPlayer" label="Create Games" icon="pi pi-plus" class="p-button-success" />
+      <Button @click="createPlayer" label="Create Player" icon="pi pi-plus" class="p-button-success" />
     </div>
 
-    <DataTable :value="playerStore.players" :loading="playerStore.loading" paginator :rows="10"
-      :rowsPerPageOptions="[5, 10, 20, 50]" responsiveLayout="scroll" class="themed-datatable">
+    <DataTable :value="playerStore.players" :loading="playerStore.loading" paginator lazy
+      :first="(playerStore.page - 1) * playerStore.rowsPerPage" :rows="playerStore.rowsPerPage"
+      :totalRecords="playerStore.totalRecords" :rowsPerPageOptions="[5, 10, 20, 50]"
+      responsiveLayout="scroll" class="themed-datatable" @page="onPage">
       <Column field="firstName" header="First Name" sortable />
       <Column field="lastName" header="Last Name" sortable />
       <Column field="position" header="Position" sortable />

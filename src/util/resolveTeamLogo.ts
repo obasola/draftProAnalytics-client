@@ -1,60 +1,61 @@
-// src/utils/resolveTeamLogo.ts
+// src/util/resolveTeamLogo.ts
 
-// Map NFL team names to logo file names
-const logoMap: Record<string, string> = {
-  'Kansas City Chiefs': 'Chiefs.avif',
-  'Las Vegas Raiders': 'Raiders.avif',
-  'Los Angeles Chargers': 'Chargers.webp', // special case
-  'Denver Broncos': 'Broncos.avif',
-
-  'Buffalo Bills': 'Bills.avif',
-  'Miami Dolphins': 'Dolphins.avif',
-  'New England Patriots': 'Patriots.avif',
-  'New York Jets': 'Jets.avif',
-
-  'Cincinnati Bengals': 'Bengals.avif',
-  'Cleveland Browns': 'Browns.avif',
-  'Pittsburgh Steelers': 'Steelers.avif',
-  'Baltimore Ravens': 'Ravens.avif',
-
-  'Jacksonville Jaguars': 'Jaguars.avif',
-  'Houston Texans': 'Texans.avif',
-  'Indianapolis Colts': 'Colts.avif',
-  'Tennessee Titans': 'Titans.avif',
-
-  // NFC
-  'Dallas Cowboys': 'Cowboys.avif',
-  'Philadelphia Eagles': 'Eagles.avif',
-  'New York Giants': 'Giants.avif',
-  'Washington Commanders': 'Commanders.avif',
-
-  'Green Bay Packers': 'Packers.avif',
-  'Chicago Bears': 'Bears.avif',
-  'Detroit Lions': 'Lions.avif',
-  'Minnesota Vikings': 'Vikings.avif',
-
-  'Tampa Bay Buccaneers': 'Buccaneers.avif',
-  'Carolina Panthers': 'Panthers.avif',
-  'New Orleans Saints': 'Saints.avif',
-  'Atlanta Falcons': 'Falcons.avif',
-
-  'San Francisco 49ers': '49ers.avif',
-  'Seattle Seahawks': 'Seahawks.avif',
-  'Los Angeles Rams': 'Rams.avif',
-  'Arizona Cardinals': 'Cardinals.avif',
+interface TeamLogoDefinition {
+  aliases: readonly string[]
+  path: string
 }
 
-export function resolveTeamLogo(teamName: string): string {
-  const file = logoMap[teamName]
-  if (!file) return ''
+const normalize = (value: string): string =>
+  value.trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ')
 
-  const isAFC = [
-    'Chiefs','Raiders','Chargers','Broncos','Bills','Dolphins','Patriots','Jets',
-    'Bengals','Browns','Steelers','Ravens',
-    'Jaguars','Texans','Colts','Titans'
-  ].some(t => file.includes(t))
+const teamLogos: readonly TeamLogoDefinition[] = [
+  { aliases: ['Arizona Cardinals', 'Cardinals', 'ARI'], path: '/logos/nfc/Cardinals.avif' },
+  { aliases: ['Atlanta Falcons', 'Falcons', 'ATL'], path: '/logos/nfc/Falcons.avif' },
+  { aliases: ['Baltimore Ravens', 'Ravens', 'BAL'], path: '/logos/afc/Ravens.avif' },
+  { aliases: ['Buffalo Bills', 'Bills', 'BUF'], path: '/logos/afc/Bills.avif' },
+  { aliases: ['Carolina Panthers', 'Panthers', 'CAR'], path: '/logos/nfc/Panthers.avif' },
+  { aliases: ['Chicago Bears', 'Bears', 'CHI'], path: '/logos/nfc/Bears.avif' },
+  { aliases: ['Cincinnati Bengals', 'Bengals', 'CIN'], path: '/logos/afc/Bengals.avif' },
+  { aliases: ['Cleveland Browns', 'Browns', 'CLE'], path: '/logos/afc/Browns.avif' },
+  { aliases: ['Dallas Cowboys', 'Cowboys', 'DAL'], path: '/logos/nfc/Cowboys.avif' },
+  { aliases: ['Denver Broncos', 'Broncos', 'DEN'], path: '/logos/afc/Broncos.avif' },
+  { aliases: ['Detroit Lions', 'Lions', 'DET'], path: '/logos/nfc/Lions.avif' },
+  { aliases: ['Green Bay Packers', 'Packers', 'GB'], path: '/logos/nfc/Packers.avif' },
+  { aliases: ['Houston Texans', 'Texans', 'HOU'], path: '/logos/afc/Texans.avif' },
+  { aliases: ['Indianapolis Colts', 'Colts', 'IND'], path: '/logos/afc/Colts.avif' },
+  { aliases: ['Jacksonville Jaguars', 'Jaguars', 'JAX'], path: '/logos/afc/Jaguars.avif' },
+  { aliases: ['Kansas City Chiefs', 'Chiefs', 'KC'], path: '/logos/afc/Chiefs.avif' },
+  { aliases: ['Las Vegas Raiders', 'Oakland Raiders', 'Raiders', 'LV', 'OAK'], path: '/logos/afc/Raiders.avif' },
+  { aliases: ['Los Angeles Chargers', 'San Diego Chargers', 'Chargers', 'LAC', 'SD'], path: '/logos/afc/Chargers.webp' },
+  { aliases: ['Los Angeles Rams', 'St. Louis Rams', 'Rams', 'LAR', 'STL'], path: '/logos/nfc/Rams.avif' },
+  { aliases: ['Miami Dolphins', 'Dolphins', 'MIA'], path: '/logos/afc/Dolphins.avif' },
+  { aliases: ['Minnesota Vikings', 'Vikings', 'MIN'], path: '/logos/nfc/Vikings.avif' },
+  { aliases: ['New England Patriots', 'Patriots', 'NE'], path: '/logos/afc/Patriots.avif' },
+  { aliases: ['New Orleans Saints', 'Saints', 'NO'], path: '/logos/nfc/Saints.avif' },
+  { aliases: ['New York Giants', 'Giants', 'NYG'], path: '/logos/nfc/Giants.avif' },
+  { aliases: ['New York Jets', 'Jets', 'NYJ'], path: '/logos/afc/Jets.avif' },
+  { aliases: ['Philadelphia Eagles', 'Eagles', 'PHI'], path: '/logos/nfc/Eagles.avif' },
+  { aliases: ['Pittsburgh Steelers', 'Steelers', 'PIT'], path: '/logos/afc/Steelers.avif' },
+  { aliases: ['San Francisco 49ers', '49ers', 'SF'], path: '/logos/nfc/49ers.avif' },
+  { aliases: ['Seattle Seahawks', 'Seahawks', 'SEA'], path: '/logos/nfc/Seahawks.avif' },
+  { aliases: ['Tampa Bay Buccaneers', 'Buccaneers', 'Bucs', 'TB'], path: '/logos/nfc/Buccaneers.avif' },
+  { aliases: ['Tennessee Titans', 'Titans', 'TEN'], path: '/logos/afc/Titans.avif' },
+  { aliases: ['Washington Commanders', 'Washington Football Team', 'Washington Redskins', 'Commanders', 'WAS'], path: '/logos/nfc/Commanders.avif' },
+]
 
-  return isAFC
-    ? `/logos/afc/${file}`
-    : `/logos/nfc/${file}`
+export function resolveTeamLogo(...teamIdentifiers: Array<string | null | undefined>): string {
+  const identifiers = teamIdentifiers
+    .filter((value): value is string => Boolean(value?.trim()))
+    .map(normalize)
+
+  for (const definition of teamLogos) {
+    const aliases = definition.aliases.map(normalize)
+    const matched = identifiers.some((identifier) =>
+      aliases.some((alias) => identifier === alias || identifier.endsWith(` ${alias}`)),
+    )
+
+    if (matched) return definition.path
+  }
+
+  return '/logos/logoNfl.jpeg'
 }

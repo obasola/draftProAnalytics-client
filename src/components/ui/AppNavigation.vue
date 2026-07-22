@@ -173,18 +173,6 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           to: "/players",
           requiredPerm: { domain: "PLAYERS", action: "VIEW" },
         }),
-        routeItem({
-          label: "Player Awards",
-          icon: "pi pi-trophy",
-          to: "/player-awards",
-          requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Player Teams",
-          icon: "pi pi-users",
-          to: "/player-teams",
-          requiredPerm: { domain: "PLAYER_MAINT", action: "VIEW" },
-        }),
       ],
     },
 

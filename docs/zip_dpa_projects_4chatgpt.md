@@ -1,6 +1,6 @@
 cd ~/aiAssistWS
 
-zip -r draftProAnalytics-client-superbowlScore.zip draftProAnalytics-client \
+zip -r draftProAnalytics-client-playerfeature.zip draftProAnalytics-client \
   -x "draftProAnalytics-client/node_modules/*" \
      "draftProAnalytics-client/dist/*" \
      "draftProAnalytics-client/coverage/*" \
@@ -14,7 +14,7 @@ zip -r draftProAnalytics-client-superbowlScore.zip draftProAnalytics-client \
 
 cd ~/aiAssistWS
 
-zip -r draftProAnalytics-server-superbowlScore.zip draftProAnalytics-server \
+zip -r draftProAnalytics-server-playerfeature.zip draftProAnalytics-server \
   -x "draftProAnalytics-server/node_modules/*" \
      "draftProAnalytics-server/dist/*" \
      "draftProAnalytics-server/coverage/*" \

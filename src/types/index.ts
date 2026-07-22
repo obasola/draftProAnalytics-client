@@ -86,26 +86,36 @@ export interface Player {
 
 
 export interface PlayerAward {
-  id?: number | undefined
-  playerId: number | undefined
-  awardName: string
-  awardYear: number
-  awardDescription?: string
+  id?: number
+  playerId: number
+  awardName?: string
+  yearAwarded?: number
+  displayName?: string
+  isRecentAward?: boolean
 }
 
-// src/types/playerTeam.ts
-// Actual PlayerTeam interface from server
 export interface PlayerTeam {
   id: number
   playerId: number
   teamId: number
+  jerseyNumber?: number | null
   currentTeam: boolean
   isActive: boolean
   startYear: number | null
   endYear: number | null
+  contractValue?: number | null
+  contractLength?: number | null
+  team?: {
+    id: number
+    name: string
+    city: string
+    conference?: string | null
+    division?: string | null
+    fullName: string
+    abbreviation?: string | null
+  } | null
 }
 
-// For create operations (omits id and handles optional endDate)
 export interface CreatePlayerTeam {
   playerId: number
   teamId: number
@@ -114,6 +124,7 @@ export interface CreatePlayerTeam {
   startYear?: number
   endYear?: number
 }
+
 
 
 export interface Prospect {

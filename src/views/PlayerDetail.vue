@@ -53,11 +53,11 @@ watch(
 <template>
   
     <div class="player-detail-view">
-      <!-- Show list when no ID -->
-      <PlayerList v-if="!playerId" />
-
       <!-- Show create form -->
-      <PlayerCreateForm v-else-if="mode === 'create'" />
+      <PlayerCreateForm v-if="mode === 'create'" />
+
+      <!-- Show list when no ID -->
+      <PlayerList v-else-if="!playerId" />
 
       <!-- Show edit form -->
       <PlayerEditForm v-else-if="mode === 'edit'" />
