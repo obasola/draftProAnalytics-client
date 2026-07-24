@@ -11,7 +11,10 @@ import Tag from 'primevue/tag'
 import {
   postSeasonResultService,
   type PostSeasonResultRow,
+  type PostSeasonTeamSummary,
 } from '@/services/postSeasonResultService'
+import { getTeamLogoInfo, type TeamLogoInfo } from '@/util/teamLogo'
+import { logger } from '@/util/Logger'
 
 const currentYear = new Date().getFullYear()
 const rows = ref<PostSeasonResultRow[]>([])
@@ -46,12 +49,12 @@ async function loadResults(): Promise<void> {
     rows.value = result.data
     totalRecords.value = result.pagination?.total ?? result.data.length
   } catch (error) {
-    console.error('Failed to load post-season results', error)
-    errorMessage.value = 'Unable to load post-season results.'
-    rows.value = []
-    totalRecords.value = 0
+      logger.error('Failed to load post-season results', error);
+      errorMessage.value = 'Unable to load post-season results.'
+      rows.value = []
+      totalRecords.value = 0
   } finally {
-    loading.value = false
+      loading.value = false
   }
 }
 
@@ -77,6 +80,19 @@ function resultSeverity(row: PostSeasonResultRow): 'success' | 'danger' | 'secon
   if (row.winLose === 'W' || row.isWin) return 'success'
   if (row.winLose === 'L') return 'danger'
   return 'secondary'
+}
+
+function getPostSeasonTeamLogo(
+  team: PostSeasonTeamSummary | null | undefined,
+): TeamLogoInfo {
+  return getTeamLogoInfo(
+    team
+      ? {
+          name: team.name,
+          conference: team.conference ?? '',
+        }
+      : undefined,
+  )
 }
 
 onMounted(loadResults)
@@ -162,7 +178,15 @@ onMounted(loadResults)
       <Column field="playoffYear" header="Year" sortable />
       <Column header="Team" sortable sort-field="team.name">
         <template #body="{ data }">
-          {{ data.team?.fullName || data.team?.name || `Team ${data.teamId ?? '—'}` }}
+          <div class="team-cell">
+            <img
+              v-if="getPostSeasonTeamLogo(data.team).logoUrl"
+              :src="getPostSeasonTeamLogo(data.team).logoUrl"
+              :alt="`${data.team?.name ?? 'Team'} logo`"
+              class="team-logo"
+            />
+            <span>{{ data.team?.name || `Team ${data.teamId ?? '—'}` }}</span>
+          </div>
         </template>
       </Column>
       <Column field="playoffRound" header="Round">
@@ -241,6 +265,19 @@ onMounted(loadResults)
 .filter-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.team-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.team-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 @media (max-width: 700px) {

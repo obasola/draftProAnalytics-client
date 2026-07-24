@@ -4,6 +4,8 @@ import { useAuthStore } from '@/modules/auth/application/authStore'
 import { draftAnalysisRoutes } from '@/modules/draft-analysis/routes'
 import B4MeAnalysisView from '@/modules/b4meAnalysis/views/B4MeAnalysisView.vue'
 import { draftDayScorecardRoutes } from '@/modules/draftDayScorecard/router/draftDayScorecard.routes'
+import { postDraftMetricRoutes } from '@/modules/postDraftMetrics/presentation/routes/postDraftMetric.routes'
+import { postDraftReportRoutes } from '@/modules/postDraftReports/presentation/routes/postDraftReport.routes'
 
 // guards
 import { requireAuth } from '@/modules/auth/authGuard'
@@ -330,6 +332,8 @@ const routes: RouteRecordRaw[] = [
       ...draftPickRoutes,
       ...draftOrderRoutes,
       ...draftDayScorecardRoutes,
+      ...postDraftMetricRoutes,
+      ...postDraftReportRoutes,
       ...playoffsRoutes,
       ...draftAnalysisRoutes,
       ...mockDraftRoutes,

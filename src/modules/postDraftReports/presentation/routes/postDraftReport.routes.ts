@@ -1,0 +1,1 @@
+import type{RouteRecordRaw}from'vue-router';export const postDraftReportRoutes:RouteRecordRaw[]=[{path:'/post-draft-reports',name:'post-draft-reports',component:()=>import('../views/PostDraftReportsView.vue'),meta:{requiresAuth:true,perm:{domain:'DRAFT_TOOLS',action:'VIEW'},title:'Post-Draft Reports'}}]

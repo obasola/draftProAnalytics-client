@@ -313,6 +313,12 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
       icon: "pi pi-chart-bar",
       items: [
         routeItem({
+          label: "Post-Draft Reports",
+          icon: "pi pi-file-check",
+          to: "/post-draft-reports",
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
           label: "Draft Analysis",
           icon: "pi pi-chart-bar",
           to: "/draft-analysis",
@@ -331,6 +337,12 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
         }),
         routeItem({
+          label: 'WR Metric Ingestion',
+          icon: 'pi pi-database',
+          to: '/post-draft-metrics/wr',
+          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+        }),
+        routeItem({
           label: "Draft Analytics",
           icon: "pi pi-chart-line",
           // keep on the existing route until you add a dedicated /draft-analytics view
@@ -344,13 +356,7 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
           to: "/draft-analysis",
           requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
         }),
-        routeItem({
-          label: "Reports",
-          icon: "pi pi-file",
-          // keep on the existing route until you add a dedicated /draft-reports view
-          to: "/draft-analysis",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
+        
       ],
     },
 

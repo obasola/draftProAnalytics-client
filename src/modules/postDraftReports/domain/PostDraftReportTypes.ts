@@ -1,0 +1,1 @@
+export interface PostDraftReportSummary { id?:number; status?:'LIVE'|'FINALIZED'|string; reportVersion?:number|string; version?:number|string; modelVersion?:string; finalizedAt?:string|null; dataConfidence?:number|string|null; missingData?:unknown[]; missingDataIndicators?:unknown[]; inputHash?:string; wrMetricProvenance?:unknown; [key:string]:unknown }
